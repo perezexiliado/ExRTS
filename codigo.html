@@ -125,18 +125,145 @@
     font-family: "Trebuchet MS", Arial, sans-serif;
   }
   .modal-close:hover { background: rgba(185, 141, 62, 0.2); }
+
+  /* --- MENÚ DE CONSTRUCCIÓN --- */
+  #build-menu {
+    position: fixed; left: 50%; bottom: 16px; transform: translateX(-50%);
+    z-index: 30; display: none;
+    background: rgba(20, 14, 6, 0.88);
+    border: 2px solid #b98d3e; border-radius: 10px;
+    padding: 10px 12px;
+    box-shadow: 0 6px 24px rgba(0,0,0,.5);
+  }
+  #build-menu.visible { display: block; }
+  #build-menu h3 {
+    margin: 0 0 8px; color: #ffd76a; font-size: 13px;
+    letter-spacing: 2px; text-align: center; user-select: none;
+  }
+  .build-grid { display: grid; grid-template-columns: repeat(8, 96px); gap: 6px; }
+  .build-section {
+    color: #b98d3e; font-size: 11px; letter-spacing: 2px;
+    margin: 6px 0 4px; text-align: center; user-select: none;
+  }
+  .build-item {
+    background: linear-gradient(180deg, rgba(60,42,20,.9), rgba(30,20,10,.9));
+    border: 2px solid #6a5228; border-radius: 6px;
+    color: #e8d5a0; padding: 6px 2px; font-size: 10.5px; line-height: 1.2;
+    cursor: pointer; text-align: center; user-select: none;
+    font-family: "Trebuchet MS", Arial, sans-serif;
+    transition: all .15s;
+  }
+  .build-item:hover { border-color: #ffd76a; color: #fff; transform: translateY(-2px); }
+  .build-item:disabled { opacity: .35; cursor: not-allowed; transform: none; }
+  .build-item .icon { font-size: 20px; display: block; margin-bottom: 3px; }
+  #build-hint {
+    position: fixed; top: 12px; left: 50%; transform: translateX(-50%);
+    z-index: 30; display: none;
+    background: rgba(20,14,6,.85); border: 2px solid #b98d3e; border-radius: 8px;
+    color: #ffd76a; padding: 8px 18px; font-size: 13px; user-select: none;
+  }
+  #build-hint.visible { display: block; }
+  #build-hint b { color: #fff; }
+
+  /* --- PANEL INFORMATIVO DE ESTRUCTURA --- */
+  #structure-info {
+    position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%);
+    z-index: 25; display: none;
+    background: linear-gradient(180deg, rgba(30, 22, 10, 0.95), rgba(18, 12, 6, 0.95));
+    border: 2px solid #b98d3e; border-radius: 10px;
+    padding: 12px 18px; min-width: 300px; max-width: 420px;
+    color: #e8d5a0; font-size: 13px; user-select: none;
+    box-shadow: 0 6px 20px rgba(0,0,0,.6);
+  }
+  #structure-info.visible { display: block; }
+  #structure-info .info-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 8px;
+  }
+  #structure-info #info-name {
+    color: #ffd76a; font-weight: bold; letter-spacing: 1px; font-size: 14px;
+  }
+  #structure-info #info-hp {
+    color: #ccc; font-size: 12px; font-family: "Courier New", monospace;
+  }
+  #structure-info .info-hp-bar {
+    width: 100%; height: 12px; background: #1a0808; border-radius: 6px;
+    overflow: hidden; margin-bottom: 8px;
+    border: 1px solid #6a5228;
+  }
+  #structure-info .info-hp-fill {
+    height: 100%; width: 100%;
+    background: linear-gradient(90deg, #39ff5a, #a0e050);
+    transition: width 0.25s ease-out, background 0.3s;
+    box-shadow: 0 0 8px rgba(57, 255, 90, 0.4);
+  }
+  #structure-info #info-desc {
+    color: #b8a878; font-size: 12px; font-style: italic; line-height: 1.4;
+  }
+
+  /* --- MINIMAPA --- */
+  #minimap-wrap {
+    position: fixed; bottom: 16px; left: 16px; z-index: 20;
+    width: 220px;
+    background: rgba(14, 10, 4, 0.85);
+    border: 2px solid #b98d3e; border-radius: 6px;
+    padding: 6px; box-shadow: 0 4px 14px rgba(0,0,0,.6);
+    user-select: none;
+  }
+  #minimap-title {
+    color: #ffd76a; font-size: 11px; letter-spacing: 2px;
+    text-align: center; margin-bottom: 4px;
+  }
+  #minimap {
+    width: 200px; height: 200px;
+    display: block; margin: 0 auto;
+    background: #0a0804;
+    border-radius: 3px;
+    image-rendering: pixelated;
+  }
 </style>
 </head>
 <body>
+
+<!-- Minimap -->
+<div id="minimap-wrap">
+  <div id="minimap-title">🗺️ MAPA</div>
+  <canvas id="minimap" width="200" height="200"></canvas>
+</div>
 
 <!-- HUD en juego -->
 <div id="hud">
   <b>👑 EL REY</b><br/>
   Muévelo con <b>W A S D</b> o las <b>flechas</b>.<br/>
   Click <b>izq</b>: atacar · Click <b>der</b>: bloquear.<br/>
+  Pulsa <b>C</b>: menú de construcción.<br/>
   El agua profunda le impide el paso.
 </div>
 <button id="exit-btn">↩ Menú Principal</button>
+
+<!-- Aviso de modo colocación -->
+<div id="build-hint">🏗️ Colocando: <b id="build-hint-name"></b> · Click izq: colocar · R: rotar · Click der / ESC: cancelar</div>
+
+<!-- Panel informativo de estructura seleccionada -->
+<div id="structure-info">
+  <div class="info-header">
+    <span id="info-name">—</span>
+    <span id="info-hp">0/0</span>
+  </div>
+  <div class="info-hp-bar">
+    <div class="info-hp-fill" id="info-hp-fill"></div>
+  </div>
+  <div id="info-desc"></div>
+</div>
+
+<!-- Menú de construcción -->
+<div id="build-menu">
+  <h3>🏗️ MENÚ DE CONSTRUCCIÓN [C]</h3>
+  <div class="build-section">— Edificios —</div>
+  <div class="build-grid" id="build-grid"></div>
+  <div class="build-section">— Murallas y Vallas —</div>
+  <div class="build-grid" id="walls-grid"></div>
+</div>
 
 <!-- Pantalla de carga -->
 <div id="loading-screen" class="hidden">
@@ -239,6 +366,7 @@ import { SSAOPass }       from 'three/addons/postprocessing/SSAOPass.js';
 import { UnrealBloomPass }from 'three/addons/postprocessing/UnrealBloomPass.js';
 import { ShaderPass }     from 'three/addons/postprocessing/ShaderPass.js';
 import { OutputPass }     from 'three/addons/postprocessing/OutputPass.js';
+import { GLTFLoader }     from 'three/addons/loaders/GLTFLoader.js';
 
 /* ============================================================
    MENÚ PRINCIPAL - NAVEGACIÓN
@@ -372,10 +500,10 @@ async function startGame(levelNum) {
   await yieldToBrowser();
 
   /* --- CONSTANTES DE JUEGO --- */
-  const WORLD_SIZE  = 220;
-  const SEGMENTS    = 320;
+  const WORLD_SIZE  = 440;   // ×2 por eje = ×4 de área
+  const SEGMENTS    = 480;   // más subdivisión para el mapa grande
   const WATER_LEVEL = CFG.waterLevel;
-  const KING_SPEED  = 12;
+  const KING_SPEED  = 14;    // un poco más rápido para un mapa grande
   const BOUND       = WORLD_SIZE / 2 - 6;
 
   /* --- RUIDO --- */
@@ -395,17 +523,17 @@ async function startGame(levelNum) {
     return value / total;
   }
   function getHeight(x, z) {
-    const raw = fbm(x * 0.02 + CFG.seed, z * 0.02 + CFG.seedZ) * CFG.heightAmp + CFG.heightOff;
+    const raw = fbm(x * 0.014 + CFG.seed, z * 0.014 + CFG.seedZ) * CFG.heightAmp + CFG.heightOff;
     const d = Math.hypot(x, z);
-    const t = smooth01((d - 10) / 30);
+    const t = smooth01((d - 20) / 80);   // centro suave más amplio para el mapa grande
     return THREE.MathUtils.lerp(CFG.centerHeight, raw, t);
   }
 
   /* --- ESCENA --- */
   const scene = new THREE.Scene();
-  scene.fog = new THREE.Fog(CFG.fogColor, 120, 420);
+  scene.fog = new THREE.Fog(CFG.fogColor, 220, 820);
 
-  const skyGeo = new THREE.SphereGeometry(500, 32, 16);
+  const skyGeo = new THREE.SphereGeometry(900, 32, 16);
   const skyMat = new THREE.ShaderMaterial({
     side: THREE.BackSide, depthWrite: false,
     uniforms: {
@@ -446,11 +574,11 @@ async function startGame(levelNum) {
 
   scene.add(new THREE.HemisphereLight(0xbfd9ff, 0x3a5a28, 0.6));
   const sun = new THREE.DirectionalLight(0xffe2a8, 3.6);
-  sun.position.set(70, 90, 40); sun.castShadow = true;
+  sun.position.set(120, 160, 80); sun.castShadow = true;
   sun.shadow.mapSize.set(4096, 4096);
-  sun.shadow.camera.left = -130; sun.shadow.camera.right = 130;
-  sun.shadow.camera.top = 130;   sun.shadow.camera.bottom = -130;
-  sun.shadow.camera.near = 10;   sun.shadow.camera.far = 300;
+  sun.shadow.camera.left = -240; sun.shadow.camera.right = 240;
+  sun.shadow.camera.top = 240;   sun.shadow.camera.bottom = -240;
+  sun.shadow.camera.near = 20;   sun.shadow.camera.far = 600;
   sun.shadow.bias = -0.0003; sun.shadow.normalBias = 0.02;
   scene.add(sun);
   const fill = new THREE.DirectionalLight(0x88aacc, 0.7); fill.position.set(-50, 40, -30); scene.add(fill);
@@ -528,7 +656,7 @@ async function startGame(levelNum) {
   geo.setAttribute('aSlope', new THREE.BufferAttribute(slopeArr, 1));
 
   const terrainMat = new THREE.ShaderMaterial({
-    uniforms: { uColorTex:{ value: texturaSuelo }, uNormalMap:{ value: normalMap }, uSunDir:{ value: new THREE.Vector3(70, 90, 40).normalize() }, uSunColor:{ value: new THREE.Color(0xffe2a8) }, uAmbient:{ value: new THREE.Color(0x6a7a8f) }, uFogColor:{ value: new THREE.Color(CFG.fogColor) }, uFogNear:{ value: 120.0 }, uFogFar:{ value: 420.0 }, uTime:{ value: 0 } },
+    uniforms: { uColorTex:{ value: texturaSuelo }, uNormalMap:{ value: normalMap }, uSunDir:{ value: new THREE.Vector3(120, 160, 80).normalize() }, uSunColor:{ value: new THREE.Color(0xffe2a8) }, uAmbient:{ value: new THREE.Color(0x6a7a8f) }, uFogColor:{ value: new THREE.Color(CFG.fogColor) }, uFogNear:{ value: 220.0 }, uFogFar:{ value: 820.0 }, uTime:{ value: 0 } },
     vertexShader: `varying vec3 vWorldPos; varying vec3 vNormal; varying vec3 vColor; varying vec2 vUv; varying float vHeight; varying float vSlope; varying float vFogDepth; attribute float aHeight; attribute float aSlope; void main() { vec4 wp = modelMatrix * vec4(position, 1.0); vWorldPos = wp.xyz; vNormal = normalize(normalMatrix * normal); vColor = color; vUv = uv; vHeight = aHeight; vSlope = aSlope; vec4 mv = modelViewMatrix * vec4(position, 1.0); vFogDepth = -mv.z; gl_Position = projectionMatrix * mv; }`,
     fragmentShader: `precision highp float; uniform sampler2D uColorTex; uniform sampler2D uNormalMap; uniform vec3 uSunDir; uniform vec3 uSunColor; uniform vec3 uAmbient; uniform vec3 uFogColor; uniform float uFogNear; uniform float uFogFar; uniform float uTime; varying vec3 vWorldPos; varying vec3 vNormal; varying vec3 vColor; varying vec2 vUv; varying float vHeight; varying float vSlope; varying float vFogDepth; float hash2(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); } float vnoise(vec2 p){ vec2 i = floor(p), f = fract(p); float a = hash2(i), b = hash2(i + vec2(1.0,0.0)), c = hash2(i + vec2(0.0,1.0)), d = hash2(i + vec2(1.0,1.0)); vec2 u = f*f*(3.0-2.0*f); return mix(mix(a,b,u.x), mix(c,d,u.x), u.y); } float fbm(vec2 p){ float v = 0.0, a = 0.5; for (int i=0; i<5; i++){ v += a * vnoise(p); p *= 2.0; a *= 0.5; } return v; } void main() { vec3 baseTex = texture2D(uColorTex, vUv).rgb; vec3 col = vColor * baseTex; float macro = fbm(vWorldPos.xz * 0.015); col *= 0.85 + macro * 0.35; float grain = fbm(vWorldPos.xz * 1.2); col *= 0.88 + grain * 0.25; vec3 mapN = texture2D(uNormalMap, vUv).rgb * 2.0 - 1.0; vec3 N = normalize(vNormal + mapN * 0.35); float diff = max(dot(N, uSunDir), 0.0); float spec = pow(max(dot(reflect(-uSunDir, N), normalize(-vWorldPos)), 0.0), 32.0) * 0.05; vec3 ambient = uAmbient * 0.35; float ao = smoothstep(-2.0, 6.0, vHeight) * (1.0 - vSlope * 0.6); ao = mix(0.45, 1.0, ao); vec3 finalCol = col * (ambient * ao + uSunColor * diff * 1.1) + uSunColor * spec; float fogFactor = smoothstep(uFogNear, uFogFar, vFogDepth); finalCol = mix(finalCol, uFogColor, fogFactor); gl_FragColor = vec4(finalCol, 1.0); }`,
     vertexColors: true
@@ -542,7 +670,7 @@ async function startGame(levelNum) {
 
   const waterMat = new THREE.ShaderMaterial({
     transparent: true,
-    uniforms: { uTime:{ value: 0 }, uSunDir:{ value: new THREE.Vector3(70, 90, 40).normalize() }, uSunColor:{ value: new THREE.Color(0xffe2a8) }, uDeep:{ value: new THREE.Color(0x0a3a5a) }, uShallow:{ value: new THREE.Color(0x4fa8d4) }, uFogColor:{ value: new THREE.Color(CFG.fogColor) }, uFogNear:{ value: 120.0 }, uFogFar:{ value: 420.0 } },
+    uniforms: { uTime:{ value: 0 }, uSunDir:{ value: new THREE.Vector3(120, 160, 80).normalize() }, uSunColor:{ value: new THREE.Color(0xffe2a8) }, uDeep:{ value: new THREE.Color(0x0a3a5a) }, uShallow:{ value: new THREE.Color(0x4fa8d4) }, uFogColor:{ value: new THREE.Color(CFG.fogColor) }, uFogNear:{ value: 220.0 }, uFogFar:{ value: 820.0 } },
     vertexShader: `uniform float uTime; varying vec3 vWorldPos; varying vec3 vNormal; varying float vFogDepth; vec3 gerstner(vec2 p, float t){ float w1 = sin(dot(p, vec2(0.15, 0.08)) + t * 1.2) * 0.15; float w2 = sin(dot(p, vec2(-0.10, 0.18)) + t * 1.7) * 0.10; float w3 = sin(dot(p, vec2(0.25, 0.02)) + t * 2.2) * 0.07; return vec3(0.0, w1 + w2 + w3, 0.0); } void main() { vec3 disp = gerstner(position.xz, uTime); vec3 pos = position + disp; float e = 0.5; vec3 px = gerstner(position.xz + vec2(e, 0.0), uTime); vec3 pz = gerstner(position.xz + vec2(0.0, e), uTime); vec3 tx = vec3(e, px.y - disp.y, 0.0); vec3 tz = vec3(0.0, pz.y - disp.y, e); vNormal = normalize(cross(tz, tx)); vec4 wp = modelMatrix * vec4(pos, 1.0); vWorldPos = wp.xyz; vec4 mv = modelViewMatrix * vec4(pos, 1.0); vFogDepth = -mv.z; gl_Position = projectionMatrix * mv; }`,
     fragmentShader: `uniform float uTime; uniform vec3 uSunDir, uSunColor, uDeep, uShallow, uFogColor; uniform float uFogNear, uFogFar; varying vec3 vWorldPos, vNormal; varying float vFogDepth; void main() { vec3 N = normalize(vNormal); vec3 V = normalize(cameraPosition - vWorldPos); float fres = pow(1.0 - max(dot(N, V), 0.0), 3.0); float depth = smoothstep(0.0, 1.2, vWorldPos.y - 0.4); vec3 waterCol = mix(uShallow, uDeep, depth); vec3 H = normalize(uSunDir + V); float spec = pow(max(dot(N, H), 0.0), 220.0) * 2.5; vec3 sunSpec = uSunColor * spec; float foam = smoothstep(0.12, 0.18, N.y - 0.7) * 0.3; vec3 col = mix(waterCol, vec3(0.75, 0.88, 0.98), fres * 0.55) + sunSpec + vec3(foam); float fogFactor = smoothstep(uFogNear, uFogFar, vFogDepth); col = mix(col, uFogColor, fogFactor); gl_FragColor = vec4(col, 0.92); }`
   });
@@ -550,7 +678,7 @@ async function startGame(levelNum) {
   water.rotation.x = -Math.PI / 2; water.position.y = WATER_LEVEL; scene.add(water);
 
   /* --- HIERBA MÁS PEQUEÑA Y NUMEROSA --- */
-  const GRASS_COUNT = CFG.grassCount;
+  const GRASS_COUNT = CFG.grassCount * 4;   // ×4 para cubrir el área ×4
   const grassGeom = new THREE.BufferGeometry();
   // Briznas más pequeñas (altura ~0.35)
   const gv = new Float32Array([
@@ -565,10 +693,10 @@ async function startGame(levelNum) {
   const grassMat = new THREE.ShaderMaterial({
     uniforms: {
       uTime:{ value: 0 },
-      uSunDir:{ value: new THREE.Vector3(70,90,40).normalize() },
+      uSunDir:{ value: new THREE.Vector3(120,160,80).normalize() },
       uFogColor:{ value: new THREE.Color(CFG.fogColor) },
-      uFogNear:{ value: 120.0 },
-      uFogFar:{ value: 420.0 },
+      uFogNear:{ value: 220.0 },
+      uFogFar:{ value: 820.0 },
       uGrassBase: { value: new THREE.Color(gBase[0], gBase[1], gBase[2]) },
       uGrassTip:  { value: new THREE.Color(gTip[0], gTip[1], gTip[2]) }
     },
@@ -595,7 +723,7 @@ async function startGame(levelNum) {
   scene.add(grass);
 
   /* --- FLORES VIOLETAS Y ROSAS --- */
-  const FLOWER_COUNT = CFG.flowerCount;
+  const FLOWER_COUNT = CFG.flowerCount * 4;
   const flowerGeom = new THREE.BufferGeometry();
   // Tallo vertical pequeño + esfera de pétalos encima
   const fv = [];
@@ -622,10 +750,10 @@ async function startGame(levelNum) {
   const flowerMat = new THREE.ShaderMaterial({
     uniforms: {
       uTime:{ value: 0 },
-      uSunDir:{ value: new THREE.Vector3(70,90,40).normalize() },
+      uSunDir:{ value: new THREE.Vector3(120,160,80).normalize() },
       uFogColor:{ value: new THREE.Color(CFG.fogColor) },
-      uFogNear:{ value: 120.0 },
-      uFogFar:{ value: 420.0 }
+      uFogNear:{ value: 220.0 },
+      uFogFar:{ value: 820.0 }
     },
     vertexShader: `uniform float uTime; varying float vFogDepth; varying float vIsPetal; varying vec3 vNormal; void main() { vec3 p = position; float sway = sin(uTime * 2.0 + instanceMatrix[3][0] * 0.5 + instanceMatrix[3][2] * 0.4) * 0.05; p.x += sway * p.y * 2.0; p.z += cos(uTime * 1.8 + instanceMatrix[3][2] * 0.6) * p.y * 1.5; vec4 mvPos = modelViewMatrix * instanceMatrix * vec4(p, 1.0); vFogDepth = -mvPos.z; vIsPetal = step(0.15, p.y); vNormal = normalize(mat3(instanceMatrix) * normal); gl_Position = projectionMatrix * mvPos; }`,
     fragmentShader: `uniform vec3 uSunDir, uFogColor; uniform float uFogNear, uFogFar; varying float vFogDepth, vIsPetal; varying vec3 vNormal;
@@ -712,23 +840,23 @@ async function startGame(levelNum) {
     scene.add(g);
   }
 
-  // Árbol según nivel
+  // Árbol según nivel (×3 para cubrir el mapa ×4 sin saturar)
   if (levelNum === 3) {
     // Desierto: cactus
-    for (let i = 0; i < CFG.treeCount; i++) {
+    for (let i = 0; i < CFG.treeCount * 3; i++) {
       const x = (Math.random() - 0.5) * (WORLD_SIZE - 16), z = (Math.random() - 0.5) * (WORLD_SIZE - 16);
       const h = getHeight(x, z);
       if (h > WATER_LEVEL + 1.0 && h < 9 && Math.hypot(x, z) > 16) makeCactus(x, z);
     }
   } else {
-    for (let i = 0; i < CFG.treeCount; i++) {
+    for (let i = 0; i < CFG.treeCount * 3; i++) {
       const x = (Math.random() - 0.5) * (WORLD_SIZE - 16), z = (Math.random() - 0.5) * (WORLD_SIZE - 16);
       const h = getHeight(x, z);
       if (h > WATER_LEVEL + 1.0 && h < 9 && Math.hypot(x, z) > 16) makeTree(x, z);
     }
   }
 
-  for (let i = 0; i < CFG.rockCount; i++) {
+  for (let i = 0; i < CFG.rockCount * 3; i++) {
     const x = (Math.random() - 0.5) * (WORLD_SIZE - 16), z = (Math.random() - 0.5) * (WORLD_SIZE - 16);
     const h = getHeight(x, z);
     if (h < WATER_LEVEL + 0.3 || Math.hypot(x, z) < 14) continue;
@@ -758,8 +886,8 @@ async function startGame(levelNum) {
   }
 
   /* --- REY PIXEL ART (sprite 2.5D generado por código) --- */
-  const KING_HEIGHT = 2.6;
-  const PX = 32, FRAME_COUNT = 12;
+  const KING_HEIGHT = 4.8;
+  const PX = 48, FRAME_COUNT = 12;
   const IDLE = [0, 1], WALK = [2, 3, 4, 5], ATTACK = [6, 7, 8, 9, 10], BLOCK = 11;
 
   const king = new THREE.Group();
@@ -768,15 +896,18 @@ async function startGame(levelNum) {
 
   let mouseAttackQueued = false, mouseBlockHeld = false;
 
-  // ---- Paleta del rey: capa blanca, corona y armadura dorada ----
+  // ---- Paleta del rey extendida (más matices y detalles) ----
   const PAL = {
-    'k': '#14141c', 's': '#e8b48c', 'S': '#c98d66',
-    'g': '#ffd75e', 'G': '#d9a733', 'd': '#9a741f',
-    'w': '#f4f4f8', 'W': '#cdd2de',
-    'b': '#2b3f92', 'B': '#1d2c66',
-    'm': '#8d99a6', 'M': '#dfe6ee',
-    'e': '#22222c', 'r': '#a83232', 'y': '#6b4a2b',
-    'c': '#3a6ea8', 'C': '#274d78'
+    'k': '#0f0f17', 'ks': '#2a2a38',        // contornos negro y gris
+    's': '#e8b48c', 'S': '#c98d66', 'sk': '#f5cba8', // piel (base, sombra, luz)
+    'g': '#ffd75e', 'G': '#d9a733', 'd': '#9a741f',  // oro (claro, medio, oscuro)
+    'w': '#f4f4f8', 'W': '#cdd2de', 'WW': '#9aa0ae', // blanco y grises de la capa
+    'b': '#2b3f92', 'B': '#1d2c66',                   // azul armadura
+    'm': '#8d99a6', 'M': '#dfe6ee',                   // acero
+    'e': '#22222c', 'ew': '#ffffff',                  // ojos (pupila y blanco)
+    'r': '#a83232', 'R': '#d84545', 'cr': '#e62e2e',  // rojos (tela, sangre, rubí)
+    'y': '#6b4a2b', 'Y': '#8a6840',                   // madera (empuñadura)
+    'c': '#3a6ea8', 'C': '#274d78'                    // azul escudo
   };
 
   const atlas = document.createElement('canvas');
@@ -789,64 +920,159 @@ async function startGame(levelNum) {
     const R = (x, y, w, h, c) => { for (let i = 0; i < w; i++) for (let j = 0; j < h; j++) P(x + i, y + j, c); };
     const b = p.breathe || 0;
 
-    // Capa blanca (detrás)
-    R(11, 11 + b, 10, 13, 'w');
-    R(11, 11 + b, 1, 13, 'W');
-    R(20, 11 + b, 1, 13, 'W');
-    R(11 + (p.cape || 0), 24, 10, 1, 'W');
+    // ============ CAPA BLANCA (detrás) ============
+    R(13, 16 + b, 22, 22, 'w');
+    R(13, 16 + b, 1, 22, 'W');  R(34, 16 + b, 1, 22, 'W');
+    R(13, 16 + b, 22, 1, 'W');
+    R(13 + (p.cape || 0), 37 + b, 22, 1, 'W');
+    // Pliegues de la capa
+    R(17, 20 + b, 1, 16, 'WW');
+    R(21, 22 + b, 1, 14, 'WW');
+    R(27, 22 + b, 1, 14, 'WW');
+    R(31, 20 + b, 1, 16, 'WW');
+    // Broche dorado en el cuello
+    R(22, 16 + b, 4, 2, 'g'); P(23, 16 + b, 'G'); P(24, 16 + b, 'G');
 
-    // Piernas
-    const leg = (x, lift) => { R(x, 17, 2, 9 - lift, 'B'); R(x, 26 - lift, 2, 2, 'k'); };
-    leg(13, p.legL || 0); leg(17, p.legR || 0);
+    // ============ PIERNAS (armadura azul) ============
+    const leg = (x, lift) => {
+      R(x, 30, 4, 10 - lift, 'B');
+      R(x, 30, 4, 1, 'b');              // rodillera
+      R(x + 1, 30, 2, 1, 'm');          // detalle metálico
+      R(x, 40 - lift, 4, 3, 'k');       // botas negras
+      R(x + 1, 40 - lift, 2, 1, 'Y');   // hebilla
+      R(x, 30, 1, 10 - lift, 'ks');     // brillo lateral
+    };
+    leg(18, p.legL || 0);
+    leg(26, p.legR || 0);
 
-    // Manos
-    P(10, 14 + b, 's'); P(21, 14 + b, 's');
+    // ============ TORSO (armadura dorada con emblema) ============
+    R(16, 18 + b, 16, 13, 'G');
+    R(16, 18 + b, 16, 1, 'g');
+    R(16, 30 + b, 16, 1, 'd');
+    // Placa pectoral con emblema (cruz real)
+    R(21, 20 + b, 6, 8, 'g');
+    R(21, 20 + b, 6, 1, 'sk');
+    R(23, 21 + b, 2, 6, 'r');   // cruz vertical
+    R(21, 23 + b, 6, 2, 'r');   // cruz horizontal
+    P(23, 23 + b, 'R'); P(24, 23 + b, 'R'); P(23, 24 + b, 'R'); P(24, 24 + b, 'R');
+    // Cinturón
+    R(16, 28 + b, 16, 1, 'k');
+    P(23, 28 + b, 'g'); P(24, 28 + b, 'g'); P(22, 28 + b, 'G'); P(25, 28 + b, 'G');
+    // Detalles laterales
+    R(16, 18 + b, 1, 13, 'd');
+    R(31, 18 + b, 1, 13, 'd');
 
-    // Torso: armadura dorada
-    R(12, 10 + b, 8, 7, 'G');
-    R(12, 10 + b, 8, 1, 'g');
-    R(12, 15 + b, 8, 1, 'd');
-    R(12, 17, 8, 1, 'k'); P(15, 17, 'g'); P(16, 17, 'g');
-    P(15, 12 + b, 'r'); P(16, 12 + b, 'r');
+    // ============ HOMBROS (hombreras doradas detalladas) ============
+    R(13, 18 + b, 3, 4, 'G'); P(13, 18 + b, 'g'); P(15, 18 + b, 'g');
+    R(32, 18 + b, 3, 4, 'G'); P(32, 18 + b, 'g'); P(34, 18 + b, 'g');
+    P(14, 19 + b, 'M'); P(33, 19 + b, 'M');  // remaches
 
-    // Hombreras doradas
-    R(10, 10 + b, 2, 3, 'G'); P(10, 10 + b, 'g');
-    R(20, 10 + b, 2, 3, 'G'); P(21, 10 + b, 'g');
+    // ============ BRAZOS ============
+    R(13, 22 + b, 3, 8, 'b');   // brazo izquierdo (azul)
+    R(32, 22 + b, 3, 8, 'b');   // brazo derecho (azul)
+    R(13, 22 + b, 1, 8, 'ks');  // brillo
+    R(34, 22 + b, 1, 8, 'ks');
+    // Manos (piel)
+    P(13, 30 + b, 's'); P(14, 30 + b, 's'); P(15, 30 + b, 's');
+    P(32, 30 + b, 's'); P(33, 30 + b, 's'); P(34, 30 + b, 's');
 
-    // Cabeza + barba blanca
-    R(13, 4 + b, 6, 6, 's');
-    R(13, 4 + b, 1, 6, 'S');
-    P(15, 6 + b, 'e'); P(17, 6 + b, 'e');
-    R(14, 8 + b, 4, 2, 'w');
+    // ============ CABEZA ============
+    R(21, 16 + b, 6, 2, 's');              // cuello
+    R(18, 7 + b, 12, 10, 's');             // cara
+    R(18, 7 + b, 1, 10, 'S');              // sombra izq
+    R(29, 7 + b, 1, 10, 'S');              // sombra der
+    R(22, 7 + b, 4, 1, 'sk');              // brillo frente
+    // Cabello blanco (lados)
+    R(17, 7 + b, 1, 7, 'W'); R(30, 7 + b, 1, 7, 'W');
+    // Cejas
+    R(19, 9 + b, 3, 1, 'W'); R(26, 9 + b, 3, 1, 'W');
+    // Ojos (blanco + pupila)
+    P(20, 11 + b, 'ew'); P(21, 11 + b, 'e');
+    P(26, 11 + b, 'ew'); P(27, 11 + b, 'e');
+    // Nariz
+    P(23, 13 + b, 'S'); P(24, 13 + b, 'S');
+    // Boca (bajo la barba)
+    P(23, 15 + b, 'R'); P(24, 15 + b, 'R');
+    // Barba blanca majestuosa (con textura)
+    R(18, 14 + b, 12, 5, 'w');
+    R(18, 14 + b, 1, 5, 'W');  R(29, 14 + b, 1, 5, 'W');
+    R(20, 19 + b, 8, 1, 'W');  R(22, 20 + b, 4, 1, 'W');
+    // Detalle bigote
+    R(21, 14 + b, 2, 1, 'W'); R(25, 14 + b, 2, 1, 'W');
 
-    // Corona
-    R(12, 3 + b, 8, 1, 'G');
-    P(12, 2 + b, 'g'); P(14, 2 + b, 'g'); P(16, 2 + b, 'g'); P(18, 2 + b, 'g');
-    P(15, 3 + b, 'r');
+    // ============ CORONA (5 picos con joyas) ============
+    R(17, 5 + b, 14, 2, 'G');
+    R(17, 5 + b, 14, 1, 'g');
+    // Picos (5 picos)
+    P(17, 4 + b, 'g'); P(17, 3 + b, 'g'); P(17, 2 + b, 'g');
+    P(20, 4 + b, 'g'); P(20, 3 + b, 'g'); P(20, 2 + b, 'g');
+    P(23, 4 + b, 'g'); P(23, 2 + b, 'g'); P(24, 2 + b, 'g');
+    P(27, 4 + b, 'g'); P(27, 3 + b, 'g'); P(27, 2 + b, 'g');
+    P(30, 4 + b, 'g'); P(30, 3 + b, 'g'); P(30, 2 + b, 'g');
+    // Perlas en los picos
+    P(17, 1 + b, 'M'); P(20, 1 + b, 'M'); P(24, 1 + b, 'M');
+    P(27, 1 + b, 'M'); P(30, 1 + b, 'M');
+    // Rubí central y laterales
+    P(23, 3 + b, 'cr'); P(24, 3 + b, 'cr');
+    P(20, 5 + b, 'r'); P(27, 5 + b, 'r');
+    // Diamantes pequeños
+    P(18, 5 + b, 'M'); P(29, 5 + b, 'M');
 
-    // Escudo
+    // ============ ESCUDO ============
     if (p.shieldUp) {
-      R(12, 8, 9, 9, 'c');
-      R(12, 8, 9, 1, 'C'); R(12, 16, 9, 1, 'C'); R(12, 8, 1, 9, 'C'); R(20, 8, 1, 9, 'C');
-      R(15, 11, 2, 2, 'g');
+      R(16, 14 + b, 16, 14, 'c');
+      R(16, 14 + b, 16, 1, 'C'); R(16, 27 + b, 16, 1, 'C');
+      R(16, 14 + b, 1, 14, 'C'); R(31, 14 + b, 1, 14, 'C');
+      R(31, 14 + b, 1, 14, 'C');
+      // Emblema heráldico (cruz con borde dorado)
+      R(22, 17 + b, 4, 8, 'g');
+      R(19, 20 + b, 10, 2, 'g');
+      R(23, 18 + b, 2, 6, 'G');
+      R(20, 20 + b, 8, 1, 'G');
+      // Remaches
+      P(17, 15 + b, 'M'); P(30, 15 + b, 'M');
+      P(17, 26 + b, 'M'); P(30, 26 + b, 'M');
     } else {
-      R(8, 11 + b, 4, 6, 'c');
-      R(8, 11 + b, 4, 1, 'C'); R(8, 16 + b, 4, 1, 'C'); R(8, 11 + b, 1, 6, 'C'); R(11, 11 + b, 1, 6, 'C');
-      R(9, 13 + b, 2, 2, 'g');
+      R(10, 22 + b, 7, 12, 'c');
+      R(10, 22 + b, 7, 1, 'C'); R(10, 33 + b, 7, 1, 'C');
+      R(10, 22 + b, 1, 12, 'C'); R(16, 22 + b, 1, 12, 'C');
+      // Emblema
+      R(12, 25 + b, 3, 6, 'g');
+      R(11, 27 + b, 5, 2, 'g');
+      R(13, 26 + b, 1, 4, 'G');
+      R(12, 27 + b, 3, 1, 'G');
+      P(10, 23 + b, 'M'); P(16, 23 + b, 'M');
     }
 
-    // Espada (línea de píxeles según ángulo)
-    const hx = 21, hy = 14 + b;
+    // ============ ESPADA (más detallada) ============
+    const hx = 34, hy = 30 + b;
     const a = (p.sword === undefined ? 110 : p.sword) * Math.PI / 180;
     const dx = Math.cos(a), dy = Math.sin(a);
-    for (let i = 1; i <= 9; i++) P(hx + Math.round(dx * i), hy + Math.round(dy * i), i >= 7 ? 'M' : 'm');
+    // Pomo
+    P(hx - Math.round(dx * 2), hy - Math.round(dy * 2), 'g');
+    // Empuñadura
+    P(hx - Math.round(dx), hy - Math.round(dy), 'y');
+    P(hx, hy, 'y');
+    // Guarda (cruz)
     P(hx + Math.round(-dy), hy + Math.round(dx), 'g');
     P(hx - Math.round(-dy), hy - Math.round(dx), 'g');
-    P(hx - Math.round(dx), hy - Math.round(dy), 'y');
+    P(hx + Math.round(-dy * 1.5), hy + Math.round(dx * 1.5), 'G');
+    P(hx - Math.round(-dy * 1.5), hy - Math.round(dx * 1.5), 'G');
+    // Hoja larga con reflejo
+    for (let i = 1; i <= 16; i++) {
+      const px = hx + Math.round(dx * i);
+      const py = hy + Math.round(dy * i);
+      P(px, py, i >= 13 ? 'M' : 'm');
+      if (i % 2 === 0 && i < 13) P(px + Math.round(-dy * 0.5), py + Math.round(dx * 0.5), 'M');
+    }
+    // Punta brillante
+    P(hx + Math.round(dx * 17), hy + Math.round(dy * 17), 'ew');
 
-    // Estela del tajo
+    // ============ ESTELA DEL TAJO ============
     if (p.trail) {
-      for (let i = 3; i <= 9; i += 2) P(hx + Math.round(Math.cos(a - 0.5) * i), hy + Math.round(Math.sin(a - 0.5) * i), 'M');
+      for (let i = 5; i <= 15; i += 2) {
+        P(hx + Math.round(Math.cos(a - 0.5) * i), hy + Math.round(Math.sin(a - 0.5) * i), 'M');
+      }
     }
   }
 
@@ -910,6 +1136,510 @@ async function startGame(levelNum) {
     kingMesh.rotation.y = yaw - king.rotation.y;
   }
 
+  /* ============================================================
+     SISTEMA DE CONSTRUCCIÓN (tecla C)
+  ============================================================ */
+  const BUILDINGS_PATH = 'assets/structures/buildings/blue/';
+  const BUILDINGS = [
+    { id: 'archeryrange', name: 'Arquería',         icon: '🏹', size: 9,  hp: 400, desc: 'Entrena arqueros de élite para defensa a distancia.',      file: 'building_archeryrange_blue.gltf' },
+    { id: 'barracks',     name: 'Cuarteles',        icon: '⚔️', size: 9,  hp: 450, desc: 'Forma soldados de infantería para el reino.',               file: 'building_barracks_blue.gltf' },
+    { id: 'blacksmith',   name: 'Herrería',         icon: '🔨', size: 7,  hp: 350, desc: 'Forja armas y armaduras para tus tropas.',                  file: 'building_blacksmith_blue.gltf' },
+    { id: 'castle',       name: 'Castillo',         icon: '🏰', size: 14, hp: 1200,desc: 'Fortaleza central del reino. Difícil de destruir.',         file: 'building_castle_blue.gltf' },
+    { id: 'church',       name: 'Iglesia',          icon: '⛪', size: 9,  hp: 500, desc: 'Templo sagrado que cura a los heridos cercanos.',           file: 'building_church_blue.gltf' },
+    { id: 'home_A',       name: 'Casa A',           icon: '🏠', size: 6,  hp: 200, desc: 'Vivienda humilde de los aldeanos del reino.',               file: 'building_home_A_blue.gltf' },
+    { id: 'home_B',       name: 'Casa B',           icon: '🏡', size: 6,  hp: 220, desc: 'Casa de campo confortable y acogedora.',                    file: 'building_home_B_blue.gltf' },
+    { id: 'lumbermill',   name: 'Aserradero',       icon: '🪵', size: 8,  hp: 380, desc: 'Produce madera aprovechando los bosques cercanos.',         file: 'building_lumbermill_blue.gltf' },
+    { id: 'market',       name: 'Mercado',          icon: '⛺', size: 10, hp: 300, desc: 'Centro de comercio e intercambio de bienes.',               file: 'building_market_blue.gltf' },
+    { id: 'mine',         name: 'Mina',             icon: '⛏️', size: 6,  hp: 420, desc: 'Extrae piedra y minerales de las entrañas de la tierra.',   file: 'building_mine_blue.gltf' },
+    { id: 'tavern',       name: 'Taberna',          icon: '🍺', size: 8,  hp: 280, desc: 'Recluta mercenarios y aventureros errantes.',               file: 'building_tavern_blue.gltf' },
+    { id: 'tower_A',      name: 'Torre A',          icon: '🗼', size: 5,  hp: 500, desc: 'Torre de vigilancia ligera, buena visión.',                 file: 'building_tower_A_blue.gltf' },
+    { id: 'tower_B',      name: 'Torre B',          icon: '🏯', size: 5,  hp: 600, desc: 'Torre defensiva fortificada con almenas.',                  file: 'building_tower_B_blue.gltf' },
+    { id: 'watermill',    name: 'Molino de agua',   icon: '💧', size: 7,  hp: 320, desc: 'Muele grano aprovechando la fuerza del río.',               file: 'building_watermill_blue.gltf' },
+    { id: 'well',         name: 'Pozo',             icon: '🪣', size: 3,  hp: 150, desc: 'Fuente de agua potable para los aldeanos.',                 file: 'building_well_blue.gltf' },
+    { id: 'windmill',     name: 'Molino de viento', icon: '🌬️', size: 7,  hp: 300, desc: 'Muele grano aprovechando la fuerza del viento.',            file: 'building_windmill_blue.gltf' }
+  ];
+
+  // Murallas y vallas "neutral" (formato .gltf; su .bin y textura se cargan solos)
+  const WALLS_PATH = 'assets/structures/buildings/neutral/';
+  const WALLS = [
+    { id: 'wall_straight',             name: 'Muralla recta',        icon: '🧱', size: 6, hp: 400, desc: 'Tramo recto de muralla defensiva.',                 file: 'wall_straight.gltf' },
+    { id: 'wall_straight_gate',        name: 'Muralla c/ puerta',    icon: '🚪', size: 6, hp: 450, desc: 'Muralla con portón de acceso al recinto.',          file: 'wall_straight_gate.gltf' },
+    { id: 'wall_corner_A_gate',        name: 'Esquina A c/ puerta',  icon: '🏰', size: 6, hp: 500, desc: 'Esquina fortificada con portón lateral.',           file: 'wall_corner_A_gate.gltf' },
+    { id: 'wall_corner_A_inside',      name: 'Esquina A int.',       icon: '📐', size: 6, hp: 400, desc: 'Esquina interior de muralla.',                      file: 'wall_corner_A_inside.gltf' },
+    { id: 'wall_corner_A_outside',     name: 'Esquina A ext.',       icon: '📐', size: 6, hp: 400, desc: 'Esquina exterior de muralla.',                      file: 'wall_corner_A_outside.gltf' },
+    { id: 'wall_corner_B_inside',      name: 'Esquina B int.',       icon: '📏', size: 6, hp: 420, desc: 'Esquina B interior reforzada.',                     file: 'wall_corner_B_inside.gltf' },
+    { id: 'wall_corner_B_outside',     name: 'Esquina B ext.',       icon: '📏', size: 6, hp: 420, desc: 'Esquina B exterior reforzada.',                     file: 'wall_corner_B_outside.gltf' },
+    { id: 'fence_stone_straight',      name: 'Valla de piedra',      icon: '🪨', size: 6, hp: 200, desc: 'Valla simple de piedra, fácil de derribar.',        file: 'fence_stone_straight.gltf' },
+    { id: 'fence_stone_straight_gate', name: 'Valla piedra c/ pta.', icon: '🪨', size: 6, hp: 220, desc: 'Valla de piedra con pequeño portón.',               file: 'fence_stone_straight_gate.gltf' },
+    { id: 'fence_wood_straight',       name: 'Valla de madera',      icon: '🪵', size: 6, hp: 120, desc: 'Valla liviana de madera, muy frágil.',              file: 'fence_wood_straight.gltf' },
+    { id: 'fence_wood_straight_gate',  name: 'Valla madera c/ pta.', icon: '🪵', size: 6, hp: 140, desc: 'Valla de madera con portón pequeño.',               file: 'fence_wood_straight_gate.gltf' }
+  ];
+
+  // Lista unificada: cada elemento sabe su carpeta y en qué rejilla del menú va
+  const ALL_STRUCTURES = [
+    ...BUILDINGS.map(b => ({ ...b, path: BUILDINGS_PATH, grid: 'build-grid' })),
+    ...WALLS.map(w => ({ ...w, path: WALLS_PATH, grid: 'walls-grid' }))
+  ];
+
+  const UP = new THREE.Vector3(0, 1, 0);
+
+  const buildMenuEl  = document.getElementById('build-menu');
+  const buildGridEl  = document.getElementById('build-grid');
+  const buildHintEl  = document.getElementById('build-hint');
+  const buildHintNameEl = document.getElementById('build-hint-name');
+
+  const build = { placing: null, ghost: null, ghostOffset: null, ghostScale: 1, ok: false, models: {} };
+
+  const ghostMatOk  = new THREE.MeshBasicMaterial({ color: 0x39ff5a, transparent: true, opacity: 0.5, depthWrite: false });
+  const ghostMatBad = new THREE.MeshBasicMaterial({ color: 0xff4040, transparent: true, opacity: 0.5, depthWrite: false });
+
+  /* ============================================================
+     SISTEMA DE ESTRUCTURAS: colisión, vida, daño y destrucción
+  ============================================================ */
+  const structures = [];                 // { mesh, def, hp, maxHp, healthBar, radius }
+  let selectedStructure = null;
+  const KING_ATTACK_RANGE = 5.5;         // alcance del espadazo del rey
+  const KING_ATTACK_DAMAGE = 35;         // daño por golpe
+  const KING_RADIUS = 1.0;               // radio de colisión del rey
+
+  // Crea una barra de vida 3D (siempre mira a la cámara)
+  function createHealthBar3D() {
+    const group = new THREE.Group();
+    const bg = new THREE.Mesh(
+      new THREE.PlaneGeometry(2.2, 0.28),
+      new THREE.MeshBasicMaterial({ color: 0x1a0808, transparent: true, opacity: 0.85, side: THREE.DoubleSide, depthTest: false })
+    );
+    group.add(bg);
+    const fg = new THREE.Mesh(
+      new THREE.PlaneGeometry(2.1, 0.20),
+      new THREE.MeshBasicMaterial({ color: 0x39ff5a, side: THREE.DoubleSide, depthTest: false })
+    );
+    fg.position.z = 0.02;
+    group.add(fg);
+    group.userData.fg = fg;
+    group.renderOrder = 999;
+    bg.renderOrder = 999;
+    fg.renderOrder = 999;
+    return group;
+  }
+
+function addStructure(bld, def) {
+    const bar = createHealthBar3D();
+    bld.add(bar);
+    bld.updateMatrixWorld(true);
+    const box = new THREE.Box3().setFromObject(bld);
+    bar.position.y = (box.max.y - bld.position.y) + 0.8;
+
+    // --- 🚪 Detectar todas las hojas de puerta del modelo GLB ---
+    const doorLeaves = [];
+    bld.traverse(o => {
+      if (o.isMesh) {
+        const n = (o.name || '').toLowerCase();
+        if (n.includes('door') || n.includes('gate') || n.includes('puerta') || 
+            n.includes('porton') || n.includes('portón') || n.includes('flap') || 
+            n.includes('leaf') || n.includes('panel') || n.includes('portcullis')) {
+          
+          // Calcular bounding box de la hoja
+          const box = new THREE.Box3().setFromObject(o);
+          const size = box.getSize(new THREE.Vector3());
+          const center = new THREE.Vector3();
+          box.getCenter(center);
+          const localCenter = bld.worldToLocal(center.clone());
+          
+          // 🎯 Calcular posición de la bisagra (borde lateral de la puerta)
+          // Para puertas dobles: hoja izq gira en su borde derecho, hoja der en su borde izquierdo
+          // Para puerta simple: gira en uno de sus bordes laterales
+          const halfWidth = size.x / 2;
+          const pivotOffset = new THREE.Vector3();
+          
+          // La bisagra está en el borde de la puerta (no en el centro)
+          // Si hay dos hojas, la bisagra está en el borde interior (lado opuesto al centro del vano)
+          if (doorLeaves.length === 0) {
+            // Primera hoja detectada - por ahora asumimos bisagra en el borde
+            pivotOffset.x = halfWidth; // pivote en el borde derecho de esta hoja
+          }
+          
+          // Crear un pivote (Object3D) en la posición de la bisagra
+          const pivot = new THREE.Object3D();
+          const worldCenter = center.clone();
+          const worldPivot = worldCenter.clone();
+          worldPivot.x += halfWidth; // mover al borde de la puerta
+          
+          const localPivot = bld.worldToLocal(worldPivot);
+          pivot.position.copy(localPivot);
+          
+          // Re-parentar el mesh al pivote
+          const originalParent = o.parent;
+          const originalPosition = o.position.clone();
+          const originalRotation = o.rotation.clone();
+          
+          originalParent.remove(o);
+          pivot.add(o);
+          bld.add(pivot);
+          
+          // Ajustar posición del mesh respecto al pivote
+          o.position.set(-halfWidth, originalPosition.y - localPivot.y, originalPosition.z - localPivot.z);
+          o.rotation.copy(originalRotation);
+          
+          doorLeaves.push({
+            pivot: pivot,              // El pivote que vamos a rotar
+            mesh: o,                   // El mesh de la puerta
+            baseRot: pivot.rotation.y,
+            targetRot: pivot.rotation.y,
+            localPos: localCenter,
+          });
+        }
+      }
+    });
+
+    // Si hay varias hojas, identificar izquierda/derecha por posición X local
+    if (doorLeaves.length >= 2) {
+      doorLeaves.sort((a, b) => a.localPos.x - b.localPos.x);
+      
+      // Re-calcular pivotes correctamente para puertas dobles
+      // Hoja izquierda (X menor): pivote en su borde derecho
+      // Hoja derecha (X mayor): pivote en su borde izquierdo
+      
+      for (let i = 0; i < doorLeaves.length; i++) {
+        const leaf = doorLeaves[i];
+        const isLeft = (i === 0); // primera es izquierda
+        
+        // Obtener bounding box del mesh actual
+        leaf.mesh.geometry.computeBoundingBox();
+        const meshBox = leaf.mesh.geometry.boundingBox.clone();
+        const meshSize = meshBox.getSize(new THREE.Vector3());
+        
+        // Reposicionar el pivote según sea hoja izquierda o derecha
+        if (isLeft) {
+          // Hoja izquierda: pivote en su borde derecho
+          leaf.pivot.position.x += meshSize.x / 2;
+          leaf.mesh.position.x = -meshSize.x / 2;
+          leaf.isLeft = true;
+        } else {
+          // Hoja derecha: pivote en su borde izquierdo
+          leaf.pivot.position.x -= meshSize.x / 2;
+          leaf.mesh.position.x = meshSize.x / 2;
+          leaf.isLeft = false;
+        }
+      }
+    } else if (doorLeaves.length === 1) {
+      // Puerta de una sola hoja: pivote en el borde izquierdo (convención)
+      const leaf = doorLeaves[0];
+      leaf.mesh.geometry.computeBoundingBox();
+      const meshBox = leaf.mesh.geometry.boundingBox.clone();
+      const meshSize = meshBox.getSize(new THREE.Vector3());
+      
+      // Ajustar pivote al borde izquierdo
+      leaf.pivot.position.x -= meshSize.x / 2;
+      leaf.mesh.position.x = meshSize.x / 2;
+      leaf.isLeft = true;
+    }
+
+    // Calcular centro global de todas las hojas (para la zona de paso)
+    let doorLocalPos = null;
+    if (doorLeaves.length > 0) {
+      const sum = new THREE.Vector3();
+      for (const leaf of doorLeaves) sum.add(leaf.localPos);
+      sum.divideScalar(doorLeaves.length);
+      doorLocalPos = sum;
+    }
+
+    const data = {
+      mesh: bld,
+      def: def,
+      hp: def.hp,
+      maxHp: def.hp,
+      healthBar: bar,
+      radius: def.size * 0.45,
+      doorLeaves: doorLeaves,            // array de hojas detectadas
+      doorOpen: false,                   // estado actual (abierta/cerrada)
+      doorLocalPos: doorLocalPos,        // centro del vano para la colisión
+    };
+    structures.push(data);
+
+    // Referencia en cada mesh para raycasting
+    bld.traverse(o => { if (o.isMesh) o.userData.structureData = data; });
+
+    // Ocultar barra si está al 100%
+    updateHealthBar3D(data);
+    return data;
+  }
+
+  function updateHealthBar3D(s) {
+    const ratio = s.hp / s.maxHp;
+    s.healthBar.userData.fg.scale.x = Math.max(0.001, ratio);
+    s.healthBar.userData.fg.position.x = -(1 - ratio) * 1.05;
+    let color;
+    if (ratio > 0.6) color = 0x39ff5a;
+    else if (ratio > 0.3) color = 0xffd76a;
+    else color = 0xff4040;
+    s.healthBar.userData.fg.material.color.setHex(color);
+    // Oculta la barra cuando está al 100%
+    s.healthBar.visible = (ratio < 0.999);
+  }
+
+  function damageStructure(s, amount) {
+    s.hp = Math.max(0, s.hp - amount);
+    updateHealthBar3D(s);
+    if (s.hp <= 0) destroyStructure(s);
+    if (selectedStructure === s) updateInfoPanel();
+  }
+
+  function destroyStructure(s) {
+    scene.remove(s.mesh);
+    const idx = structures.indexOf(s);
+    if (idx >= 0) structures.splice(idx, 1);
+    if (selectedStructure === s) deselectStructure();
+  }
+
+  function selectStructure(s) {
+    selectedStructure = s;
+    updateInfoPanel();
+  }
+
+  function deselectStructure() {
+    selectedStructure = null;
+    document.getElementById('structure-info').classList.remove('visible');
+  }
+
+  function updateInfoPanel() {
+    if (!selectedStructure) {
+      document.getElementById('structure-info').classList.remove('visible');
+      return;
+    }
+    const s = selectedStructure;
+    document.getElementById('info-name').textContent = s.def.icon + ' ' + s.def.name;
+    document.getElementById('info-hp').textContent = Math.ceil(s.hp) + ' / ' + s.maxHp;
+    const ratio = s.hp / s.maxHp;
+    const fill = document.getElementById('info-hp-fill');
+    fill.style.width = (ratio * 100) + '%';
+    if (ratio > 0.6)      fill.style.background = 'linear-gradient(90deg, #39ff5a, #a0e050)';
+    else if (ratio > 0.3) fill.style.background = 'linear-gradient(90deg, #ffd76a, #ff9a3a)';
+    else                  fill.style.background = 'linear-gradient(90deg, #ff4040, #c01010)';
+    document.getElementById('info-desc').textContent = s.def.desc;
+    document.getElementById('structure-info').classList.add('visible');
+  }
+
+  // Colisión circular del rey contra las estructuras
+  function collidesWithStructure(x, z, radius) {
+    for (const s of structures) {
+      const dx = x - s.mesh.position.x;
+      const dz = z - s.mesh.position.z;
+      const distSq = dx*dx + dz*dz;
+      const maxDist = radius + s.radius;
+      if (distSq < maxDist * maxDist) {
+        // 🚪 Si la puerta está abierta, permitir paso cerca de la apertura
+        if (s.doorOpen && s.doorLocalPos) {
+          const doorWorld = s.doorLocalPos.clone().applyMatrix4(s.mesh.matrixWorld);
+          const ddx = x - doorWorld.x;
+          const ddz = z - doorWorld.z;
+          const doorDistSq = ddx*ddx + ddz*ddz;
+          // Radio del "hueco": más amplio si tiene dos hojas
+          const leafCount = s.doorLeaves ? s.doorLeaves.length : 1;
+          const passageRadius = leafCount >= 2
+            ? Math.max(4.0, s.radius * 0.85)   // doble hoja: hueco más grande
+            : Math.max(2.5, s.radius * 0.55);  // hoja simple: hueco normal
+          if (doorDistSq < passageRadius * passageRadius) {
+            return false;
+          }
+        }
+        return true;
+      }
+    }
+    return false;
+  }
+
+  // Botones del menú (uno por estructura, en su sección correspondiente)
+  ALL_STRUCTURES.forEach(b => {
+    const btn = document.createElement('button');
+    btn.className = 'build-item';
+    btn.id = 'build-item-' + b.id;
+    btn.innerHTML = '<span class="icon">' + b.icon + '</span>' + b.name;
+    btn.addEventListener('click', () => startPlacement(b.id));
+    document.getElementById(b.grid).appendChild(btn);
+  });
+
+  function toggleBuildMenu() {
+    if (build.placing) { cancelPlacement(); buildMenuEl.classList.add('visible'); return; }
+    buildMenuEl.classList.toggle('visible');
+  }
+  function closeBuildMenu() { buildMenuEl.classList.remove('visible'); }
+
+  function startPlacement(id) {
+    const model = build.models[id];
+    if (!model) return;
+    cancelPlacement();
+    closeBuildMenu();
+
+    const def = ALL_STRUCTURES.find(b => b.id === id);
+    const ghost = model.scene.clone(true);
+
+    // Escalar al tamaño deseado
+    ghost.position.set(0, 0, 0); ghost.rotation.set(0, 0, 0); ghost.scale.set(1, 1, 1);
+    ghost.updateMatrixWorld(true);
+    let box = new THREE.Box3().setFromObject(ghost);
+    const dim = box.getSize(new THREE.Vector3());
+    build.ghostScale = def.size / Math.max(dim.x, dim.z);
+    ghost.scale.setScalar(build.ghostScale);
+
+    // Materiales de holograma
+    ghost.traverse(o => { if (o.isMesh) { o.material = ghostMatOk; o.castShadow = false; o.receiveShadow = false; } });
+
+    // Offset para que el cursor quede al centro de la base
+    ghost.updateMatrixWorld(true);
+    box = new THREE.Box3().setFromObject(ghost);
+    const c = box.getCenter(new THREE.Vector3());
+    build.ghostOffset = new THREE.Vector3(-c.x, -box.min.y, -c.z);
+
+    scene.add(ghost);
+    build.ghost = ghost;
+    build.placing = id;
+    buildHintNameEl.textContent = def.name;
+    buildHintEl.classList.add('visible');
+    updateGhost();
+  }
+
+  function cancelPlacement() {
+    if (build.ghost) { scene.remove(build.ghost); build.ghost = null; }
+    build.placing = null;
+    buildHintEl.classList.remove('visible');
+  }
+
+  const buildRay = new THREE.Raycaster();
+  const mouseNDC = new THREE.Vector2(0, 0);
+  window.addEventListener('mousemove', (e) => {
+    mouseNDC.set((e.clientX / innerWidth) * 2 - 1, -(e.clientY / innerHeight) * 2 + 1);
+  });
+
+  function terrainPoint() {
+    buildRay.setFromCamera(mouseNDC, camera);
+    const hits = buildRay.intersectObject(terrain, false);
+    return hits.length ? hits[0].point : null;
+  }
+
+  function setGhostOk(ok) {
+    build.ok = ok;
+    if (!build.ghost) return;
+    const mat = ok ? ghostMatOk : ghostMatBad;
+    build.ghost.traverse(o => { if (o.isMesh) o.material = mat; });
+  }
+
+  function updateGhost() {
+    if (!build.ghost) return;
+    const p = terrainPoint();
+    if (!p) { setGhostOk(false); return; }
+    const h = getHeight(p.x, p.z);
+    const valid = h > WATER_LEVEL + 0.6 && Math.abs(p.x) < BOUND && Math.abs(p.z) < BOUND;
+    setGhostOk(valid);
+    const off = build.ghostOffset.clone().applyAxisAngle(UP, build.ghost.rotation.y);
+    build.ghost.position.set(p.x + off.x, h + off.y, p.z + off.z);
+  }
+
+  function buildPlace() {
+    if (!build.placing || !build.ok) return;
+    const model = build.models[build.placing];
+    const def = ALL_STRUCTURES.find(b => b.id === build.placing);
+    const bld = model.scene.clone(true);
+    bld.scale.setScalar(build.ghostScale);
+    bld.position.copy(build.ghost.position);
+    bld.rotation.y = build.ghost.rotation.y;
+    bld.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+    scene.add(bld);
+    addStructure(bld, def);
+    // El modo colocación sigue activo para poner varias; click der / ESC para salir
+  }
+
+  // ---- Cargar los 24 modelos (.gltf edificios + .glb murallas) ----
+  // GLTFLoader lee ambos formatos; el .glb ya trae texturas y buffers incrustados.
+  const gltfLoader = new GLTFLoader();
+  for (let i = 0; i < ALL_STRUCTURES.length; i++) {
+    const b = ALL_STRUCTURES[i];
+    updateLoading(92 + Math.round((i / ALL_STRUCTURES.length) * 7), `Cargando estructuras (${i + 1}/${ALL_STRUCTURES.length})...`);
+    try {
+      const gltf = await gltfLoader.loadAsync(b.path + b.file);
+      build.models[b.id] = { scene: gltf.scene };
+    } catch (err) {
+      console.warn('⚠ No se pudo cargar ' + b.file, err);
+      const item = document.getElementById('build-item-' + b.id);
+      if (item) item.disabled = true;
+    }
+    await yieldToBrowser();
+  }
+
+  /* ============================================================
+     MINIMAPA (canvas 2D top-down)
+  ============================================================ */
+  const minimapCanvas = document.getElementById('minimap');
+  const minimapCtx = minimapCanvas.getContext('2d');
+  const MINIMAP_RES = minimapCanvas.width;   // 200x200
+  let minimapBase = null;
+
+  // Mapea una altura del mundo a un color RGB del minimapa
+  function heightToColor(x, z) {
+    const h = getHeight(x, z);
+    if (h < WATER_LEVEL)                 return [18, 80, 120];
+    if (h < WATER_LEVEL + 0.5)           return [74, 140, 180];
+    if (h < WATER_LEVEL + 1.6)           return [203, 177, 115];
+    if (h < 9.5)                         return [94, 140, 61];
+    if (h < 14)                          return [139, 134, 121];
+    if (CFG.hasSnow && h > 13)           return [230, 230, 240];
+    return [110, 105, 95];
+  }
+
+  // Genera la imagen base del minimapa (solo una vez, al cargar)
+  function generateMinimapBase() {
+    const img = minimapCtx.createImageData(MINIMAP_RES, MINIMAP_RES);
+    for (let y = 0; y < MINIMAP_RES; y++) {
+      for (let x = 0; x < MINIMAP_RES; x++) {
+        const wx = (x / MINIMAP_RES - 0.5) * WORLD_SIZE;
+        const wz = (y / MINIMAP_RES - 0.5) * WORLD_SIZE;
+        const [r, g, b] = heightToColor(wx, wz);
+        const idx = (y * MINIMAP_RES + x) * 4;
+        img.data[idx]   = r;
+        img.data[idx+1] = g;
+        img.data[idx+2] = b;
+        img.data[idx+3] = 255;
+      }
+    }
+    return img;
+  }
+  minimapBase = generateMinimapBase();
+
+  // Actualiza puntos dinámicos cada frame
+  function updateMinimap() {
+    minimapCtx.putImageData(minimapBase, 0, 0);
+
+    // Estructuras (puntos dorados)
+    minimapCtx.fillStyle = '#d9a733';
+    for (let i = 0; i < structures.length; i++) {
+      const s = structures[i];
+      const mx = (s.mesh.position.x / WORLD_SIZE + 0.5) * MINIMAP_RES;
+      const my = (s.mesh.position.z / WORLD_SIZE + 0.5) * MINIMAP_RES;
+      minimapCtx.fillRect(mx - 1.5, my - 1.5, 3, 3);
+    }
+
+    // Rey (círculo blanco con borde)
+    const kx = (king.position.x / WORLD_SIZE + 0.5) * MINIMAP_RES;
+    const ky = (king.position.z / WORLD_SIZE + 0.5) * MINIMAP_RES;
+    minimapCtx.fillStyle = '#ffffff';
+    minimapCtx.strokeStyle = '#b98d3e';
+    minimapCtx.lineWidth = 1.2;
+    minimapCtx.beginPath();
+    minimapCtx.arc(kx, ky, 3.5, 0, Math.PI * 2);
+    minimapCtx.fill();
+    minimapCtx.stroke();
+
+    // Indicador de dirección del rey (pequeña línea)
+    const dirX = Math.sin(king.rotation.y) * 6;
+    const dirZ = Math.cos(king.rotation.y) * 6;
+    minimapCtx.strokeStyle = '#ffd76a';
+    minimapCtx.lineWidth = 1.5;
+    minimapCtx.beginPath();
+    minimapCtx.moveTo(kx, ky);
+    minimapCtx.lineTo(kx + dirX, ky + dirZ);
+    minimapCtx.stroke();
+  }
+
   /* --- LISTO --- */
   updateLoading(100, `¡Bienvenido a ${CFG.name}!`);
 
@@ -921,32 +1651,132 @@ async function startGame(levelNum) {
 
   /* --- INPUT --- */
   const keys = {};
-  const keydownHandler = e => { keys[e.code] = true; if (e.code.startsWith('Arrow')) e.preventDefault(); };
+  const keydownHandler = e => {
+    keys[e.code] = true;
+    if (e.code.startsWith('Arrow')) e.preventDefault();
+    if (e.code === 'KeyC')  toggleBuildMenu();
+    if (e.code === 'Escape') {
+      if (build.placing) cancelPlacement();
+      else if (selectedStructure) deselectStructure();
+      else closeBuildMenu();
+    }
+    if (e.code === 'KeyR' && build.placing && build.ghost) build.ghost.rotation.y += Math.PI / 4;
+  };
   const keyupHandler = e => { keys[e.code] = false; };
   window.addEventListener('keydown', keydownHandler);
   window.addEventListener('keyup', keyupHandler);
 
-  /* Ratón: click izq ataca, click der bloquea */
+  /* Ratón: click izq ataca, click der bloquea, click medio rota cámara */
+  let cameraAzimuth = 0;          // ángulo horizontal de la cámara
+  const CAMERA_RADIUS = 30;       // distancia horizontal al rey
+  const CAMERA_HEIGHT = 42;       // altura de la cámara
+  let isMiddleMouseDown = false;
+  let lastMouseX = 0;
+
   window.addEventListener('mousedown', (e) => {
-    if (e.button === 0) mouseAttackQueued = true;
-    if (e.button === 2) mouseBlockHeld = true;
+    if (e.target !== renderer.domElement) return;   // ignorar clicks sobre la interfaz
+
+    if (e.button === 0) {
+      if (build.placing) { buildPlace(); return; }
+      if (buildMenuEl.classList.contains('visible')) { closeBuildMenu(); return; }
+      
+      // 🛡️ Evitar ataque doble en un doble click (solo el primer click ataca)
+      const now = performance.now();
+      if (now - (window.__lastLeftClick || 0) < 400) return;
+      window.__lastLeftClick = now;
+      
+      mouseAttackQueued = true;
+
+      // Raycast contra estructuras colocadas
+      const allMeshes = [];
+      structures.forEach(s => s.mesh.traverse(o => { if (o.isMesh) allMeshes.push(o); }));
+      if (allMeshes.length > 0) {
+        buildRay.setFromCamera(mouseNDC, camera);
+        const hits = buildRay.intersectObjects(allMeshes, false);
+        if (hits.length > 0) {
+          const data = hits[0].object.userData.structureData;
+          if (data) {
+            selectStructure(data);
+            const dist = king.position.distanceTo(data.mesh.position);
+            if (dist < KING_ATTACK_RANGE) damageStructure(data, KING_ATTACK_DAMAGE);
+            return;
+          }
+        }
+      }
+      deselectStructure();   // click en vacío deselecciona
+    }
+    if (e.button === 2) {
+      if (build.placing) { cancelPlacement(); return; }
+      mouseBlockHeld = true;
+    }
+    if (e.button === 1) {         // botón central (ruedita)
+      isMiddleMouseDown = true;
+      lastMouseX = e.clientX;
+      e.preventDefault();
+    }
   });
   window.addEventListener('mouseup', (e) => {
     if (e.button === 2) mouseBlockHeld = false;
+    if (e.button === 1) isMiddleMouseDown = false;
+  });
+  window.addEventListener('mousemove', (e) => {
+    if (isMiddleMouseDown) {
+      const dx = e.clientX - lastMouseX;
+      cameraAzimuth -= dx * 0.005;   // sensibilidad de rotación
+      lastMouseX = e.clientX;
+    }
+  });
+  // 🚪 DOBLE CLICK: abrir/cerrar puertas (soporta 1 o 2 hojas)
+  window.addEventListener('dblclick', (e) => {
+    if (e.target !== renderer.domElement) return;
+    if (build.placing) return;
+    
+    buildRay.setFromCamera(mouseNDC, camera);
+    const allMeshes = [];
+    structures.forEach(s => s.mesh.traverse(o => { if (o.isMesh) allMeshes.push(o); }));
+    const hits = buildRay.intersectObjects(allMeshes, false);
+    
+    if (hits.length > 0) {
+      const data = hits[0].object.userData.structureData;
+      if (data && data.doorLeaves && data.doorLeaves.length > 0) {
+        data.doorOpen = !data.doorOpen;
+        for (const leaf of data.doorLeaves) {
+          if (data.doorOpen) {
+            if (data.doorLeaves.length === 1) {
+              // Puerta simple: abre 90° hacia afuera
+              leaf.targetRot = leaf.baseRot - Math.PI / 2;
+            } else if (leaf.isLeft) {
+              // Hoja izquierda de puerta doble: abre hacia afuera-izq (gira hacia la derecha desde su pivote)
+              leaf.targetRot = leaf.baseRot - Math.PI / 2;
+            } else {
+              // Hoja derecha de puerta doble: abre hacia afuera-der (gira hacia la izquierda desde su pivote)
+              leaf.targetRot = leaf.baseRot + Math.PI / 2;
+            }
+          } else {
+            // Cerrar: todas vuelven a su rotación base
+            leaf.targetRot = leaf.baseRot;
+          }
+        }
+      }
+    }
   });
   window.addEventListener('contextmenu', (e) => e.preventDefault());
+  window.addEventListener('auxclick', (e) => { if (e.button === 1) e.preventDefault(); });
 
   const clock = new THREE.Clock();
-  const camOffset = new THREE.Vector3(0, 42, 30);
   let walkT = 0;
-  camera.position.copy(king.position).add(camOffset);
+  camera.position.copy(king.position).add(new THREE.Vector3(0, CAMERA_HEIGHT, CAMERA_RADIUS));
 
   function update(dt, t) {
     const dir = new THREE.Vector3();
-    if (keys['KeyW'] || keys['ArrowUp']) dir.z -= 1;
-    if (keys['KeyS'] || keys['ArrowDown']) dir.z += 1;
-    if (keys['KeyA'] || keys['ArrowLeft']) dir.x -= 1;
-    if (keys['KeyD'] || keys['ArrowRight']) dir.x += 1;
+    // Direcciones relativas a la orientación de la cámara
+    const forward = new THREE.Vector3(-Math.sin(cameraAzimuth), 0, -Math.cos(cameraAzimuth));
+    const right   = new THREE.Vector3( Math.cos(cameraAzimuth), 0, -Math.sin(cameraAzimuth));
+
+    if (keys['KeyW'] || keys['ArrowUp'])    dir.add(forward);
+    if (keys['KeyS'] || keys['ArrowDown'])  dir.sub(forward);
+    if (keys['KeyD'] || keys['ArrowRight']) dir.add(right);
+    if (keys['KeyA'] || keys['ArrowLeft'])  dir.sub(right);
 
     const moving = dir.lengthSq() > 0;
     if (moving) {
@@ -954,8 +1784,8 @@ async function startGame(levelNum) {
       const speed = KING_SPEED * (mouseBlockHeld ? 0.45 : 1);
       let nx = THREE.MathUtils.clamp(king.position.x + dir.x * speed * dt, -BOUND, BOUND);
       let nz = THREE.MathUtils.clamp(king.position.z + dir.z * speed * dt, -BOUND, BOUND);
-      if (getHeight(nx, king.position.z) >= WATER_LEVEL - 1.0) king.position.x = nx;
-      if (getHeight(king.position.x, nz) >= WATER_LEVEL - 1.0) king.position.z = nz;
+      if (getHeight(nx, king.position.z) >= WATER_LEVEL - 1.0 && !collidesWithStructure(nx, king.position.z, KING_RADIUS)) king.position.x = nx;
+      if (getHeight(king.position.x, nz) >= WATER_LEVEL - 1.0 && !collidesWithStructure(king.position.x, nz, KING_RADIUS)) king.position.z = nz;
 
       const targetRot = Math.atan2(dir.x, dir.z);
       let diff = targetRot - king.rotation.y;
@@ -974,9 +1804,32 @@ async function startGame(levelNum) {
     grassMat.uniforms.uTime.value = t;
     flowerMat.uniforms.uTime.value = t;
 
-    const desired = king.position.clone().add(camOffset);
+    const desired = new THREE.Vector3(
+      king.position.x + Math.sin(cameraAzimuth) * CAMERA_RADIUS,
+      king.position.y + CAMERA_HEIGHT,
+      king.position.z + Math.cos(cameraAzimuth) * CAMERA_RADIUS
+    );
     camera.position.lerp(desired, 1 - Math.exp(-6 * dt));
     camera.lookAt(king.position.x, king.position.y + 2, king.position.z);
+
+    if (build.placing) updateGhost();
+
+    // Las barras de vida miran siempre a la cámara (billboard)
+    for (let i = 0; i < structures.length; i++) {
+      structures[i].healthBar.quaternion.copy(camera.quaternion);
+    }
+    // 🚪 Animar todas las hojas de puerta (interpolación suave)
+    for (const s of structures) {
+      if (s.doorLeaves) {
+        for (const leaf of s.doorLeaves) {
+          const diff = leaf.targetRot - leaf.pivot.rotation.y;
+          leaf.pivot.rotation.y += diff * Math.min(1, dt * 4);
+        }
+      }
+    }
+
+    // Minimapa cada frame (muy barato: 200x200)
+    updateMinimap();
   }
 
   function animate() {

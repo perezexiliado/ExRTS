@@ -1,0 +1,1677 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8"/>
+<title>Reino RTT — Estilo Age of Empires (Mejorado)</title>
+<style>
+  html, body { margin: 0; padding: 0; overflow: hidden; height: 100%; background: #000; font-family: "Trebuchet MS", Arial, sans-serif; }
+  #hud {
+    position: absolute; top: 12px; left: 12px; z-index: 10;
+    color: #fff;
+    background: rgba(20, 14, 6, 0.65); border: 2px solid #b98d3e; border-radius: 8px;
+    padding: 10px 14px; font-size: 14px; line-height: 1.6; user-select: none;
+    display: none;
+  }
+  #hud b { color: #ffd76a; }
+  #exit-btn {
+    position: absolute; top: 12px; right: 12px; z-index: 10;
+    display: none;
+    background: rgba(20, 14, 6, 0.75); color: #ffd76a; border: 2px solid #b98d3e;
+    padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 14px;
+    font-family: "Trebuchet MS", Arial, sans-serif;
+  }
+  #exit-btn:hover { background: rgba(40, 24, 10, 0.9); }
+
+  /* --- BARRA DE CARGA --- */
+  #loading-screen {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: #1a1a1a; z-index: 1000;
+    display: flex; justify-content: center; align-items: center;
+    flex-direction: column;
+    transition: opacity 0.5s;
+  }
+  #loading-screen.hidden { opacity: 0; pointer-events: none; }
+  .loading-content { text-align: center; color: #ffd76a; }
+  .loading-content h2 { margin: 0 0 20px 0; font-size: 24px; letter-spacing: 2px; }
+  .progress-bar { width: 300px; height: 20px; background: #333; border-radius: 10px; overflow: hidden; border: 2px solid #b98d3e; }
+  .progress-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #b98d3e, #ffd76a); transition: width 0.3s ease-out; }
+  .loading-text { font-size: 14px; color: #ccc; margin-top: 15px; }
+
+  /* --- MENÚ PRINCIPAL --- */
+  #main-menu {
+    position: fixed; inset: 0; z-index: 900;
+    background:
+      radial-gradient(circle at 50% 30%, rgba(185, 141, 62, 0.25), transparent 60%),
+      linear-gradient(180deg, #0c0a06 0%, #1a130a 100%);
+    display: flex; flex-direction: column; justify-content: center; align-items: center;
+    color: #ffd76a;
+  }
+  #main-menu.hidden { display: none; }
+  .menu-title {
+    font-size: 58px; letter-spacing: 6px; margin: 0 0 8px 0;
+    text-shadow: 0 0 20px rgba(255, 215, 106, 0.5), 2px 2px 4px #000;
+    font-weight: bold;
+  }
+  .menu-subtitle {
+    font-size: 16px; color: #b98d3e; letter-spacing: 3px;
+    margin: 0 0 50px 0; font-style: italic;
+  }
+  .menu-buttons { display: flex; flex-direction: column; gap: 14px; width: 300px; }
+  .menu-btn {
+    background: linear-gradient(180deg, rgba(40, 28, 14, 0.9), rgba(20, 14, 6, 0.9));
+    color: #ffd76a; border: 2px solid #b98d3e; border-radius: 8px;
+    padding: 14px 24px; font-size: 18px; letter-spacing: 2px;
+    cursor: pointer; font-family: "Trebuchet MS", Arial, sans-serif;
+    transition: all 0.2s; text-transform: uppercase;
+  }
+  .menu-btn:hover {
+    background: linear-gradient(180deg, rgba(80, 56, 28, 0.95), rgba(40, 28, 14, 0.95));
+    transform: translateY(-2px); box-shadow: 0 4px 15px rgba(185, 141, 62, 0.4);
+    color: #fff;
+  }
+  .menu-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+  /* --- SELECTOR DE NIVELES --- */
+  #level-select {
+    position: fixed; inset: 0; z-index: 950;
+    background:
+      radial-gradient(circle at 50% 30%, rgba(185, 141, 62, 0.2), transparent 60%),
+      linear-gradient(180deg, #0c0a06 0%, #1a130a 100%);
+    display: none; flex-direction: column; justify-content: center; align-items: center;
+    color: #ffd76a;
+  }
+  #level-select.visible { display: flex; }
+  .level-title { font-size: 36px; letter-spacing: 4px; margin: 0 0 10px 0; text-shadow: 2px 2px 4px #000; }
+  .level-subtitle { font-size: 14px; color: #b98d3e; margin: 0 0 40px 0; }
+  .level-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; max-width: 700px; }
+  .level-card {
+    background: linear-gradient(180deg, rgba(40, 28, 14, 0.9), rgba(20, 14, 6, 0.9));
+    border: 2px solid #b98d3e; border-radius: 10px; padding: 20px;
+    cursor: pointer; transition: all 0.2s; min-width: 280px;
+  }
+  .level-card:hover {
+    transform: translateY(-4px); border-color: #ffd76a;
+    box-shadow: 0 6px 20px rgba(255, 215, 106, 0.3);
+  }
+  .level-card h3 { margin: 0 0 8px 0; font-size: 20px; color: #ffd76a; }
+  .level-card .level-num { font-size: 12px; color: #b98d3e; letter-spacing: 2px; margin-bottom: 6px; }
+  .level-card p { margin: 0; font-size: 13px; color: #ccc; line-height: 1.5; }
+  .level-icon { font-size: 36px; float: right; margin-left: 8px; }
+  .back-link {
+    margin-top: 30px; color: #b98d3e; cursor: pointer; font-size: 14px;
+    text-decoration: underline; letter-spacing: 1px;
+  }
+  .back-link:hover { color: #ffd76a; }
+
+  /* --- MODAL GENÉRICO --- */
+  .modal {
+    position: fixed; inset: 0; z-index: 975;
+    background: rgba(0,0,0,0.75);
+    display: none; justify-content: center; align-items: center;
+  }
+  .modal.visible { display: flex; }
+  .modal-box {
+    background: linear-gradient(180deg, #2a1e10, #1a130a);
+    border: 2px solid #b98d3e; border-radius: 10px;
+    padding: 30px 40px; max-width: 420px; color: #ffd76a;
+    text-align: center;
+  }
+  .modal-box h2 { margin-top: 0; letter-spacing: 2px; }
+  .modal-box p { color: #ccc; line-height: 1.6; }
+  .modal-close {
+    margin-top: 18px; padding: 10px 24px;
+    background: transparent; color: #ffd76a; border: 2px solid #b98d3e;
+    border-radius: 6px; cursor: pointer; font-size: 14px;
+    font-family: "Trebuchet MS", Arial, sans-serif;
+  }
+  .modal-close:hover { background: rgba(185, 141, 62, 0.2); }
+
+  /* --- MENÚ DE CONSTRUCCIÓN --- */
+  #build-menu {
+    position: fixed; left: 50%; bottom: 16px; transform: translateX(-50%);
+    z-index: 30; display: none;
+    background: rgba(20, 14, 6, 0.88);
+    border: 2px solid #b98d3e; border-radius: 10px;
+    padding: 10px 12px;
+    box-shadow: 0 6px 24px rgba(0,0,0,.5);
+  }
+  #build-menu.visible { display: block; }
+  #build-menu h3 {
+    margin: 0 0 8px; color: #ffd76a; font-size: 13px;
+    letter-spacing: 2px; text-align: center; user-select: none;
+  }
+  .build-grid { display: grid; grid-template-columns: repeat(8, 96px); gap: 6px; }
+  .build-section {
+    color: #b98d3e; font-size: 11px; letter-spacing: 2px;
+    margin: 6px 0 4px; text-align: center; user-select: none;
+  }
+  .build-item {
+    background: linear-gradient(180deg, rgba(60,42,20,.9), rgba(30,20,10,.9));
+    border: 2px solid #6a5228; border-radius: 6px;
+    color: #e8d5a0; padding: 6px 2px; font-size: 10.5px; line-height: 1.2;
+    cursor: pointer; text-align: center; user-select: none;
+    font-family: "Trebuchet MS", Arial, sans-serif;
+    transition: all .15s;
+  }
+  .build-item:hover { border-color: #ffd76a; color: #fff; transform: translateY(-2px); }
+  .build-item:disabled { opacity: .35; cursor: not-allowed; transform: none; }
+  .build-item .icon { font-size: 20px; display: block; margin-bottom: 3px; }
+  #build-hint {
+    position: fixed; top: 12px; left: 50%; transform: translateX(-50%);
+    z-index: 30; display: none;
+    background: rgba(20,14,6,.85); border: 2px solid #b98d3e; border-radius: 8px;
+    color: #ffd76a; padding: 8px 18px; font-size: 13px; user-select: none;
+  }
+  #build-hint.visible { display: block; }
+  #build-hint b { color: #fff; }
+
+  /* --- PANEL INFORMATIVO DE ESTRUCTURA --- */
+  #structure-info {
+    position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%);
+    z-index: 25; display: none;
+    background: linear-gradient(180deg, rgba(30, 22, 10, 0.95), rgba(18, 12, 6, 0.95));
+    border: 2px solid #b98d3e; border-radius: 10px;
+    padding: 12px 18px; min-width: 300px; max-width: 420px;
+    color: #e8d5a0; font-size: 13px; user-select: none;
+    box-shadow: 0 6px 20px rgba(0,0,0,.6);
+  }
+  #structure-info.visible { display: block; }
+  #structure-info .info-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 8px;
+  }
+  #structure-info #info-name {
+    color: #ffd76a; font-weight: bold; letter-spacing: 1px; font-size: 14px;
+  }
+  #structure-info #info-hp {
+    color: #ccc; font-size: 12px; font-family: "Courier New", monospace;
+  }
+  #structure-info .info-hp-bar {
+    width: 100%; height: 12px; background: #1a0808; border-radius: 6px;
+    overflow: hidden; margin-bottom: 8px;
+    border: 1px solid #6a5228;
+  }
+  #structure-info .info-hp-fill {
+    height: 100%; width: 100%;
+    background: linear-gradient(90deg, #39ff5a, #a0e050);
+    transition: width 0.25s ease-out, background 0.3s;
+    box-shadow: 0 0 8px rgba(57, 255, 90, 0.4);
+  }
+  #structure-info #info-desc {
+    color: #b8a878; font-size: 12px; font-style: italic; line-height: 1.4;
+  }
+
+  /* --- MINIMAPA --- */
+  #minimap-wrap {
+    position: fixed; bottom: 16px; left: 16px; z-index: 20;
+    width: 220px;
+    background: rgba(14, 10, 4, 0.85);
+    border: 2px solid #b98d3e; border-radius: 6px;
+    padding: 6px; box-shadow: 0 4px 14px rgba(0,0,0,.6);
+    user-select: none;
+  }
+  #minimap-title {
+    color: #ffd76a; font-size: 11px; letter-spacing: 2px;
+    text-align: center; margin-bottom: 4px;
+  }
+  #minimap {
+    width: 200px; height: 200px;
+    display: block; margin: 0 auto;
+    background: #0a0804;
+    border-radius: 3px;
+    image-rendering: pixelated;
+  }
+</style>
+</head>
+<body>
+
+<!-- Minimap -->
+<div id="minimap-wrap">
+  <div id="minimap-title">🗺️ MAPA</div>
+  <canvas id="minimap" width="200" height="200"></canvas>
+</div>
+
+<!-- HUD en juego -->
+<div id="hud">
+  <b>👑 EL REY</b><br/>
+  Muévelo con <b>W A S D</b> o las <b>flechas</b>.<br/>
+  Click <b>izq</b>: atacar · Click <b>der</b>: bloquear.<br/>
+  Pulsa <b>C</b>: menú de construcción.<br/>
+  El agua profunda le impide el paso.
+</div>
+<button id="exit-btn">↩ Menú Principal</button>
+
+<!-- Aviso de modo colocación -->
+<div id="build-hint">🏗️ Colocando: <b id="build-hint-name"></b> · Click izq: colocar · R: rotar · Click der / ESC: cancelar</div>
+
+<!-- Panel informativo de estructura seleccionada -->
+<div id="structure-info">
+  <div class="info-header">
+    <span id="info-name">—</span>
+    <span id="info-hp">0/0</span>
+  </div>
+  <div class="info-hp-bar">
+    <div class="info-hp-fill" id="info-hp-fill"></div>
+  </div>
+  <div id="info-desc"></div>
+</div>
+
+<!-- Menú de construcción -->
+<div id="build-menu">
+  <h3>🏗️ MENÚ DE CONSTRUCCIÓN [C]</h3>
+  <div class="build-section">— Edificios —</div>
+  <div class="build-grid" id="build-grid"></div>
+  <div class="build-section">— Murallas y Vallas —</div>
+  <div class="build-grid" id="walls-grid"></div>
+</div>
+
+<!-- Pantalla de carga -->
+<div id="loading-screen" class="hidden">
+  <div class="loading-content">
+    <h2 id="loading-title">Cargando el Reino...</h2>
+    <div class="progress-bar">
+      <div class="progress-fill"></div>
+    </div>
+    <p class="loading-text">Preparando texturas...</p>
+  </div>
+</div>
+
+<!-- MENÚ PRINCIPAL -->
+<div id="main-menu">
+  <h1 class="menu-title">REINO RTT</h1>
+  <div class="menu-subtitle">— Crónicas del Reino —</div>
+  <div class="menu-buttons">
+    <button class="menu-btn" id="btn-new">Nueva Partida</button>
+    <button class="menu-btn" id="btn-load" disabled>Cargar Partida</button>
+    <button class="menu-btn" id="btn-options">Opciones</button>
+    <button class="menu-btn" id="btn-quit">Salir</button>
+  </div>
+</div>
+
+<!-- SELECTOR DE NIVELES -->
+<div id="level-select">
+  <h2 class="level-title">Elige tu Destino</h2>
+  <div class="level-subtitle">Selecciona un reino para gobernar</div>
+  <div class="level-grid">
+    <div class="level-card" data-level="1">
+      <span class="level-icon">🌿</span>
+      <div class="level-num">NIVEL I</div>
+      <h3>La Pradera Real</h3>
+      <p>Un reino verde y fértil, con colinas suaves, aldeas humildes y un lago cristalino.</p>
+    </div>
+    <div class="level-card" data-level="2">
+      <span class="level-icon">🌲</span>
+      <div class="level-num">NIVEL II</div>
+      <h3>Bosque Encantado</h3>
+      <p>Un bosque antiguo y brumoso. Árboles centenarios, niebla densa y secretos escondidos.</p>
+    </div>
+    <div class="level-card" data-level="3">
+      <span class="level-icon">🏜️</span>
+      <div class="level-num">NIVEL III</div>
+      <h3>Desierto de Arena</h3>
+      <p>Dunas doradas, cactus resistentes y un sol abrasador. Solo los fuertes sobreviven.</p>
+    </div>
+    <div class="level-card" data-level="4">
+      <span class="level-icon">⛰️</span>
+      <div class="level-num">NIVEL IV</div>
+      <h3>Montañas Heladas</h3>
+      <p>Picos nevados, pinos robustos y vientos gélidos. Un reino duro pero majestuoso.</p>
+    </div>
+  </div>
+  <div class="back-link" id="level-back">← Volver al menú</div>
+</div>
+
+<!-- MODAL OPCIONES -->
+<div class="modal" id="modal-options">
+  <div class="modal-box">
+    <h2>⚙ Opciones</h2>
+    <p>Calidad gráfica: <b style="color:#ffd76a">Alta</b><br>
+    Dificultad: <b style="color:#ffd76a">Normal</b><br>
+    Volumen: <b style="color:#ffd76a">80%</b></p>
+    <p style="font-size:12px; color:#888;">(Ajustes de ejemplo — próximamente editables)</p>
+    <button class="modal-close" data-close="options">Cerrar</button>
+  </div>
+</div>
+
+<!-- MODAL CARGAR -->
+<div class="modal" id="modal-load">
+  <div class="modal-box">
+    <h2>📂 Cargar Partida</h2>
+    <p>No hay partidas guardadas aún.<br>El sistema de guardado llegará en una futura actualización.</p>
+    <button class="modal-close" data-close="load">Cerrar</button>
+  </div>
+</div>
+
+<!-- MODAL SALIR -->
+<div class="modal" id="modal-quit">
+  <div class="modal-box">
+    <h2>👑 Hasta pronto</h2>
+    <p>El reino quedará a salvo hasta tu regreso.<br>Gracias por jugar.</p>
+    <button class="modal-close" data-close="quit">Cerrar</button>
+  </div>
+</div>
+
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+} }
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass }     from 'three/addons/postprocessing/RenderPass.js';
+import { SSAOPass }       from 'three/addons/postprocessing/SSAOPass.js';
+import { UnrealBloomPass }from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { ShaderPass }     from 'three/addons/postprocessing/ShaderPass.js';
+import { OutputPass }     from 'three/addons/postprocessing/OutputPass.js';
+import { GLTFLoader }     from 'three/addons/loaders/GLTFLoader.js';
+
+/* ============================================================
+   MENÚ PRINCIPAL - NAVEGACIÓN
+============================================================ */
+const menu = document.getElementById('main-menu');
+const levelSelect = document.getElementById('level-select');
+const loadingScreen = document.getElementById('loading-screen');
+const loadingTitle = document.getElementById('loading-title');
+const hud = document.getElementById('hud');
+const exitBtn = document.getElementById('exit-btn');
+
+document.getElementById('btn-new').onclick = () => {
+  menu.classList.add('hidden');
+  levelSelect.classList.add('visible');
+};
+document.getElementById('btn-load').onclick = () => document.getElementById('modal-load').classList.add('visible');
+document.getElementById('btn-options').onclick = () => document.getElementById('modal-options').classList.add('visible');
+document.getElementById('btn-quit').onclick = () => document.getElementById('modal-quit').classList.add('visible');
+document.getElementById('level-back').onclick = () => {
+  levelSelect.classList.remove('visible');
+  menu.classList.remove('hidden');
+};
+document.querySelectorAll('.modal-close').forEach(b => {
+  b.onclick = () => b.closest('.modal').classList.remove('visible');
+});
+exitBtn.onclick = () => {
+  location.reload(); // Volver al menú recargando
+};
+
+/* ============================================================
+   CONFIGURACIÓN DE NIVELES
+============================================================ */
+const LEVELS = {
+  1: {
+    name: "La Pradera Real",
+    seed: 37.2,
+    seedZ: 11.8,
+    heightAmp: 24,
+    heightOff: -7,
+    centerHeight: 2.2,
+    waterLevel: 0.5,
+    skyTop: 0x2d68c4, skyBottom: 0xe6f0f3, skyHorizon: 0xf7dcb0,
+    fogColor: 0xc8d8de,
+    treeCount: 110, treeLeafColor: 0x3a6a28, treeTrunkColor: 0x5a3a20,
+    rockCount: 45, rockColor: 0x7a7569,
+    grassCount: 18000, grassBase: [0.10, 0.22, 0.06], grassTip: [0.24, 0.45, 0.13],
+    flowerCount: 600, flowerColors: [[0.55, 0.25, 0.65], [0.95, 0.55, 0.75]],
+    sandColor: 0xcbb173, sandWet: 0x8f7f55,
+    grass1: 0x5e8c3d, grass2: 0x79a94b, grass3: 0x4c7a33, rockCol: 0x8b8679,
+    hasSnow: false
+  },
+  2: {
+    name: "Bosque Encantado",
+    seed: 11.3,
+    seedZ: 55.7,
+    heightAmp: 18,
+    heightOff: -4,
+    centerHeight: 1.5,
+    waterLevel: 0.3,
+    skyTop: 0x1a3a5a, skyBottom: 0x4a6a4a, skyHorizon: 0x8aa87a,
+    fogColor: 0x7a8a7a,
+    treeCount: 250, treeLeafColor: 0x1a4a18, treeTrunkColor: 0x3a2a18,
+    rockCount: 30, rockColor: 0x5a5a4a,
+    grassCount: 22000, grassBase: [0.06, 0.18, 0.05], grassTip: [0.18, 0.35, 0.10],
+    flowerCount: 250, flowerColors: [[0.4, 0.2, 0.5], [0.8, 0.4, 0.6]],
+    sandColor: 0x8a7a5a, sandWet: 0x5a4a3a,
+    grass1: 0x3a6a28, grass2: 0x4a7a28, grass3: 0x2a4a1a, rockCol: 0x6a6a5a,
+    hasSnow: false
+  },
+  3: {
+    name: "Desierto de Arena",
+    seed: 88.7,
+    seedZ: 22.1,
+    heightAmp: 14,
+    heightOff: -2,
+    centerHeight: 1.0,
+    waterLevel: -1.0,
+    skyTop: 0xe8a050, skyBottom: 0xf8e0a0, skyHorizon: 0xffd890,
+    fogColor: 0xe8d0a0,
+    treeCount: 25, treeLeafColor: 0x5a7a2a, treeTrunkColor: 0x6a5a3a,
+    rockCount: 80, rockColor: 0xb88a5a,
+    grassCount: 3000, grassBase: [0.4, 0.35, 0.2], grassTip: [0.55, 0.48, 0.28],
+    flowerCount: 100, flowerColors: [[0.9, 0.4, 0.5], [0.9, 0.7, 0.2]],
+    sandColor: 0xe8c888, sandWet: 0xb89858,
+    grass1: 0xd8b878, grass2: 0xc8a868, grass3: 0xb89858, rockCol: 0xa88858,
+    hasSnow: false
+  },
+  4: {
+    name: "Montañas Heladas",
+    seed: 5.5,
+    seedZ: 3.2,
+    heightAmp: 32,
+    heightOff: -8,
+    centerHeight: 2.8,
+    waterLevel: 0.8,
+    skyTop: 0x4a6a9a, skyBottom: 0xc8d8e8, skyHorizon: 0xd8e0e8,
+    fogColor: 0xc8d0d8,
+    treeCount: 90, treeLeafColor: 0x1a3a2a, treeTrunkColor: 0x4a3a28,
+    rockCount: 60, rockColor: 0x8a8a8a,
+    grassCount: 12000, grassBase: [0.12, 0.22, 0.1], grassTip: [0.25, 0.4, 0.2],
+    flowerCount: 200, flowerColors: [[0.5, 0.3, 0.6], [0.85, 0.5, 0.7]],
+    sandColor: 0xb0a898, sandWet: 0x807878,
+    grass1: 0x6a8a5a, grass2: 0x7a9a6a, grass3: 0x4a6a3a, rockCol: 0xa8a8a8,
+    hasSnow: true
+  }
+};
+
+/* ============================================================
+   FUNCIÓN DE CARGA DEL JUEGO
+============================================================ */
+let gameStarted = false;
+
+async function startGame(levelNum) {
+  const CFG = LEVELS[levelNum];
+
+  // Ocultar selector, mostrar loading
+  levelSelect.classList.remove('visible');
+  loadingScreen.classList.remove('hidden');
+  loadingTitle.textContent = `Cargando: ${CFG.name}...`;
+
+  const progressFill = document.querySelector('.progress-fill');
+  const loadingText = document.querySelector('.loading-text');
+
+  function updateLoading(percent, text) {
+    progressFill.style.width = percent + '%';
+    if(text) loadingText.textContent = text;
+  }
+  function yieldToBrowser() { return new Promise(resolve => setTimeout(resolve, 15)); }
+
+  updateLoading(5, "Inicializando motor 3D...");
+  await yieldToBrowser();
+
+  /* --- CONSTANTES DE JUEGO --- */
+  const WORLD_SIZE  = 440;   // ×2 por eje = ×4 de área
+  const SEGMENTS    = 480;   // más subdivisión para el mapa grande
+  const WATER_LEVEL = CFG.waterLevel;
+  const KING_SPEED  = 14;    // un poco más rápido para un mapa grande
+  const BOUND       = WORLD_SIZE / 2 - 6;
+
+  /* --- RUIDO --- */
+  function hash(x, y) { const n = Math.sin(x * 127.1 + y * 311.7) * 43758.5453; return n - Math.floor(n); }
+  function smooth01(t) { t = Math.max(0, Math.min(1, t)); return t * t * (3 - 2 * t); }
+  function noise(x, y) {
+    const xi = Math.floor(x), yi = Math.floor(y);
+    const xf = x - xi, yf = y - yi;
+    const a = hash(xi, yi), b = hash(xi + 1, yi);
+    const c = hash(xi, yi + 1), d = hash(xi + 1, yi + 1);
+    const u = smooth01(xf), v = smooth01(yf);
+    return a + (b - a) * u + (c - a) * v + (a - b - c + d) * u * v;
+  }
+  function fbm(x, y) {
+    let value = 0, amp = 1, freq = 1, total = 0;
+    for (let i = 0; i < 4; i++) { value += noise(x * freq, y * freq) * amp; total += amp; amp *= 0.5; freq *= 2; }
+    return value / total;
+  }
+  function getHeight(x, z) {
+    const raw = fbm(x * 0.014 + CFG.seed, z * 0.014 + CFG.seedZ) * CFG.heightAmp + CFG.heightOff;
+    const d = Math.hypot(x, z);
+    const t = smooth01((d - 20) / 80);   // centro suave más amplio para el mapa grande
+    return THREE.MathUtils.lerp(CFG.centerHeight, raw, t);
+  }
+
+  /* --- ESCENA --- */
+  const scene = new THREE.Scene();
+  scene.fog = new THREE.Fog(CFG.fogColor, 220, 820);
+
+  const skyGeo = new THREE.SphereGeometry(900, 32, 16);
+  const skyMat = new THREE.ShaderMaterial({
+    side: THREE.BackSide, depthWrite: false,
+    uniforms: {
+      top:{ value: new THREE.Color(CFG.skyTop) },
+      bottom:{ value: new THREE.Color(CFG.skyBottom) },
+      horizon:{ value: new THREE.Color(CFG.skyHorizon) }
+    },
+    vertexShader: `varying vec3 vPos; void main() { vPos = position; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
+    fragmentShader: `uniform vec3 top, bottom, horizon; varying vec3 vPos; void main() { float h = clamp(normalize(vPos).y, 0.0, 1.0); vec3 sky = mix(bottom, top, pow(h, 0.55)); float band = exp(-pow((h - 0.15) * 8.0, 2.0)); sky = mix(sky, horizon, band * 0.6); gl_FragColor = vec4(sky, 1.0); }`
+  });
+  scene.add(new THREE.Mesh(skyGeo, skyMat));
+
+  const camera = new THREE.PerspectiveCamera(50, innerWidth / innerHeight, 0.1, 600);
+  const renderer = new THREE.WebGLRenderer({ antialias: true });
+  renderer.setSize(innerWidth, innerHeight);
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.05;
+  document.body.appendChild(renderer.domElement);
+
+  const composer = new EffectComposer(renderer);
+  composer.addPass(new RenderPass(scene, camera));
+  const ssao = new SSAOPass(scene, camera, innerWidth, innerHeight);
+  ssao.kernelRadius = 6; ssao.minDistance = 0.0015; ssao.maxDistance = 0.12;
+  composer.addPass(ssao);
+  const bloom = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), 0.45, 0.9, 0.85);
+  composer.addPass(bloom);
+
+  const gradingShader = {
+    uniforms: { tDiffuse: { value: null } },
+    vertexShader: `varying vec2 vUv; void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }`,
+    fragmentShader: `uniform sampler2D tDiffuse; varying vec2 vUv; void main() { vec3 col = texture2D(tDiffuse, vUv).rgb; col = mix(vec3(dot(col, vec3(0.299,0.587,0.114))), col, 1.15); float luma = dot(col, vec3(0.299,0.587,0.114)); col.r += (luma - 0.5) * 0.04; col.b -= (luma - 0.5) * 0.05; vec2 uv = vUv * 2.0 - 1.0; float vig = smoothstep(1.3, 0.4, length(uv)); col *= mix(0.55, 1.0, vig); gl_FragColor = vec4(col, 1.0); }`
+  };
+  composer.addPass(new ShaderPass(gradingShader));
+  composer.addPass(new OutputPass());
+
+  scene.add(new THREE.HemisphereLight(0xbfd9ff, 0x3a5a28, 0.6));
+  const sun = new THREE.DirectionalLight(0xffe2a8, 3.6);
+  sun.position.set(120, 160, 80); sun.castShadow = true;
+  sun.shadow.mapSize.set(4096, 4096);
+  sun.shadow.camera.left = -240; sun.shadow.camera.right = 240;
+  sun.shadow.camera.top = 240;   sun.shadow.camera.bottom = -240;
+  sun.shadow.camera.near = 20;   sun.shadow.camera.far = 600;
+  sun.shadow.bias = -0.0003; sun.shadow.normalBias = 0.02;
+  scene.add(sun);
+  const fill = new THREE.DirectionalLight(0x88aacc, 0.7); fill.position.set(-50, 40, -30); scene.add(fill);
+
+  /* --- TEXTURAS --- */
+  updateLoading(20, "Generando textura del suelo...");
+  await yieldToBrowser();
+
+  function crearTexturaSuelo(size = 2048) {
+    const canvas = document.createElement('canvas'); canvas.width = canvas.height = size; const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#e8e6d6'; ctx.fillRect(0, 0, size, size);
+    for (let i = 0; i < 40; i++) { const x = Math.random() * size, y = Math.random() * size, r = 80 + Math.random() * 220; const g = ctx.createRadialGradient(x, y, 0, x, y, r); const tono = Math.random() > 0.5 ? '190,200,160' : '150,160,120'; g.addColorStop(0, `rgba(${tono},0.15)`); g.addColorStop(1, `rgba(${tono},0)`); ctx.fillStyle = g; ctx.fillRect(x - r, y - r, r * 2, r * 2); }
+    const paleta = ['#d8d2b0','#c9c39e','#b9b48d','#a8a37f','#cfd8b4','#b0a878'];
+    for (let i = 0; i < 25000; i++) {
+      const x = Math.random() * size, y = Math.random() * size;
+      ctx.fillStyle = paleta[(Math.random() * paleta.length) | 0];
+      ctx.globalAlpha = 0.06 + Math.random() * 0.12;
+      const r = 0.8 + Math.random() * 2.2;
+      ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+    const tex = new THREE.CanvasTexture(canvas); tex.wrapS = tex.wrapT = THREE.RepeatWrapping; tex.repeat.set(32, 32); tex.anisotropy = renderer.capabilities.getMaxAnisotropy(); tex.colorSpace = THREE.SRGBColorSpace; return tex;
+  }
+  const texturaSuelo = crearTexturaSuelo();
+
+  updateLoading(45, "Generando mapa de normales...");
+  await yieldToBrowser();
+
+  function crearNormalMap(size = 2048) {
+    const canvas = document.createElement('canvas'); canvas.width = canvas.height = size; const ctx = canvas.getContext('2d'); const img = ctx.createImageData(size, size);
+    for (let y = 0; y < size; y++) { for (let x = 0; x < size; x++) { const h = fbm(x * 0.05, y * 0.05), hx = fbm((x+1) * 0.05, y * 0.05), hy = fbm(x * 0.05, (y+1) * 0.05); const dx = (h - hx) * 2.0, dy = (h - hy) * 2.0, i = (y * size + x) * 4; img.data[i] = Math.floor((dx * 0.5 + 0.5) * 255); img.data[i+1] = Math.floor((dy * 0.5 + 0.5) * 255); img.data[i+2] = 200; img.data[i+3] = 255; } }
+    ctx.putImageData(img, 0, 0);
+    const tex = new THREE.CanvasTexture(canvas); tex.wrapS = tex.wrapT = THREE.RepeatWrapping; tex.repeat.set(32, 32); tex.anisotropy = renderer.capabilities.getMaxAnisotropy(); return tex;
+  }
+  const normalMap = crearNormalMap();
+
+  /* --- TERRENO --- */
+  updateLoading(65, "Esculpiendo la malla del terreno...");
+  await yieldToBrowser();
+
+  const geo = new THREE.PlaneGeometry(WORLD_SIZE, WORLD_SIZE, SEGMENTS, SEGMENTS);
+  geo.rotateX(-Math.PI / 2);
+  const pos = geo.attributes.position;
+  for (let i = 0; i < pos.count; i++) pos.setY(i, getHeight(pos.getX(i), pos.getZ(i)));
+  geo.computeVertexNormals();
+
+  const heightArr = new Float32Array(pos.count), slopeArr = new Float32Array(pos.count), colorsArr = new Float32Array(pos.count * 3);
+  const tmp = new THREE.Color();
+  const C_SAND = new THREE.Color(CFG.sandColor), C_SAND_W = new THREE.Color(CFG.sandWet),
+        C_GRASS1 = new THREE.Color(CFG.grass1), C_GRASS2 = new THREE.Color(CFG.grass2),
+        C_GRASS3 = new THREE.Color(CFG.grass3), C_ROCK = new THREE.Color(CFG.rockCol);
+  const C_SNOW = new THREE.Color(0xf8f8ff);
+
+  for (let i = 0; i < pos.count; i++) {
+    const x = pos.getX(i), z = pos.getZ(i), h = pos.getY(i);
+    heightArr[i] = h; slopeArr[i] = 1.0 - geo.attributes.normal.getY(i);
+    const patch = fbm(x * 0.08 + 5, z * 0.08 + 5);
+    if (h < WATER_LEVEL + 0.5) tmp.copy(C_SAND).lerp(C_SAND_W, THREE.MathUtils.clamp((WATER_LEVEL + 0.5 - h) / 3, 0, 1));
+    else if (h < WATER_LEVEL + 1.6) tmp.copy(C_SAND).lerp(C_GRASS1, (h - (WATER_LEVEL + 0.5)) / 1.1);
+    else if (h < 9.5) tmp.copy(C_GRASS1).lerp(patch > 0.55 ? C_GRASS2 : C_GRASS3, Math.abs(patch - 0.5) * 1.6);
+    else if (h < 14) tmp.copy(C_GRASS3).lerp(C_ROCK, (h - 9.5) / 4.5);
+    else tmp.copy(C_ROCK);
+
+    // Nieve en cumbres (solo nivel 4)
+    if (CFG.hasSnow && h > 13 && slopeArr[i] < 0.4) {
+      const snowMix = smooth01((h - 13) / 3);
+      tmp.lerp(C_SNOW, snowMix * 0.8);
+    }
+
+    tmp.multiplyScalar(0.92 + hash(x, z) * 0.14);
+    colorsArr[i*3] = tmp.r; colorsArr[i*3+1] = tmp.g; colorsArr[i*3+2] = tmp.b;
+  }
+  geo.setAttribute('color', new THREE.BufferAttribute(colorsArr, 3));
+  geo.setAttribute('aHeight', new THREE.BufferAttribute(heightArr, 1));
+  geo.setAttribute('aSlope', new THREE.BufferAttribute(slopeArr, 1));
+
+  const terrainMat = new THREE.ShaderMaterial({
+    uniforms: { uColorTex:{ value: texturaSuelo }, uNormalMap:{ value: normalMap }, uSunDir:{ value: new THREE.Vector3(120, 160, 80).normalize() }, uSunColor:{ value: new THREE.Color(0xffe2a8) }, uAmbient:{ value: new THREE.Color(0x6a7a8f) }, uFogColor:{ value: new THREE.Color(CFG.fogColor) }, uFogNear:{ value: 220.0 }, uFogFar:{ value: 820.0 }, uTime:{ value: 0 } },
+    vertexShader: `varying vec3 vWorldPos; varying vec3 vNormal; varying vec3 vColor; varying vec2 vUv; varying float vHeight; varying float vSlope; varying float vFogDepth; attribute float aHeight; attribute float aSlope; void main() { vec4 wp = modelMatrix * vec4(position, 1.0); vWorldPos = wp.xyz; vNormal = normalize(normalMatrix * normal); vColor = color; vUv = uv; vHeight = aHeight; vSlope = aSlope; vec4 mv = modelViewMatrix * vec4(position, 1.0); vFogDepth = -mv.z; gl_Position = projectionMatrix * mv; }`,
+    fragmentShader: `precision highp float; uniform sampler2D uColorTex; uniform sampler2D uNormalMap; uniform vec3 uSunDir; uniform vec3 uSunColor; uniform vec3 uAmbient; uniform vec3 uFogColor; uniform float uFogNear; uniform float uFogFar; uniform float uTime; varying vec3 vWorldPos; varying vec3 vNormal; varying vec3 vColor; varying vec2 vUv; varying float vHeight; varying float vSlope; varying float vFogDepth; float hash2(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); } float vnoise(vec2 p){ vec2 i = floor(p), f = fract(p); float a = hash2(i), b = hash2(i + vec2(1.0,0.0)), c = hash2(i + vec2(0.0,1.0)), d = hash2(i + vec2(1.0,1.0)); vec2 u = f*f*(3.0-2.0*f); return mix(mix(a,b,u.x), mix(c,d,u.x), u.y); } float fbm(vec2 p){ float v = 0.0, a = 0.5; for (int i=0; i<5; i++){ v += a * vnoise(p); p *= 2.0; a *= 0.5; } return v; } void main() { vec3 baseTex = texture2D(uColorTex, vUv).rgb; vec3 col = vColor * baseTex; float macro = fbm(vWorldPos.xz * 0.015); col *= 0.85 + macro * 0.35; float grain = fbm(vWorldPos.xz * 1.2); col *= 0.88 + grain * 0.25; vec3 mapN = texture2D(uNormalMap, vUv).rgb * 2.0 - 1.0; vec3 N = normalize(vNormal + mapN * 0.35); float diff = max(dot(N, uSunDir), 0.0); float spec = pow(max(dot(reflect(-uSunDir, N), normalize(-vWorldPos)), 0.0), 32.0) * 0.05; vec3 ambient = uAmbient * 0.35; float ao = smoothstep(-2.0, 6.0, vHeight) * (1.0 - vSlope * 0.6); ao = mix(0.45, 1.0, ao); vec3 finalCol = col * (ambient * ao + uSunColor * diff * 1.1) + uSunColor * spec; float fogFactor = smoothstep(uFogNear, uFogFar, vFogDepth); finalCol = mix(finalCol, uFogColor, fogFactor); gl_FragColor = vec4(finalCol, 1.0); }`,
+    vertexColors: true
+  });
+  const terrain = new THREE.Mesh(geo, terrainMat);
+  terrain.receiveShadow = true; scene.add(terrain);
+
+  /* --- AGUA --- */
+  updateLoading(80, "Creando agua, hierba y flores...");
+  await yieldToBrowser();
+
+  const waterMat = new THREE.ShaderMaterial({
+    transparent: true,
+    uniforms: { uTime:{ value: 0 }, uSunDir:{ value: new THREE.Vector3(120, 160, 80).normalize() }, uSunColor:{ value: new THREE.Color(0xffe2a8) }, uDeep:{ value: new THREE.Color(0x0a3a5a) }, uShallow:{ value: new THREE.Color(0x4fa8d4) }, uFogColor:{ value: new THREE.Color(CFG.fogColor) }, uFogNear:{ value: 220.0 }, uFogFar:{ value: 820.0 } },
+    vertexShader: `uniform float uTime; varying vec3 vWorldPos; varying vec3 vNormal; varying float vFogDepth; vec3 gerstner(vec2 p, float t){ float w1 = sin(dot(p, vec2(0.15, 0.08)) + t * 1.2) * 0.15; float w2 = sin(dot(p, vec2(-0.10, 0.18)) + t * 1.7) * 0.10; float w3 = sin(dot(p, vec2(0.25, 0.02)) + t * 2.2) * 0.07; return vec3(0.0, w1 + w2 + w3, 0.0); } void main() { vec3 disp = gerstner(position.xz, uTime); vec3 pos = position + disp; float e = 0.5; vec3 px = gerstner(position.xz + vec2(e, 0.0), uTime); vec3 pz = gerstner(position.xz + vec2(0.0, e), uTime); vec3 tx = vec3(e, px.y - disp.y, 0.0); vec3 tz = vec3(0.0, pz.y - disp.y, e); vNormal = normalize(cross(tz, tx)); vec4 wp = modelMatrix * vec4(pos, 1.0); vWorldPos = wp.xyz; vec4 mv = modelViewMatrix * vec4(pos, 1.0); vFogDepth = -mv.z; gl_Position = projectionMatrix * mv; }`,
+    fragmentShader: `uniform float uTime; uniform vec3 uSunDir, uSunColor, uDeep, uShallow, uFogColor; uniform float uFogNear, uFogFar; varying vec3 vWorldPos, vNormal; varying float vFogDepth; void main() { vec3 N = normalize(vNormal); vec3 V = normalize(cameraPosition - vWorldPos); float fres = pow(1.0 - max(dot(N, V), 0.0), 3.0); float depth = smoothstep(0.0, 1.2, vWorldPos.y - 0.4); vec3 waterCol = mix(uShallow, uDeep, depth); vec3 H = normalize(uSunDir + V); float spec = pow(max(dot(N, H), 0.0), 220.0) * 2.5; vec3 sunSpec = uSunColor * spec; float foam = smoothstep(0.12, 0.18, N.y - 0.7) * 0.3; vec3 col = mix(waterCol, vec3(0.75, 0.88, 0.98), fres * 0.55) + sunSpec + vec3(foam); float fogFactor = smoothstep(uFogNear, uFogFar, vFogDepth); col = mix(col, uFogColor, fogFactor); gl_FragColor = vec4(col, 0.92); }`
+  });
+  const water = new THREE.Mesh(new THREE.PlaneGeometry(WORLD_SIZE * 1.5, WORLD_SIZE * 1.5, 80, 80), waterMat);
+  water.rotation.x = -Math.PI / 2; water.position.y = WATER_LEVEL; scene.add(water);
+
+  /* --- HIERBA MÁS PEQUEÑA Y NUMEROSA --- */
+  const GRASS_COUNT = CFG.grassCount * 4;   // ×4 para cubrir el área ×4
+  const grassGeom = new THREE.BufferGeometry();
+  // Briznas más pequeñas (altura ~0.35)
+  const gv = new Float32Array([
+    -0.10, 0.0, 0.0,  0.10, 0.0, 0.0,  0.0, 0.22, 0.0,
+    -0.08, 0.1, 0.0,  0.08, 0.1, 0.0,  0.0, 0.38, 0.0
+  ]);
+  grassGeom.setAttribute('position', new THREE.BufferAttribute(gv, 3));
+  grassGeom.setIndex([0,1,2, 3,4,5]);
+  grassGeom.computeVertexNormals();
+
+  const gBase = CFG.grassBase, gTip = CFG.grassTip;
+  const grassMat = new THREE.ShaderMaterial({
+    uniforms: {
+      uTime:{ value: 0 },
+      uSunDir:{ value: new THREE.Vector3(120,160,80).normalize() },
+      uFogColor:{ value: new THREE.Color(CFG.fogColor) },
+      uFogNear:{ value: 220.0 },
+      uFogFar:{ value: 820.0 },
+      uGrassBase: { value: new THREE.Color(gBase[0], gBase[1], gBase[2]) },
+      uGrassTip:  { value: new THREE.Color(gTip[0], gTip[1], gTip[2]) }
+    },
+    vertexShader: `uniform float uTime; varying float vFogDepth; varying float vHeight; varying vec3 vNormal; void main() { vec3 p = position; float sway = sin(uTime * 1.5 + instanceMatrix[3][0] * 0.4 + instanceMatrix[3][2] * 0.3); p.x += sway * p.y * 0.3; p.z += cos(uTime * 1.3 + instanceMatrix[3][2] * 0.5) * p.y * 0.2; vec4 mvPos = modelViewMatrix * instanceMatrix * vec4(p, 1.0); vFogDepth = -mvPos.z; vHeight = p.y; vNormal = normalize(mat3(instanceMatrix) * normal); gl_Position = projectionMatrix * mvPos; }`,
+    fragmentShader: `uniform vec3 uSunDir, uFogColor, uGrassBase, uGrassTip; uniform float uFogNear, uFogFar; varying float vFogDepth, vHeight; varying vec3 vNormal; void main() { vec3 base = mix(uGrassBase, uGrassTip, clamp(vHeight / 0.38, 0.0, 1.0)); float diff = max(dot(normalize(vNormal), uSunDir), 0.0); vec3 col = base * (0.5 + diff * 0.8); float fogFactor = smoothstep(uFogNear, uFogFar, vFogDepth); col = mix(col, uFogColor, fogFactor); gl_FragColor = vec4(col, 1.0); }`,
+    side: THREE.DoubleSide
+  });
+  const grass = new THREE.InstancedMesh(grassGeom, grassMat, GRASS_COUNT);
+  const dummy = new THREE.Object3D();
+  let placed = 0;
+  for (let i = 0; i < GRASS_COUNT * 3 && placed < GRASS_COUNT; i++) {
+    const x = (Math.random() - 0.5) * (WORLD_SIZE - 10), z = (Math.random() - 0.5) * (WORLD_SIZE - 10);
+    const h = getHeight(x, z);
+    if (h < WATER_LEVEL + 1.8 || h > 9.5) continue;
+    dummy.position.set(x, h, z);
+    dummy.rotation.y = Math.random() * Math.PI * 2;
+    const s = 0.6 + Math.random() * 0.8;
+    dummy.scale.set(s, s + Math.random() * 0.5, s);
+    dummy.updateMatrix();
+    grass.setMatrixAt(placed++, dummy.matrix);
+  }
+  grass.instanceMatrix.needsUpdate = true;
+  grass.count = placed;
+  scene.add(grass);
+
+  /* --- FLORES VIOLETAS Y ROSAS --- */
+  const FLOWER_COUNT = CFG.flowerCount * 4;
+  const flowerGeom = new THREE.BufferGeometry();
+  // Tallo vertical pequeño + esfera de pétalos encima
+  const fv = [];
+  const fi = [];
+  // Tallo (dos triángulos finos)
+  fv.push(-0.02, 0, 0,  0.02, 0, 0,  0.02, 0.22, 0);
+  fv.push(-0.02, 0, 0,  0.02, 0.22, 0, -0.02, 0.22, 0);
+  fi.push(0,1,2, 3,4,5);
+  // "Pétalos" como disco plano encima
+  const petals = 5;
+  const baseIdx = 6;
+  fv.push(0, 0.22, 0); // centro
+  for (let i = 0; i < petals; i++) {
+    const a = (i / petals) * Math.PI * 2;
+    fv.push(Math.cos(a) * 0.07, 0.22, Math.sin(a) * 0.07);
+  }
+  for (let i = 0; i < petals; i++) {
+    fi.push(baseIdx, baseIdx + 1 + i, baseIdx + 1 + ((i+1) % petals));
+  }
+  flowerGeom.setAttribute('position', new THREE.BufferAttribute(new Float32Array(fv), 3));
+  flowerGeom.setIndex(fi);
+  flowerGeom.computeVertexNormals();
+
+  const flowerMat = new THREE.ShaderMaterial({
+    uniforms: {
+      uTime:{ value: 0 },
+      uSunDir:{ value: new THREE.Vector3(120,160,80).normalize() },
+      uFogColor:{ value: new THREE.Color(CFG.fogColor) },
+      uFogNear:{ value: 220.0 },
+      uFogFar:{ value: 820.0 }
+    },
+    vertexShader: `uniform float uTime; varying float vFogDepth; varying float vIsPetal; varying vec3 vNormal; void main() { vec3 p = position; float sway = sin(uTime * 2.0 + instanceMatrix[3][0] * 0.5 + instanceMatrix[3][2] * 0.4) * 0.05; p.x += sway * p.y * 2.0; p.z += cos(uTime * 1.8 + instanceMatrix[3][2] * 0.6) * p.y * 1.5; vec4 mvPos = modelViewMatrix * instanceMatrix * vec4(p, 1.0); vFogDepth = -mvPos.z; vIsPetal = step(0.15, p.y); vNormal = normalize(mat3(instanceMatrix) * normal); gl_Position = projectionMatrix * mvPos; }`,
+    fragmentShader: `uniform vec3 uSunDir, uFogColor; uniform float uFogNear, uFogFar; varying float vFogDepth, vIsPetal; varying vec3 vNormal;
+      vec3 getFlowerColor() {
+        float h = fract(sin(dot(vec2(0.0), vec2(12.9898, 78.233))) * 43758.5453);
+        return vec3(0.55, 0.25, 0.65);
+      }
+      void main() {
+        vec3 stem = vec3(0.15, 0.35, 0.12);
+        vec3 petal = vec3(0.75, 0.45, 0.80);
+        vec3 base = mix(stem, petal, vIsPetal);
+        float diff = max(dot(normalize(vNormal), uSunDir), 0.0);
+        vec3 col = base * (0.5 + diff * 0.9);
+        float fogFactor = smoothstep(uFogNear, uFogFar, vFogDepth);
+        col = mix(col, uFogColor, fogFactor);
+        gl_FragColor = vec4(col, 1.0);
+      }`,
+    side: THREE.DoubleSide
+  });
+  const flowers = new THREE.InstancedMesh(flowerGeom, flowerMat, FLOWER_COUNT);
+  let fPlaced = 0;
+  for (let i = 0; i < FLOWER_COUNT * 4 && fPlaced < FLOWER_COUNT; i++) {
+    const x = (Math.random() - 0.5) * (WORLD_SIZE - 20);
+    const z = (Math.random() - 0.5) * (WORLD_SIZE - 20);
+    const h = getHeight(x, z);
+    if (h < WATER_LEVEL + 2.0 || h > 8.0) continue;
+    dummy.position.set(x, h, z);
+    dummy.rotation.y = Math.random() * Math.PI * 2;
+    const s = 0.8 + Math.random() * 0.6;
+    dummy.scale.set(s, s + Math.random() * 0.3, s);
+    dummy.updateMatrix();
+    // Alternar color violeta/rosa por instancia
+    const color = CFG.flowerColors[fPlaced % CFG.flowerColors.length];
+    flowers.setMatrixAt(fPlaced, dummy.matrix);
+    flowers.setColorAt(fPlaced, new THREE.Color(color[0], color[1], color[2]));
+    fPlaced++;
+  }
+  flowers.instanceMatrix.needsUpdate = true;
+  if (flowers.instanceColor) flowers.instanceColor.needsUpdate = true;
+  flowers.count = fPlaced;
+  scene.add(flowers);
+
+  /* --- ÁRBOLES Y ROCAS (con colores del nivel) --- */
+  updateLoading(92, `Construyendo ${CFG.name}...`);
+  await yieldToBrowser();
+
+  const trunkMat = new THREE.MeshStandardMaterial({ color: CFG.treeTrunkColor, roughness: 0.95 });
+  const leavesMat = new THREE.MeshStandardMaterial({ color: CFG.treeLeafColor, roughness: 0.9 });
+  const rockMat = new THREE.MeshStandardMaterial({ color: CFG.rockColor, roughness: 1.0 });
+
+  function makeTree(x, z) {
+    const g = new THREE.Group();
+    const s = 0.9 + Math.random() * 0.9;
+    const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.32, 2.0, 8), trunkMat);
+    trunk.position.y = 1.0; trunk.castShadow = true;
+    const leaves = new THREE.Group();
+    for (let i = 0; i < 4; i++) {
+      const ball = new THREE.Mesh(new THREE.SphereGeometry(0.9 + Math.random()*0.4, 10, 10), leavesMat);
+      ball.position.set((Math.random()-0.5)*0.8, 2.2 + Math.random()*0.8, (Math.random()-0.5)*0.8);
+      ball.castShadow = true;
+      leaves.add(ball);
+    }
+    g.add(trunk, leaves);
+    g.scale.setScalar(s);
+    g.position.set(x, getHeight(x, z), z);
+    g.rotation.y = Math.random() * Math.PI;
+    scene.add(g);
+  }
+
+  function makeCactus(x, z) {
+    const g = new THREE.Group();
+    const s = 0.7 + Math.random() * 0.5;
+    const cactusMat = new THREE.MeshStandardMaterial({ color: 0x3a6a2a, roughness: 0.9 });
+    const body = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.35, 2.5, 8), cactusMat);
+    body.position.y = 1.25; body.castShadow = true;
+    g.add(body);
+    if (Math.random() > 0.4) {
+      const arm = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.18, 1.0, 6), cactusMat);
+      arm.position.set(0.35, 1.6, 0); arm.rotation.z = -Math.PI / 4; arm.castShadow = true;
+      g.add(arm);
+    }
+    g.scale.setScalar(s);
+    g.position.set(x, getHeight(x, z), z);
+    scene.add(g);
+  }
+
+  // Árbol según nivel (×3 para cubrir el mapa ×4 sin saturar)
+  if (levelNum === 3) {
+    // Desierto: cactus
+    for (let i = 0; i < CFG.treeCount * 3; i++) {
+      const x = (Math.random() - 0.5) * (WORLD_SIZE - 16), z = (Math.random() - 0.5) * (WORLD_SIZE - 16);
+      const h = getHeight(x, z);
+      if (h > WATER_LEVEL + 1.0 && h < 9 && Math.hypot(x, z) > 16) makeCactus(x, z);
+    }
+  } else {
+    for (let i = 0; i < CFG.treeCount * 3; i++) {
+      const x = (Math.random() - 0.5) * (WORLD_SIZE - 16), z = (Math.random() - 0.5) * (WORLD_SIZE - 16);
+      const h = getHeight(x, z);
+      if (h > WATER_LEVEL + 1.0 && h < 9 && Math.hypot(x, z) > 16) makeTree(x, z);
+    }
+  }
+
+  for (let i = 0; i < CFG.rockCount * 3; i++) {
+    const x = (Math.random() - 0.5) * (WORLD_SIZE - 16), z = (Math.random() - 0.5) * (WORLD_SIZE - 16);
+    const h = getHeight(x, z);
+    if (h < WATER_LEVEL + 0.3 || Math.hypot(x, z) < 14) continue;
+    const rock = new THREE.Mesh(new THREE.DodecahedronGeometry(0.8, 1), rockMat);
+    const s = 0.5 + Math.random() * 1.5;
+    rock.scale.set(s, s * (0.6 + Math.random()*0.5), s);
+    rock.rotation.set(Math.random()*3, Math.random()*3, Math.random()*3);
+    rock.position.set(x, h + s * 0.15, z);
+    rock.castShadow = true;
+    scene.add(rock);
+  }
+
+  // Casas (solo niveles 1 y 2)
+  if (levelNum === 1 || levelNum === 2) {
+    function makeHouse(x, z, rot) {
+      const g = new THREE.Group();
+      const base = new THREE.Mesh(new THREE.BoxGeometry(4, 2.6, 3.2), new THREE.MeshStandardMaterial({ color: 0xd8c39a, roughness: 0.92 }));
+      base.position.y = 1.3; base.castShadow = base.receiveShadow = true;
+      const roof = new THREE.Mesh(new THREE.ConeGeometry(3.1, 2.0, 4), new THREE.MeshStandardMaterial({ color: 0xa8452e, roughness: 0.85 }));
+      roof.rotation.y = Math.PI / 4; roof.position.y = 3.6; roof.castShadow = true;
+      g.add(base, roof);
+      g.position.set(x, getHeight(x, z), z);
+      g.rotation.y = rot;
+      scene.add(g);
+    }
+    makeHouse(9, -6, 0.4); makeHouse(-8, -10, -0.6); makeHouse(-11, 5, 1.2);
+  }
+
+  /* --- REY PIXEL ART (sprite 2.5D generado por código) --- */
+  const KING_HEIGHT = 4.8;
+  const PX = 48, FRAME_COUNT = 12;
+  const IDLE = [0, 1], WALK = [2, 3, 4, 5], ATTACK = [6, 7, 8, 9, 10], BLOCK = 11;
+
+  const king = new THREE.Group();
+  king.position.set(0, Math.max(getHeight(0, 0), WATER_LEVEL + 2), 0);
+  scene.add(king);
+
+  let mouseAttackQueued = false, mouseBlockHeld = false;
+
+  // ---- Paleta del rey extendida (más matices y detalles) ----
+  const PAL = {
+    'k': '#0f0f17', 'ks': '#2a2a38',        // contornos negro y gris
+    's': '#e8b48c', 'S': '#c98d66', 'sk': '#f5cba8', // piel (base, sombra, luz)
+    'g': '#ffd75e', 'G': '#d9a733', 'd': '#9a741f',  // oro (claro, medio, oscuro)
+    'w': '#f4f4f8', 'W': '#cdd2de', 'WW': '#9aa0ae', // blanco y grises de la capa
+    'b': '#2b3f92', 'B': '#1d2c66',                   // azul armadura
+    'm': '#8d99a6', 'M': '#dfe6ee',                   // acero
+    'e': '#22222c', 'ew': '#ffffff',                  // ojos (pupila y blanco)
+    'r': '#a83232', 'R': '#d84545', 'cr': '#e62e2e',  // rojos (tela, sangre, rubí)
+    'y': '#6b4a2b', 'Y': '#8a6840',                   // madera (empuñadura)
+    'c': '#3a6ea8', 'C': '#274d78'                    // azul escudo
+  };
+
+  const atlas = document.createElement('canvas');
+  atlas.width = PX * FRAME_COUNT; atlas.height = PX;
+  const actx = atlas.getContext('2d');
+
+  function drawKingFrame(idx, p) {
+    const ox = idx * PX;
+    const P = (x, y, c) => { if (PAL[c]) { actx.fillStyle = PAL[c]; actx.fillRect(ox + x, y, 1, 1); } };
+    const R = (x, y, w, h, c) => { for (let i = 0; i < w; i++) for (let j = 0; j < h; j++) P(x + i, y + j, c); };
+    const b = p.breathe || 0;
+
+    // ============ CAPA BLANCA (detrás) ============
+    R(13, 16 + b, 22, 22, 'w');
+    R(13, 16 + b, 1, 22, 'W');  R(34, 16 + b, 1, 22, 'W');
+    R(13, 16 + b, 22, 1, 'W');
+    R(13 + (p.cape || 0), 37 + b, 22, 1, 'W');
+    // Pliegues de la capa
+    R(17, 20 + b, 1, 16, 'WW');
+    R(21, 22 + b, 1, 14, 'WW');
+    R(27, 22 + b, 1, 14, 'WW');
+    R(31, 20 + b, 1, 16, 'WW');
+    // Broche dorado en el cuello
+    R(22, 16 + b, 4, 2, 'g'); P(23, 16 + b, 'G'); P(24, 16 + b, 'G');
+
+    // ============ PIERNAS (armadura azul) ============
+    const leg = (x, lift) => {
+      R(x, 30, 4, 10 - lift, 'B');
+      R(x, 30, 4, 1, 'b');              // rodillera
+      R(x + 1, 30, 2, 1, 'm');          // detalle metálico
+      R(x, 40 - lift, 4, 3, 'k');       // botas negras
+      R(x + 1, 40 - lift, 2, 1, 'Y');   // hebilla
+      R(x, 30, 1, 10 - lift, 'ks');     // brillo lateral
+    };
+    leg(18, p.legL || 0);
+    leg(26, p.legR || 0);
+
+    // ============ TORSO (armadura dorada con emblema) ============
+    R(16, 18 + b, 16, 13, 'G');
+    R(16, 18 + b, 16, 1, 'g');
+    R(16, 30 + b, 16, 1, 'd');
+    // Placa pectoral con emblema (cruz real)
+    R(21, 20 + b, 6, 8, 'g');
+    R(21, 20 + b, 6, 1, 'sk');
+    R(23, 21 + b, 2, 6, 'r');   // cruz vertical
+    R(21, 23 + b, 6, 2, 'r');   // cruz horizontal
+    P(23, 23 + b, 'R'); P(24, 23 + b, 'R'); P(23, 24 + b, 'R'); P(24, 24 + b, 'R');
+    // Cinturón
+    R(16, 28 + b, 16, 1, 'k');
+    P(23, 28 + b, 'g'); P(24, 28 + b, 'g'); P(22, 28 + b, 'G'); P(25, 28 + b, 'G');
+    // Detalles laterales
+    R(16, 18 + b, 1, 13, 'd');
+    R(31, 18 + b, 1, 13, 'd');
+
+    // ============ HOMBROS (hombreras doradas detalladas) ============
+    R(13, 18 + b, 3, 4, 'G'); P(13, 18 + b, 'g'); P(15, 18 + b, 'g');
+    R(32, 18 + b, 3, 4, 'G'); P(32, 18 + b, 'g'); P(34, 18 + b, 'g');
+    P(14, 19 + b, 'M'); P(33, 19 + b, 'M');  // remaches
+
+    // ============ BRAZOS ============
+    R(13, 22 + b, 3, 8, 'b');   // brazo izquierdo (azul)
+    R(32, 22 + b, 3, 8, 'b');   // brazo derecho (azul)
+    R(13, 22 + b, 1, 8, 'ks');  // brillo
+    R(34, 22 + b, 1, 8, 'ks');
+    // Manos (piel)
+    P(13, 30 + b, 's'); P(14, 30 + b, 's'); P(15, 30 + b, 's');
+    P(32, 30 + b, 's'); P(33, 30 + b, 's'); P(34, 30 + b, 's');
+
+    // ============ CABEZA ============
+    R(21, 16 + b, 6, 2, 's');              // cuello
+    R(18, 7 + b, 12, 10, 's');             // cara
+    R(18, 7 + b, 1, 10, 'S');              // sombra izq
+    R(29, 7 + b, 1, 10, 'S');              // sombra der
+    R(22, 7 + b, 4, 1, 'sk');              // brillo frente
+    // Cabello blanco (lados)
+    R(17, 7 + b, 1, 7, 'W'); R(30, 7 + b, 1, 7, 'W');
+    // Cejas
+    R(19, 9 + b, 3, 1, 'W'); R(26, 9 + b, 3, 1, 'W');
+    // Ojos (blanco + pupila)
+    P(20, 11 + b, 'ew'); P(21, 11 + b, 'e');
+    P(26, 11 + b, 'ew'); P(27, 11 + b, 'e');
+    // Nariz
+    P(23, 13 + b, 'S'); P(24, 13 + b, 'S');
+    // Boca (bajo la barba)
+    P(23, 15 + b, 'R'); P(24, 15 + b, 'R');
+    // Barba blanca majestuosa (con textura)
+    R(18, 14 + b, 12, 5, 'w');
+    R(18, 14 + b, 1, 5, 'W');  R(29, 14 + b, 1, 5, 'W');
+    R(20, 19 + b, 8, 1, 'W');  R(22, 20 + b, 4, 1, 'W');
+    // Detalle bigote
+    R(21, 14 + b, 2, 1, 'W'); R(25, 14 + b, 2, 1, 'W');
+
+    // ============ CORONA (5 picos con joyas) ============
+    R(17, 5 + b, 14, 2, 'G');
+    R(17, 5 + b, 14, 1, 'g');
+    // Picos (5 picos)
+    P(17, 4 + b, 'g'); P(17, 3 + b, 'g'); P(17, 2 + b, 'g');
+    P(20, 4 + b, 'g'); P(20, 3 + b, 'g'); P(20, 2 + b, 'g');
+    P(23, 4 + b, 'g'); P(23, 2 + b, 'g'); P(24, 2 + b, 'g');
+    P(27, 4 + b, 'g'); P(27, 3 + b, 'g'); P(27, 2 + b, 'g');
+    P(30, 4 + b, 'g'); P(30, 3 + b, 'g'); P(30, 2 + b, 'g');
+    // Perlas en los picos
+    P(17, 1 + b, 'M'); P(20, 1 + b, 'M'); P(24, 1 + b, 'M');
+    P(27, 1 + b, 'M'); P(30, 1 + b, 'M');
+    // Rubí central y laterales
+    P(23, 3 + b, 'cr'); P(24, 3 + b, 'cr');
+    P(20, 5 + b, 'r'); P(27, 5 + b, 'r');
+    // Diamantes pequeños
+    P(18, 5 + b, 'M'); P(29, 5 + b, 'M');
+
+    // ============ ESCUDO ============
+    if (p.shieldUp) {
+      R(16, 14 + b, 16, 14, 'c');
+      R(16, 14 + b, 16, 1, 'C'); R(16, 27 + b, 16, 1, 'C');
+      R(16, 14 + b, 1, 14, 'C'); R(31, 14 + b, 1, 14, 'C');
+      R(31, 14 + b, 1, 14, 'C');
+      // Emblema heráldico (cruz con borde dorado)
+      R(22, 17 + b, 4, 8, 'g');
+      R(19, 20 + b, 10, 2, 'g');
+      R(23, 18 + b, 2, 6, 'G');
+      R(20, 20 + b, 8, 1, 'G');
+      // Remaches
+      P(17, 15 + b, 'M'); P(30, 15 + b, 'M');
+      P(17, 26 + b, 'M'); P(30, 26 + b, 'M');
+    } else {
+      R(10, 22 + b, 7, 12, 'c');
+      R(10, 22 + b, 7, 1, 'C'); R(10, 33 + b, 7, 1, 'C');
+      R(10, 22 + b, 1, 12, 'C'); R(16, 22 + b, 1, 12, 'C');
+      // Emblema
+      R(12, 25 + b, 3, 6, 'g');
+      R(11, 27 + b, 5, 2, 'g');
+      R(13, 26 + b, 1, 4, 'G');
+      R(12, 27 + b, 3, 1, 'G');
+      P(10, 23 + b, 'M'); P(16, 23 + b, 'M');
+    }
+
+    // ============ ESPADA (más detallada) ============
+    const hx = 34, hy = 30 + b;
+    const a = (p.sword === undefined ? 110 : p.sword) * Math.PI / 180;
+    const dx = Math.cos(a), dy = Math.sin(a);
+    // Pomo
+    P(hx - Math.round(dx * 2), hy - Math.round(dy * 2), 'g');
+    // Empuñadura
+    P(hx - Math.round(dx), hy - Math.round(dy), 'y');
+    P(hx, hy, 'y');
+    // Guarda (cruz)
+    P(hx + Math.round(-dy), hy + Math.round(dx), 'g');
+    P(hx - Math.round(-dy), hy - Math.round(dx), 'g');
+    P(hx + Math.round(-dy * 1.5), hy + Math.round(dx * 1.5), 'G');
+    P(hx - Math.round(-dy * 1.5), hy - Math.round(dx * 1.5), 'G');
+    // Hoja larga con reflejo
+    for (let i = 1; i <= 16; i++) {
+      const px = hx + Math.round(dx * i);
+      const py = hy + Math.round(dy * i);
+      P(px, py, i >= 13 ? 'M' : 'm');
+      if (i % 2 === 0 && i < 13) P(px + Math.round(-dy * 0.5), py + Math.round(dx * 0.5), 'M');
+    }
+    // Punta brillante
+    P(hx + Math.round(dx * 17), hy + Math.round(dy * 17), 'ew');
+
+    // ============ ESTELA DEL TAJO ============
+    if (p.trail) {
+      for (let i = 5; i <= 15; i += 2) {
+        P(hx + Math.round(Math.cos(a - 0.5) * i), hy + Math.round(Math.sin(a - 0.5) * i), 'M');
+      }
+    }
+  }
+
+  // ---- Hornear los 12 frames ----
+  drawKingFrame(0, {});
+  drawKingFrame(1, { breathe: 1 });
+  drawKingFrame(2, { legL: 1, cape: 1 });
+  drawKingFrame(3, { breathe: 1 });
+  drawKingFrame(4, { legR: 1, cape: -1 });
+  drawKingFrame(5, { breathe: 1 });
+  drawKingFrame(6, { sword: -120 });
+  drawKingFrame(7, { sword: -70, trail: 1 });
+  drawKingFrame(8, { sword: -15, trail: 1 });
+  drawKingFrame(9, { sword: 45, trail: 1 });
+  drawKingFrame(10, { sword: 100 });
+  drawKingFrame(11, { shieldUp: 1, sword: 140 });
+
+  const kingTex = new THREE.CanvasTexture(atlas);
+  kingTex.magFilter = THREE.NearestFilter;   // píxel nítido
+  kingTex.minFilter = THREE.NearestFilter;
+  kingTex.generateMipmaps = false;
+  kingTex.colorSpace = THREE.SRGBColorSpace;
+  kingTex.repeat.set(1 / FRAME_COUNT, 1);
+
+  const kingMat = new THREE.MeshBasicMaterial({ map: kingTex, transparent: true, alphaTest: 0.1, side: THREE.DoubleSide });
+  const kingMesh = new THREE.Mesh(new THREE.PlaneGeometry(KING_HEIGHT, KING_HEIGHT), kingMat);
+  kingMesh.position.y = KING_HEIGHT / 2 - 0.1;
+  king.add(kingMesh);
+
+  // Sombra falsa + anillo de selección
+  const shadow = new THREE.Mesh(new THREE.CircleGeometry(0.55, 24), new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.35 }));
+  shadow.rotation.x = -Math.PI / 2; shadow.position.y = 0.06; king.add(shadow);
+  const ring = new THREE.Mesh(new THREE.RingGeometry(0.9, 1.15, 32), new THREE.MeshBasicMaterial({ color: 0x39ff5a, transparent: true, opacity: 0.75, side: THREE.DoubleSide }));
+  ring.rotation.x = -Math.PI / 2; ring.position.y = 0.08; king.add(ring);
+
+  // ---- Máquina de estados de animación ----
+  let kingState = 'idle', attackT = 0, walkAcc = 0, idleAcc = 0, lastFrame = -1;
+  const ATTACK_DUR = 0.45;
+
+  function updateKingSprite(moving, dt) {
+    if (mouseAttackQueued) { mouseAttackQueued = false; kingState = 'attack'; attackT = 0; }
+    if (kingState === 'attack') {
+      attackT += dt;
+      if (attackT >= ATTACK_DUR) kingState = moving ? 'walk' : 'idle';
+    } else if (mouseBlockHeld) {
+      kingState = 'block';
+    } else {
+      kingState = moving ? 'walk' : 'idle';
+    }
+
+    let frame;
+    if (kingState === 'idle')            { idleAcc += dt; frame = IDLE[Math.floor(idleAcc * 2) % 2]; }
+    else if (kingState === 'walk')       { walkAcc += dt; frame = WALK[Math.floor(walkAcc * 8) % 4]; }
+    else if (kingState === 'attack')     { frame = ATTACK[Math.min(ATTACK.length - 1, Math.floor((attackT / ATTACK_DUR) * ATTACK.length))]; }
+    else                                 { frame = BLOCK; }
+
+    if (frame !== lastFrame) { kingTex.offset.x = frame / FRAME_COUNT; lastFrame = frame; }
+
+    // Billboard: el sprite siempre mira a la cámara
+    const yaw = Math.atan2(camera.position.x - king.position.x, camera.position.z - king.position.z);
+    kingMesh.rotation.y = yaw - king.rotation.y;
+  }
+
+  /* ============================================================
+     SISTEMA DE CONSTRUCCIÓN (tecla C)
+  ============================================================ */
+  const BUILDINGS_PATH = 'assets/structures/buildings/blue/';
+  const BUILDINGS = [
+    { id: 'archeryrange', name: 'Arquería',         icon: '🏹', size: 9,  hp: 400, desc: 'Entrena arqueros de élite para defensa a distancia.',      file: 'building_archeryrange_blue.gltf' },
+    { id: 'barracks',     name: 'Cuarteles',        icon: '⚔️', size: 9,  hp: 450, desc: 'Forma soldados de infantería para el reino.',               file: 'building_barracks_blue.gltf' },
+    { id: 'blacksmith',   name: 'Herrería',         icon: '🔨', size: 7,  hp: 350, desc: 'Forja armas y armaduras para tus tropas.',                  file: 'building_blacksmith_blue.gltf' },
+    { id: 'castle',       name: 'Castillo',         icon: '🏰', size: 14, hp: 1200,desc: 'Fortaleza central del reino. Difícil de destruir.',         file: 'building_castle_blue.gltf' },
+    { id: 'church',       name: 'Iglesia',          icon: '⛪', size: 9,  hp: 500, desc: 'Templo sagrado que cura a los heridos cercanos.',           file: 'building_church_blue.gltf' },
+    { id: 'home_A',       name: 'Casa A',           icon: '🏠', size: 6,  hp: 200, desc: 'Vivienda humilde de los aldeanos del reino.',               file: 'building_home_A_blue.gltf' },
+    { id: 'home_B',       name: 'Casa B',           icon: '🏡', size: 6,  hp: 220, desc: 'Casa de campo confortable y acogedora.',                    file: 'building_home_B_blue.gltf' },
+    { id: 'lumbermill',   name: 'Aserradero',       icon: '🪵', size: 8,  hp: 380, desc: 'Produce madera aprovechando los bosques cercanos.',         file: 'building_lumbermill_blue.gltf' },
+    { id: 'market',       name: 'Mercado',          icon: '⛺', size: 10, hp: 300, desc: 'Centro de comercio e intercambio de bienes.',               file: 'building_market_blue.gltf' },
+    { id: 'mine',         name: 'Mina',             icon: '⛏️', size: 6,  hp: 420, desc: 'Extrae piedra y minerales de las entrañas de la tierra.',   file: 'building_mine_blue.gltf' },
+    { id: 'tavern',       name: 'Taberna',          icon: '🍺', size: 8,  hp: 280, desc: 'Recluta mercenarios y aventureros errantes.',               file: 'building_tavern_blue.gltf' },
+    { id: 'tower_A',      name: 'Torre A',          icon: '🗼', size: 5,  hp: 500, desc: 'Torre de vigilancia ligera, buena visión.',                 file: 'building_tower_A_blue.gltf' },
+    { id: 'tower_B',      name: 'Torre B',          icon: '🏯', size: 5,  hp: 600, desc: 'Torre defensiva fortificada con almenas.',                  file: 'building_tower_B_blue.gltf' },
+    { id: 'watermill',    name: 'Molino de agua',   icon: '💧', size: 7,  hp: 320, desc: 'Muele grano aprovechando la fuerza del río.',               file: 'building_watermill_blue.gltf' },
+    { id: 'well',         name: 'Pozo',             icon: '🪣', size: 3,  hp: 150, desc: 'Fuente de agua potable para los aldeanos.',                 file: 'building_well_blue.gltf' },
+    { id: 'windmill',     name: 'Molino de viento', icon: '🌬️', size: 7,  hp: 300, desc: 'Muele grano aprovechando la fuerza del viento.',            file: 'building_windmill_blue.gltf' }
+  ];
+
+  // Murallas y vallas "neutral" (formato .gltf; su .bin y textura se cargan solos)
+  const WALLS_PATH = 'assets/structures/buildings/neutral/';
+  const WALLS = [
+    { id: 'wall_straight',             name: 'Muralla recta',        icon: '🧱', size: 6, hp: 400, desc: 'Tramo recto de muralla defensiva.',                 file: 'wall_straight.gltf' },
+    { id: 'wall_straight_gate',        name: 'Muralla c/ puerta',    icon: '🚪', size: 6, hp: 450, desc: 'Muralla con portón de acceso al recinto.',          file: 'wall_straight_gate.gltf' },
+    { id: 'wall_corner_A_gate',        name: 'Esquina A c/ puerta',  icon: '🏰', size: 6, hp: 500, desc: 'Esquina fortificada con portón lateral.',           file: 'wall_corner_A_gate.gltf' },
+    { id: 'wall_corner_A_inside',      name: 'Esquina A int.',       icon: '📐', size: 6, hp: 400, desc: 'Esquina interior de muralla.',                      file: 'wall_corner_A_inside.gltf' },
+    { id: 'wall_corner_A_outside',     name: 'Esquina A ext.',       icon: '📐', size: 6, hp: 400, desc: 'Esquina exterior de muralla.',                      file: 'wall_corner_A_outside.gltf' },
+    { id: 'wall_corner_B_inside',      name: 'Esquina B int.',       icon: '📏', size: 6, hp: 420, desc: 'Esquina B interior reforzada.',                     file: 'wall_corner_B_inside.gltf' },
+    { id: 'wall_corner_B_outside',     name: 'Esquina B ext.',       icon: '📏', size: 6, hp: 420, desc: 'Esquina B exterior reforzada.',                     file: 'wall_corner_B_outside.gltf' },
+    { id: 'fence_stone_straight',      name: 'Valla de piedra',      icon: '🪨', size: 6, hp: 200, desc: 'Valla simple de piedra, fácil de derribar.',        file: 'fence_stone_straight.gltf' },
+    { id: 'fence_stone_straight_gate', name: 'Valla piedra c/ pta.', icon: '🪨', size: 6, hp: 220, desc: 'Valla de piedra con pequeño portón.',               file: 'fence_stone_straight_gate.gltf' },
+    { id: 'fence_wood_straight',       name: 'Valla de madera',      icon: '🪵', size: 6, hp: 120, desc: 'Valla liviana de madera, muy frágil.',              file: 'fence_wood_straight.gltf' },
+    { id: 'fence_wood_straight_gate',  name: 'Valla madera c/ pta.', icon: '🪵', size: 6, hp: 140, desc: 'Valla de madera con portón pequeño.',               file: 'fence_wood_straight_gate.gltf' }
+  ];
+
+  // Lista unificada: cada elemento sabe su carpeta y en qué rejilla del menú va
+  const ALL_STRUCTURES = [
+    ...BUILDINGS.map(b => ({ ...b, path: BUILDINGS_PATH, grid: 'build-grid' })),
+    ...WALLS.map(w => ({ ...w, path: WALLS_PATH, grid: 'walls-grid' }))
+  ];
+
+  const UP = new THREE.Vector3(0, 1, 0);
+
+  const buildMenuEl  = document.getElementById('build-menu');
+  const buildGridEl  = document.getElementById('build-grid');
+  const buildHintEl  = document.getElementById('build-hint');
+  const buildHintNameEl = document.getElementById('build-hint-name');
+
+  const build = { placing: null, ghost: null, ghostOffset: null, ghostScale: 1, ok: false, models: {} };
+
+  const ghostMatOk  = new THREE.MeshBasicMaterial({ color: 0x39ff5a, transparent: true, opacity: 0.5, depthWrite: false });
+  const ghostMatBad = new THREE.MeshBasicMaterial({ color: 0xff4040, transparent: true, opacity: 0.5, depthWrite: false });
+
+  /* ============================================================
+     SISTEMA DE ESTRUCTURAS: colisión, vida, daño y destrucción
+  ============================================================ */
+  const structures = [];                 // { mesh, def, hp, maxHp, healthBar, radius }
+  let selectedStructure = null;
+  const KING_ATTACK_RANGE = 5.5;         // alcance del espadazo del rey
+  const KING_ATTACK_DAMAGE = 35;         // daño por golpe
+  const KING_RADIUS = 1.0;               // radio de colisión del rey
+
+  // Crea una barra de vida 3D (siempre mira a la cámara)
+  function createHealthBar3D() {
+    const group = new THREE.Group();
+    const bg = new THREE.Mesh(
+      new THREE.PlaneGeometry(2.2, 0.28),
+      new THREE.MeshBasicMaterial({ color: 0x1a0808, transparent: true, opacity: 0.85, side: THREE.DoubleSide, depthTest: false })
+    );
+    group.add(bg);
+    const fg = new THREE.Mesh(
+      new THREE.PlaneGeometry(2.1, 0.20),
+      new THREE.MeshBasicMaterial({ color: 0x39ff5a, side: THREE.DoubleSide, depthTest: false })
+    );
+    fg.position.z = 0.02;
+    group.add(fg);
+    group.userData.fg = fg;
+    group.renderOrder = 999;
+    bg.renderOrder = 999;
+    fg.renderOrder = 999;
+    return group;
+  }
+
+  function addStructure(bld, def) {
+    const bar = createHealthBar3D();
+    bld.add(bar);
+    bld.updateMatrixWorld(true);
+    const box = new THREE.Box3().setFromObject(bld);
+    bar.position.y = (box.max.y - bld.position.y) + 0.8;
+
+    const data = {
+      mesh: bld,
+      def: def,
+      hp: def.hp,
+      maxHp: def.hp,
+      healthBar: bar,
+      radius: def.size * 0.45,
+    };
+    structures.push(data);
+
+    // Referencia en cada mesh para raycasting
+    bld.traverse(o => { if (o.isMesh) o.userData.structureData = data; });
+
+    // Ocultar barra si está al 100%
+    updateHealthBar3D(data);
+    return data;
+  }
+
+  function updateHealthBar3D(s) {
+    const ratio = s.hp / s.maxHp;
+    s.healthBar.userData.fg.scale.x = Math.max(0.001, ratio);
+    s.healthBar.userData.fg.position.x = -(1 - ratio) * 1.05;
+    let color;
+    if (ratio > 0.6) color = 0x39ff5a;
+    else if (ratio > 0.3) color = 0xffd76a;
+    else color = 0xff4040;
+    s.healthBar.userData.fg.material.color.setHex(color);
+    // Oculta la barra cuando está al 100%
+    s.healthBar.visible = (ratio < 0.999);
+  }
+
+  function damageStructure(s, amount) {
+    s.hp = Math.max(0, s.hp - amount);
+    updateHealthBar3D(s);
+    if (s.hp <= 0) destroyStructure(s);
+    if (selectedStructure === s) updateInfoPanel();
+  }
+
+  function destroyStructure(s) {
+    scene.remove(s.mesh);
+    const idx = structures.indexOf(s);
+    if (idx >= 0) structures.splice(idx, 1);
+    if (selectedStructure === s) deselectStructure();
+  }
+
+  function selectStructure(s) {
+    selectedStructure = s;
+    updateInfoPanel();
+  }
+
+  function deselectStructure() {
+    selectedStructure = null;
+    document.getElementById('structure-info').classList.remove('visible');
+  }
+
+  function updateInfoPanel() {
+    if (!selectedStructure) {
+      document.getElementById('structure-info').classList.remove('visible');
+      return;
+    }
+    const s = selectedStructure;
+    document.getElementById('info-name').textContent = s.def.icon + ' ' + s.def.name;
+    document.getElementById('info-hp').textContent = Math.ceil(s.hp) + ' / ' + s.maxHp;
+    const ratio = s.hp / s.maxHp;
+    const fill = document.getElementById('info-hp-fill');
+    fill.style.width = (ratio * 100) + '%';
+    if (ratio > 0.6)      fill.style.background = 'linear-gradient(90deg, #39ff5a, #a0e050)';
+    else if (ratio > 0.3) fill.style.background = 'linear-gradient(90deg, #ffd76a, #ff9a3a)';
+    else                  fill.style.background = 'linear-gradient(90deg, #ff4040, #c01010)';
+    document.getElementById('info-desc').textContent = s.def.desc;
+    document.getElementById('structure-info').classList.add('visible');
+  }
+
+  // Colisión circular del rey contra las estructuras
+  function collidesWithStructure(x, z, radius) {
+    for (const s of structures) {
+      const dx = x - s.mesh.position.x;
+      const dz = z - s.mesh.position.z;
+      if (dx*dx + dz*dz < (radius + s.radius) * (radius + s.radius)) return true;
+    }
+    return false;
+  }
+
+  // Botones del menú (uno por estructura, en su sección correspondiente)
+  ALL_STRUCTURES.forEach(b => {
+    const btn = document.createElement('button');
+    btn.className = 'build-item';
+    btn.id = 'build-item-' + b.id;
+    btn.innerHTML = '<span class="icon">' + b.icon + '</span>' + b.name;
+    btn.addEventListener('click', () => startPlacement(b.id));
+    document.getElementById(b.grid).appendChild(btn);
+  });
+
+  function toggleBuildMenu() {
+    if (build.placing) { cancelPlacement(); buildMenuEl.classList.add('visible'); return; }
+    buildMenuEl.classList.toggle('visible');
+  }
+  function closeBuildMenu() { buildMenuEl.classList.remove('visible'); }
+
+  function startPlacement(id) {
+    const model = build.models[id];
+    if (!model) return;
+    cancelPlacement();
+    closeBuildMenu();
+
+    const def = ALL_STRUCTURES.find(b => b.id === id);
+    const ghost = model.scene.clone(true);
+
+    // Escalar al tamaño deseado
+    ghost.position.set(0, 0, 0); ghost.rotation.set(0, 0, 0); ghost.scale.set(1, 1, 1);
+    ghost.updateMatrixWorld(true);
+    let box = new THREE.Box3().setFromObject(ghost);
+    const dim = box.getSize(new THREE.Vector3());
+    build.ghostScale = def.size / Math.max(dim.x, dim.z);
+    ghost.scale.setScalar(build.ghostScale);
+
+    // Materiales de holograma
+    ghost.traverse(o => { if (o.isMesh) { o.material = ghostMatOk; o.castShadow = false; o.receiveShadow = false; } });
+
+    // Offset para que el cursor quede al centro de la base
+    ghost.updateMatrixWorld(true);
+    box = new THREE.Box3().setFromObject(ghost);
+    const c = box.getCenter(new THREE.Vector3());
+    build.ghostOffset = new THREE.Vector3(-c.x, -box.min.y, -c.z);
+
+    scene.add(ghost);
+    build.ghost = ghost;
+    build.placing = id;
+    buildHintNameEl.textContent = def.name;
+    buildHintEl.classList.add('visible');
+    updateGhost();
+  }
+
+  function cancelPlacement() {
+    if (build.ghost) { scene.remove(build.ghost); build.ghost = null; }
+    build.placing = null;
+    buildHintEl.classList.remove('visible');
+  }
+
+  const buildRay = new THREE.Raycaster();
+  const mouseNDC = new THREE.Vector2(0, 0);
+  window.addEventListener('mousemove', (e) => {
+    mouseNDC.set((e.clientX / innerWidth) * 2 - 1, -(e.clientY / innerHeight) * 2 + 1);
+  });
+
+  function terrainPoint() {
+    buildRay.setFromCamera(mouseNDC, camera);
+    const hits = buildRay.intersectObject(terrain, false);
+    return hits.length ? hits[0].point : null;
+  }
+
+  function setGhostOk(ok) {
+    build.ok = ok;
+    if (!build.ghost) return;
+    const mat = ok ? ghostMatOk : ghostMatBad;
+    build.ghost.traverse(o => { if (o.isMesh) o.material = mat; });
+  }
+
+  function updateGhost() {
+    if (!build.ghost) return;
+    const p = terrainPoint();
+    if (!p) { setGhostOk(false); return; }
+    const h = getHeight(p.x, p.z);
+    const valid = h > WATER_LEVEL + 0.6 && Math.abs(p.x) < BOUND && Math.abs(p.z) < BOUND;
+    setGhostOk(valid);
+    const off = build.ghostOffset.clone().applyAxisAngle(UP, build.ghost.rotation.y);
+    build.ghost.position.set(p.x + off.x, h + off.y, p.z + off.z);
+  }
+
+  function buildPlace() {
+    if (!build.placing || !build.ok) return;
+    const model = build.models[build.placing];
+    const def = ALL_STRUCTURES.find(b => b.id === build.placing);
+    const bld = model.scene.clone(true);
+    bld.scale.setScalar(build.ghostScale);
+    bld.position.copy(build.ghost.position);
+    bld.rotation.y = build.ghost.rotation.y;
+    bld.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+    scene.add(bld);
+    addStructure(bld, def);
+    // El modo colocación sigue activo para poner varias; click der / ESC para salir
+  }
+
+  // ---- Cargar los 24 modelos (.gltf edificios + .glb murallas) ----
+  // GLTFLoader lee ambos formatos; el .glb ya trae texturas y buffers incrustados.
+  const gltfLoader = new GLTFLoader();
+  for (let i = 0; i < ALL_STRUCTURES.length; i++) {
+    const b = ALL_STRUCTURES[i];
+    updateLoading(92 + Math.round((i / ALL_STRUCTURES.length) * 7), `Cargando estructuras (${i + 1}/${ALL_STRUCTURES.length})...`);
+    try {
+      const gltf = await gltfLoader.loadAsync(b.path + b.file);
+      build.models[b.id] = { scene: gltf.scene };
+    } catch (err) {
+      console.warn('⚠ No se pudo cargar ' + b.file, err);
+      const item = document.getElementById('build-item-' + b.id);
+      if (item) item.disabled = true;
+    }
+    await yieldToBrowser();
+  }
+
+  /* ============================================================
+     MINIMAPA (canvas 2D top-down)
+  ============================================================ */
+  const minimapCanvas = document.getElementById('minimap');
+  const minimapCtx = minimapCanvas.getContext('2d');
+  const MINIMAP_RES = minimapCanvas.width;   // 200x200
+  let minimapBase = null;
+
+  // Mapea una altura del mundo a un color RGB del minimapa
+  function heightToColor(x, z) {
+    const h = getHeight(x, z);
+    if (h < WATER_LEVEL)                 return [18, 80, 120];
+    if (h < WATER_LEVEL + 0.5)           return [74, 140, 180];
+    if (h < WATER_LEVEL + 1.6)           return [203, 177, 115];
+    if (h < 9.5)                         return [94, 140, 61];
+    if (h < 14)                          return [139, 134, 121];
+    if (CFG.hasSnow && h > 13)           return [230, 230, 240];
+    return [110, 105, 95];
+  }
+
+  // Genera la imagen base del minimapa (solo una vez, al cargar)
+  function generateMinimapBase() {
+    const img = minimapCtx.createImageData(MINIMAP_RES, MINIMAP_RES);
+    for (let y = 0; y < MINIMAP_RES; y++) {
+      for (let x = 0; x < MINIMAP_RES; x++) {
+        const wx = (x / MINIMAP_RES - 0.5) * WORLD_SIZE;
+        const wz = (y / MINIMAP_RES - 0.5) * WORLD_SIZE;
+        const [r, g, b] = heightToColor(wx, wz);
+        const idx = (y * MINIMAP_RES + x) * 4;
+        img.data[idx]   = r;
+        img.data[idx+1] = g;
+        img.data[idx+2] = b;
+        img.data[idx+3] = 255;
+      }
+    }
+    return img;
+  }
+  minimapBase = generateMinimapBase();
+
+  // Actualiza puntos dinámicos cada frame
+  function updateMinimap() {
+    minimapCtx.putImageData(minimapBase, 0, 0);
+
+    // Estructuras (puntos dorados)
+    minimapCtx.fillStyle = '#d9a733';
+    for (let i = 0; i < structures.length; i++) {
+      const s = structures[i];
+      const mx = (s.mesh.position.x / WORLD_SIZE + 0.5) * MINIMAP_RES;
+      const my = (s.mesh.position.z / WORLD_SIZE + 0.5) * MINIMAP_RES;
+      minimapCtx.fillRect(mx - 1.5, my - 1.5, 3, 3);
+    }
+
+    // Rey (círculo blanco con borde)
+    const kx = (king.position.x / WORLD_SIZE + 0.5) * MINIMAP_RES;
+    const ky = (king.position.z / WORLD_SIZE + 0.5) * MINIMAP_RES;
+    minimapCtx.fillStyle = '#ffffff';
+    minimapCtx.strokeStyle = '#b98d3e';
+    minimapCtx.lineWidth = 1.2;
+    minimapCtx.beginPath();
+    minimapCtx.arc(kx, ky, 3.5, 0, Math.PI * 2);
+    minimapCtx.fill();
+    minimapCtx.stroke();
+
+    // Indicador de dirección del rey (pequeña línea)
+    const dirX = Math.sin(king.rotation.y) * 6;
+    const dirZ = Math.cos(king.rotation.y) * 6;
+    minimapCtx.strokeStyle = '#ffd76a';
+    minimapCtx.lineWidth = 1.5;
+    minimapCtx.beginPath();
+    minimapCtx.moveTo(kx, ky);
+    minimapCtx.lineTo(kx + dirX, ky + dirZ);
+    minimapCtx.stroke();
+  }
+
+  /* --- LISTO --- */
+  updateLoading(100, `¡Bienvenido a ${CFG.name}!`);
+
+  setTimeout(() => {
+    loadingScreen.classList.add('hidden');
+    hud.style.display = 'block';
+    exitBtn.style.display = 'block';
+  }, 400);
+
+  /* --- INPUT --- */
+  const keys = {};
+  const keydownHandler = e => {
+    keys[e.code] = true;
+    if (e.code.startsWith('Arrow')) e.preventDefault();
+    if (e.code === 'KeyC')  toggleBuildMenu();
+    if (e.code === 'Escape') {
+      if (build.placing) cancelPlacement();
+      else if (selectedStructure) deselectStructure();
+      else closeBuildMenu();
+    }
+    if (e.code === 'KeyR' && build.placing && build.ghost) build.ghost.rotation.y += Math.PI / 4;
+  };
+  const keyupHandler = e => { keys[e.code] = false; };
+  window.addEventListener('keydown', keydownHandler);
+  window.addEventListener('keyup', keyupHandler);
+
+  /* Ratón: click izq ataca, click der bloquea, click medio rota cámara */
+  let cameraAzimuth = 0;          // ángulo horizontal de la cámara
+  const CAMERA_RADIUS = 30;       // distancia horizontal al rey
+  const CAMERA_HEIGHT = 42;       // altura de la cámara
+  let isMiddleMouseDown = false;
+  let lastMouseX = 0;
+
+  window.addEventListener('mousedown', (e) => {
+    if (e.target !== renderer.domElement) return;   // ignorar clicks sobre la interfaz
+
+    if (e.button === 0) {
+      if (build.placing) { buildPlace(); return; }
+      if (buildMenuEl.classList.contains('visible')) { closeBuildMenu(); return; }
+      mouseAttackQueued = true;
+
+      // Raycast contra estructuras colocadas
+      const allMeshes = [];
+      structures.forEach(s => s.mesh.traverse(o => { if (o.isMesh) allMeshes.push(o); }));
+      if (allMeshes.length > 0) {
+        buildRay.setFromCamera(mouseNDC, camera);
+        const hits = buildRay.intersectObjects(allMeshes, false);
+        if (hits.length > 0) {
+          const data = hits[0].object.userData.structureData;
+          if (data) {
+            selectStructure(data);
+            const dist = king.position.distanceTo(data.mesh.position);
+            if (dist < KING_ATTACK_RANGE) damageStructure(data, KING_ATTACK_DAMAGE);
+            return;
+          }
+        }
+      }
+      deselectStructure();   // click en vacío deselecciona
+    }
+    if (e.button === 2) {
+      if (build.placing) { cancelPlacement(); return; }
+      mouseBlockHeld = true;
+    }
+    if (e.button === 1) {         // botón central (ruedita)
+      isMiddleMouseDown = true;
+      lastMouseX = e.clientX;
+      e.preventDefault();
+    }
+  });
+  window.addEventListener('mouseup', (e) => {
+    if (e.button === 2) mouseBlockHeld = false;
+    if (e.button === 1) isMiddleMouseDown = false;
+  });
+  window.addEventListener('mousemove', (e) => {
+    if (isMiddleMouseDown) {
+      const dx = e.clientX - lastMouseX;
+      cameraAzimuth -= dx * 0.005;   // sensibilidad de rotación
+      lastMouseX = e.clientX;
+    }
+  });
+  window.addEventListener('contextmenu', (e) => e.preventDefault());
+  window.addEventListener('auxclick', (e) => { if (e.button === 1) e.preventDefault(); });
+
+  const clock = new THREE.Clock();
+  let walkT = 0;
+  camera.position.copy(king.position).add(new THREE.Vector3(0, CAMERA_HEIGHT, CAMERA_RADIUS));
+
+  function update(dt, t) {
+    const dir = new THREE.Vector3();
+    // Direcciones relativas a la orientación de la cámara
+    const forward = new THREE.Vector3(-Math.sin(cameraAzimuth), 0, -Math.cos(cameraAzimuth));
+    const right   = new THREE.Vector3( Math.cos(cameraAzimuth), 0, -Math.sin(cameraAzimuth));
+
+    if (keys['KeyW'] || keys['ArrowUp'])    dir.add(forward);
+    if (keys['KeyS'] || keys['ArrowDown'])  dir.sub(forward);
+    if (keys['KeyD'] || keys['ArrowRight']) dir.add(right);
+    if (keys['KeyA'] || keys['ArrowLeft'])  dir.sub(right);
+
+    const moving = dir.lengthSq() > 0;
+    if (moving) {
+      dir.normalize();
+      const speed = KING_SPEED * (mouseBlockHeld ? 0.45 : 1);
+      let nx = THREE.MathUtils.clamp(king.position.x + dir.x * speed * dt, -BOUND, BOUND);
+      let nz = THREE.MathUtils.clamp(king.position.z + dir.z * speed * dt, -BOUND, BOUND);
+      if (getHeight(nx, king.position.z) >= WATER_LEVEL - 1.0 && !collidesWithStructure(nx, king.position.z, KING_RADIUS)) king.position.x = nx;
+      if (getHeight(king.position.x, nz) >= WATER_LEVEL - 1.0 && !collidesWithStructure(king.position.x, nz, KING_RADIUS)) king.position.z = nz;
+
+      const targetRot = Math.atan2(dir.x, dir.z);
+      let diff = targetRot - king.rotation.y;
+      diff = Math.atan2(Math.sin(diff), Math.cos(diff));
+      king.rotation.y += diff * Math.min(1, dt * 12);
+
+      updateKingSprite(true, dt);
+    } else {
+      updateKingSprite(false, dt);
+    }
+
+    king.position.y = Math.max(getHeight(king.position.x, king.position.z), WATER_LEVEL + 0.5);
+
+    waterMat.uniforms.uTime.value = t;
+    terrainMat.uniforms.uTime.value = t;
+    grassMat.uniforms.uTime.value = t;
+    flowerMat.uniforms.uTime.value = t;
+
+    const desired = new THREE.Vector3(
+      king.position.x + Math.sin(cameraAzimuth) * CAMERA_RADIUS,
+      king.position.y + CAMERA_HEIGHT,
+      king.position.z + Math.cos(cameraAzimuth) * CAMERA_RADIUS
+    );
+    camera.position.lerp(desired, 1 - Math.exp(-6 * dt));
+    camera.lookAt(king.position.x, king.position.y + 2, king.position.z);
+
+    if (build.placing) updateGhost();
+
+    // Las barras de vida miran siempre a la cámara (billboard)
+    for (let i = 0; i < structures.length; i++) {
+      structures[i].healthBar.quaternion.copy(camera.quaternion);
+    }
+
+    // Minimapa cada frame (muy barato: 200x200)
+    updateMinimap();
+  }
+
+  function animate() {
+    requestAnimationFrame(animate);
+    const dt = Math.min(clock.getDelta(), 0.05);
+    update(dt, clock.elapsedTime);
+    composer.render();
+  }
+  animate();
+
+  window.addEventListener('resize', () => {
+    camera.aspect = innerWidth / innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(innerWidth, innerHeight);
+    composer.setSize(innerWidth, innerHeight);
+  });
+}
+
+/* ============================================================
+   INICIAR JUEGO DESDE SELECTOR DE NIVEL
+============================================================ */
+document.querySelectorAll('.level-card').forEach(card => {
+  card.onclick = () => {
+    const level = parseInt(card.dataset.level);
+    startGame(level);
+  };
+});
+</script>
+</body>
+</html>
