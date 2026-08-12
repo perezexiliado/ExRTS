@@ -6,15 +6,22 @@
 <style>
   html, body { margin: 0; padding: 0; overflow: hidden; height: 100%; background: #000; font-family: "Trebuchet MS", Arial, sans-serif; }
   #hud {
-    position: absolute; top: 12px; left: 12px; z-index: 10;
+    position: absolute; top: 12px; right: 12px; z-index: 10;
     color: #fff;
     background: rgba(20, 14, 6, 0.65); border: 2px solid #b98d3e; border-radius: 8px;
     padding: 10px 14px; font-size: 14px; line-height: 1.6; user-select: none;
-    display: none;
+    display: none; text-align: right;
   }
   #hud b { color: #ffd76a; }
+  #hud .res-row { display: flex; gap: 16px; justify-content: flex-end; }
+  #hud .res { white-space: nowrap; font-size: 15px; }
+  #hud .res b { font-family: "Courier New", monospace; }
+  #hud-help {
+    font-size: 11px; color: #c9b98a;
+    border-top: 1px solid #6a5228; margin-top: 6px; padding-top: 5px;
+  }
   #exit-btn {
-    position: absolute; top: 12px; right: 12px; z-index: 10;
+    position: absolute; top: 12px; left: 12px; z-index: 10;
     display: none;
     background: rgba(20, 14, 6, 0.75); color: #ffd76a; border: 2px solid #b98d3e;
     padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 14px;
@@ -200,6 +207,43 @@
   #structure-info #info-desc {
     color: #b8a878; font-size: 12px; font-style: italic; line-height: 1.4;
   }
+  #structure-info #info-desc {
+    color: #b8a878; font-size: 12px; font-style: italic; line-height: 1.4;
+  }
+
+  /* --- PANEL DE PRODUCCIÓN DEL CASTILLO --- */
+  #castle-production {
+    display: none;
+    margin-top: 10px; border-top: 1px solid #6a5228; padding-top: 8px;
+  }
+  #castle-production .prod-title {
+    color: #ffd76a; font-size: 12px; letter-spacing: 2px; margin-bottom: 6px;
+  }
+  .train-bar {
+    width: 100%; height: 14px; background: #1a0808;
+    border: 1px solid #6a5228; border-radius: 7px; overflow: hidden; margin-bottom: 4px;
+  }
+  .train-fill {
+    height: 100%; width: 0%;
+    background: linear-gradient(90deg, #b98d3e, #ffd76a);
+  }
+  #train-status { font-size: 12px; color: #ccc; margin-bottom: 6px; }
+  #train-queue { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 8px; min-height: 24px; align-items: center; }
+  .queue-slot {
+    width: 24px; height: 24px;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(60,42,20,.9); border: 1px solid #6a5228; border-radius: 4px;
+    font-size: 14px;
+  }
+  .queue-slot.active { border-color: #ffd76a; box-shadow: 0 0 6px rgba(255,215,106,.5); }
+  #btn-train-slave {
+    width: 100%; padding: 8px;
+    background: linear-gradient(180deg, rgba(60,42,20,.9), rgba(30,20,10,.9));
+    color: #ffd76a; border: 2px solid #b98d3e; border-radius: 6px;
+    cursor: pointer; font-family: "Trebuchet MS", Arial, sans-serif; font-size: 13px;
+  }
+  #btn-train-slave:hover { border-color: #ffd76a; color: #fff; }
+  #btn-train-slave:disabled { opacity: .4; cursor: not-allowed; }
 
   /* --- MINIMAPA --- */
   #minimap-wrap {
@@ -214,13 +258,45 @@
     color: #ffd76a; font-size: 11px; letter-spacing: 2px;
     text-align: center; margin-bottom: 4px;
   }
-  #minimap {
-    width: 200px; height: 200px;
-    display: block; margin: 0 auto;
-    background: #0a0804;
-    border-radius: 3px;
-    image-rendering: pixelated;
-  }
+#minimap {
+  width: 200px; height: 200px;
+  display: block; margin: 0 auto;
+  background: #0a0804;
+  border-radius: 3px;
+  image-rendering: pixelated;
+}
+
+/* --- MENÚ CONTEXTUAL DEL CASTILLO --- */
+#castle-menu, #npc-menu {
+  position: fixed; z-index: 100; display: none;
+  background: rgba(20, 14, 6, 0.92);
+  border: 2px solid #b98d3e; border-radius: 8px;
+  padding: 8px 0; min-width: 200px;
+  box-shadow: 0 4px 14px rgba(0,0,0,.6);
+}
+#castle-menu.visible, #npc-menu.visible { display: block; }
+#castle-menu h3, #npc-menu h3 {
+  margin: 0 12px 6px; color: #ffd76a; font-size: 13px;
+  letter-spacing: 2px; text-align: center; user-select: none;
+}
+.menu-option {
+  display: block; width: 100%;
+  background: transparent; color: #e8d5a0; border: none;
+  padding: 8px 18px; font-size: 13px; text-align: left;
+  cursor: pointer; font-family: "Trebuchet MS", Arial, sans-serif;
+  transition: all 0.15s;
+}
+.menu-option:hover { background: rgba(185, 141, 62, 0.3); color: #fff; }
+.menu-option:disabled { opacity: 0.4; cursor: not-allowed; }
+.menu-option .cost { float: right; color: #b98d3e; font-size: 11px; }
+
+/* --- RECTÁNGULO DE SELECCIÓN --- */
+#select-rect {
+  position: fixed; z-index: 90; pointer-events: none;
+  border: 2px solid #39ff5a;
+  background: rgba(57, 255, 90, 0.15);
+  display: none;
+}
 </style>
 </head>
 <body>
@@ -233,11 +309,14 @@
 
 <!-- HUD en juego -->
 <div id="hud">
-  <b>👑 EL REY</b><br/>
-  Muévelo con <b>W A S D</b> o las <b>flechas</b>.<br/>
-  Click <b>izq</b>: atacar · Click <b>der</b>: bloquear.<br/>
-  Pulsa <b>C</b>: menú de construcción.<br/>
-  El agua profunda le impide el paso.
+  <div class="res-row">
+    <span class="res" title="Oro">🪙 <b id="res-gold">0</b></span>
+    <span class="res" title="Madera">🪵 <b id="res-wood">0</b></span>
+    <span class="res" title="Piedra">🪨 <b id="res-stone">0</b></span>
+  </div>
+  <div id="hud-help">
+    <b>👑 W A S D</b> mover · Click <b>izq</b> atacar · Click <b>der</b> bloquear · <b>C</b> construir · El agua profunda bloquea el paso
+  </div>
 </div>
 <button id="exit-btn">↩ Menú Principal</button>
 
@@ -254,6 +333,13 @@
     <div class="info-hp-fill" id="info-hp-fill"></div>
   </div>
   <div id="info-desc"></div>
+  <div id="castle-production">
+    <div class="prod-title">⚒ PRODUCCIÓN DE ESCLAVOS</div>
+    <div class="train-bar"><div class="train-fill" id="train-fill"></div></div>
+    <div id="train-status">Sin producción activa</div>
+    <div id="train-queue"></div>
+    <button id="btn-train-slave">👥 Entrenar esclavo (10 🪙)</button>
+  </div>
 </div>
 
 <!-- Menú de construcción -->
@@ -368,6 +454,9 @@ import { ShaderPass }     from 'three/addons/postprocessing/ShaderPass.js';
 import { OutputPass }     from 'three/addons/postprocessing/OutputPass.js';
 import { GLTFLoader }     from 'three/addons/loaders/GLTFLoader.js';
 
+// 🎁 gifuct-js (decodificador de GIF) se cargará más abajo de forma dinámica y segura
+let parseGIF = null, decompressFrames = null;
+
 /* ============================================================
    MENÚ PRINCIPAL - NAVEGACIÓN
 ============================================================ */
@@ -395,6 +484,22 @@ document.querySelectorAll('.modal-close').forEach(b => {
 exitBtn.onclick = () => {
   location.reload(); // Volver al menú recargando
 };
+
+/* ============================================================
+   🎵 MÚSICA DEL MENÚ (assets/music/menumusic.mp3)
+============================================================ */
+const menuMusic = new Audio('assets/music/menumusic.mp3');
+menuMusic.loop = true;
+menuMusic.volume = 0.5;
+
+function tryPlayMenuMusic() { menuMusic.play().catch(() => {}); }
+function stopMenuMusic()    { menuMusic.pause(); menuMusic.currentTime = 0; }
+
+// Intento inmediato; si el navegador bloquea el autoplay,
+// arrancará con la primera interacción del jugador (click/tecla).
+tryPlayMenuMusic();
+window.addEventListener('pointerdown', tryPlayMenuMusic, { once: true });
+window.addEventListener('keydown',     tryPlayMenuMusic, { once: true });
 
 /* ============================================================
    CONFIGURACIÓN DE NIVELES
@@ -486,6 +591,7 @@ async function startGame(levelNum) {
   levelSelect.classList.remove('visible');
   loadingScreen.classList.remove('hidden');
   loadingTitle.textContent = `Cargando: ${CFG.name}...`;
+  stopMenuMusic(); // 🎵 la música del menú se detiene al entrar al mapa
 
   const progressFill = document.querySelector('.progress-fill');
   const loadingText = document.querySelector('.loading-text');
@@ -503,7 +609,7 @@ async function startGame(levelNum) {
   const WORLD_SIZE  = 440;   // ×2 por eje = ×4 de área
   const SEGMENTS    = 480;   // más subdivisión para el mapa grande
   const WATER_LEVEL = CFG.waterLevel;
-  const KING_SPEED  = 14;    // un poco más rápido para un mapa grande
+  const KING_SPEED  = 18;    // 👑 paso más ágil
   const BOUND       = WORLD_SIZE / 2 - 6;
 
   /* --- RUIDO --- */
@@ -561,6 +667,7 @@ async function startGame(levelNum) {
   const ssao = new SSAOPass(scene, camera, innerWidth, innerHeight);
   ssao.kernelRadius = 6; ssao.minDistance = 0.0015; ssao.maxDistance = 0.12;
   composer.addPass(ssao);
+
   const bloom = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), 0.45, 0.9, 0.85);
   composer.addPass(bloom);
 
@@ -804,6 +911,18 @@ async function startGame(levelNum) {
   const leavesMat = new THREE.MeshStandardMaterial({ color: CFG.treeLeafColor, roughness: 0.9 });
   const rockMat = new THREE.MeshStandardMaterial({ color: CFG.rockColor, roughness: 1.0 });
 
+  // 🌲 Colisión circular del rey contra los troncos de los árboles
+  const treeColliders = [];
+  function collidesWithTree(x, z, radius) {
+    for (let i = 0; i < treeColliders.length; i++) {
+      const c = treeColliders[i];
+      const dx = x - c.x, dz = z - c.z;
+      const md = radius + c.r;
+      if (dx * dx + dz * dz < md * md) return true;
+    }
+    return false;
+  }
+
   function makeTree(x, z) {
     const g = new THREE.Group();
     const s = 0.9 + Math.random() * 0.9;
@@ -821,6 +940,8 @@ async function startGame(levelNum) {
     g.position.set(x, getHeight(x, z), z);
     g.rotation.y = Math.random() * Math.PI;
     scene.add(g);
+    // 🌲 Colisión del tronco, proporcional al tamaño del árbol
+    treeColliders.push({ x, z, r: 0.4 * s });
   }
 
   function makeCactus(x, z) {
@@ -840,7 +961,7 @@ async function startGame(levelNum) {
     scene.add(g);
   }
 
-  // Árbol según nivel (×3 para cubrir el mapa ×4 sin saturar)
+  // Árbol según nivel (el desierto conserva sus cactus)
   if (levelNum === 3) {
     // Desierto: cactus
     for (let i = 0; i < CFG.treeCount * 3; i++) {
@@ -885,253 +1006,300 @@ async function startGame(levelNum) {
     makeHouse(9, -6, 0.4); makeHouse(-8, -10, -0.6); makeHouse(-11, 5, 1.2);
   }
 
-  /* --- REY PIXEL ART (sprite 2.5D generado por código) --- */
-  const KING_HEIGHT = 4.8;
-  const PX = 48, FRAME_COUNT = 12;
-  const IDLE = [0, 1], WALK = [2, 3, 4, 5], ATTACK = [6, 7, 8, 9, 10], BLOCK = 11;
+  /* --- REY (sprites reales 2.5D) --- */
+  const KING_HEIGHT = 6.5;
+
+  // 🏰 Bases: jugador abajo-izquierda, ciudad enemiga en la esquina opuesta
+  function findLandSpot(cx, cz) {
+    for (let r = 0; r <= 80; r += 10) {
+      for (let a = 0; a < 8; a++) {
+        const ang = (a / 8) * Math.PI * 2;
+        const x = THREE.MathUtils.clamp(cx + Math.cos(ang) * r, -BOUND, BOUND);
+        const z = THREE.MathUtils.clamp(cz + Math.sin(ang) * r, -BOUND, BOUND);
+        const h = getHeight(x, z);
+        if (h > WATER_LEVEL + 2 && h < 9) return { x, z };  // tierra construible
+      }
+    }
+    return { x: cx, z: cz };
+  }
+  const playerBase = findLandSpot(-170, 170);   // esquina inferior izquierda
+  const enemyBase  = findLandSpot(170, -170);   // esquina opuesta
 
   const king = new THREE.Group();
-  king.position.set(0, Math.max(getHeight(0, 0), WATER_LEVEL + 2), 0);
+  king.position.set(playerBase.x + 12, Math.max(getHeight(playerBase.x + 12, playerBase.z - 12), WATER_LEVEL + 2), playerBase.z - 12);
   scene.add(king);
 
   let mouseAttackQueued = false, mouseBlockHeld = false;
 
-  // ---- Paleta del rey extendida (más matices y detalles) ----
-  const PAL = {
-    'k': '#0f0f17', 'ks': '#2a2a38',        // contornos negro y gris
-    's': '#e8b48c', 'S': '#c98d66', 'sk': '#f5cba8', // piel (base, sombra, luz)
-    'g': '#ffd75e', 'G': '#d9a733', 'd': '#9a741f',  // oro (claro, medio, oscuro)
-    'w': '#f4f4f8', 'W': '#cdd2de', 'WW': '#9aa0ae', // blanco y grises de la capa
-    'b': '#2b3f92', 'B': '#1d2c66',                   // azul armadura
-    'm': '#8d99a6', 'M': '#dfe6ee',                   // acero
-    'e': '#22222c', 'ew': '#ffffff',                  // ojos (pupila y blanco)
-    'r': '#a83232', 'R': '#d84545', 'cr': '#e62e2e',  // rojos (tela, sangre, rubí)
-    'y': '#6b4a2b', 'Y': '#8a6840',                   // madera (empuñadura)
-    'c': '#3a6ea8', 'C': '#274d78'                    // azul escudo
+  // ============================================================
+  // REY CON SPRITES REALES (idle / walking / attack por dirección)
+  // ============================================================
+  const KING_DIRS = ['south','south-west','west','north-west','north','north-east','east','south-east'];
+  const IDLE_PATH   = 'assets/characters/rey/animations/idle/';
+  const ATTACK_PATH = 'assets/characters/rey/animations/attack/';
+  const WALK_PATH   = 'assets/characters/rey/animations/walking/';
+
+  // ⚔️ Nombres reales de los GIF de ataque (diagonales sin guion).
+  // Cuando tengas el de espaldas, llámalo "attack_north.gif" y funcionará solo.
+  const ATTACK_FILE = {
+    'south':      'attack_south.gif',
+    'south-east': 'attack_southeast.gif',
+    'east':       'attack_east.gif',
+    'north-east': 'attack_northeast.gif',
+    'north':      'attack_north.gif',      // 👈 pendiente (espaldas)
+    'north-west': 'attack_northwest.gif',
+    'west':       'attack_west.gif',
+    'south-west': 'attack_southwest.gif',
   };
 
-  const atlas = document.createElement('canvas');
-  atlas.width = PX * FRAME_COUNT; atlas.height = PX;
-  const actx = atlas.getContext('2d');
+  const kingAssets = {};   // dir -> { idle, attack, walk:[{tex,delay}], aspectIdle, aspectAttack, aspectWalk }
+  const texLoader = new THREE.TextureLoader();
 
-  function drawKingFrame(idx, p) {
-    const ox = idx * PX;
-    const P = (x, y, c) => { if (PAL[c]) { actx.fillStyle = PAL[c]; actx.fillRect(ox + x, y, 1, 1); } };
-    const R = (x, y, w, h, c) => { for (let i = 0; i < w; i++) for (let j = 0; j < h; j++) P(x + i, y + j, c); };
-    const b = p.breathe || 0;
+  function prepTexture(tex) {
+    tex.magFilter = THREE.NearestFilter;   // píxel nítido
+    tex.minFilter = THREE.NearestFilter;
+    tex.generateMipmaps = false;
+    tex.colorSpace = THREE.SRGBColorSpace;
+    return tex;
+  }
 
-    // ============ CAPA BLANCA (detrás) ============
-    R(13, 16 + b, 22, 22, 'w');
-    R(13, 16 + b, 1, 22, 'W');  R(34, 16 + b, 1, 22, 'W');
-    R(13, 16 + b, 22, 1, 'W');
-    R(13 + (p.cape || 0), 37 + b, 22, 1, 'W');
-    // Pliegues de la capa
-    R(17, 20 + b, 1, 16, 'WW');
-    R(21, 22 + b, 1, 14, 'WW');
-    R(27, 22 + b, 1, 14, 'WW');
-    R(31, 20 + b, 1, 16, 'WW');
-    // Broche dorado en el cuello
-    R(22, 16 + b, 4, 2, 'g'); P(23, 16 + b, 'G'); P(24, 16 + b, 'G');
+  const ALPHA_CUT = 100;   // 👻 píxeles con alfa menor se consideran fondo/velo
 
-    // ============ PIERNAS (armadura azul) ============
-    const leg = (x, lift) => {
-      R(x, 30, 4, 10 - lift, 'B');
-      R(x, 30, 4, 1, 'b');              // rodillera
-      R(x + 1, 30, 2, 1, 'm');          // detalle metálico
-      R(x, 40 - lift, 4, 3, 'k');       // botas negras
-      R(x + 1, 40 - lift, 2, 1, 'Y');   // hebilla
-      R(x, 30, 1, 10 - lift, 'ks');     // brillo lateral
-    };
-    leg(18, p.legL || 0);
-    leg(26, p.legR || 0);
-
-    // ============ TORSO (armadura dorada con emblema) ============
-    R(16, 18 + b, 16, 13, 'G');
-    R(16, 18 + b, 16, 1, 'g');
-    R(16, 30 + b, 16, 1, 'd');
-    // Placa pectoral con emblema (cruz real)
-    R(21, 20 + b, 6, 8, 'g');
-    R(21, 20 + b, 6, 1, 'sk');
-    R(23, 21 + b, 2, 6, 'r');   // cruz vertical
-    R(21, 23 + b, 6, 2, 'r');   // cruz horizontal
-    P(23, 23 + b, 'R'); P(24, 23 + b, 'R'); P(23, 24 + b, 'R'); P(24, 24 + b, 'R');
-    // Cinturón
-    R(16, 28 + b, 16, 1, 'k');
-    P(23, 28 + b, 'g'); P(24, 28 + b, 'g'); P(22, 28 + b, 'G'); P(25, 28 + b, 'G');
-    // Detalles laterales
-    R(16, 18 + b, 1, 13, 'd');
-    R(31, 18 + b, 1, 13, 'd');
-
-    // ============ HOMBROS (hombreras doradas detalladas) ============
-    R(13, 18 + b, 3, 4, 'G'); P(13, 18 + b, 'g'); P(15, 18 + b, 'g');
-    R(32, 18 + b, 3, 4, 'G'); P(32, 18 + b, 'g'); P(34, 18 + b, 'g');
-    P(14, 19 + b, 'M'); P(33, 19 + b, 'M');  // remaches
-
-    // ============ BRAZOS ============
-    R(13, 22 + b, 3, 8, 'b');   // brazo izquierdo (azul)
-    R(32, 22 + b, 3, 8, 'b');   // brazo derecho (azul)
-    R(13, 22 + b, 1, 8, 'ks');  // brillo
-    R(34, 22 + b, 1, 8, 'ks');
-    // Manos (piel)
-    P(13, 30 + b, 's'); P(14, 30 + b, 's'); P(15, 30 + b, 's');
-    P(32, 30 + b, 's'); P(33, 30 + b, 's'); P(34, 30 + b, 's');
-
-    // ============ CABEZA ============
-    R(21, 16 + b, 6, 2, 's');              // cuello
-    R(18, 7 + b, 12, 10, 's');             // cara
-    R(18, 7 + b, 1, 10, 'S');              // sombra izq
-    R(29, 7 + b, 1, 10, 'S');              // sombra der
-    R(22, 7 + b, 4, 1, 'sk');              // brillo frente
-    // Cabello blanco (lados)
-    R(17, 7 + b, 1, 7, 'W'); R(30, 7 + b, 1, 7, 'W');
-    // Cejas
-    R(19, 9 + b, 3, 1, 'W'); R(26, 9 + b, 3, 1, 'W');
-    // Ojos (blanco + pupila)
-    P(20, 11 + b, 'ew'); P(21, 11 + b, 'e');
-    P(26, 11 + b, 'ew'); P(27, 11 + b, 'e');
-    // Nariz
-    P(23, 13 + b, 'S'); P(24, 13 + b, 'S');
-    // Boca (bajo la barba)
-    P(23, 15 + b, 'R'); P(24, 15 + b, 'R');
-    // Barba blanca majestuosa (con textura)
-    R(18, 14 + b, 12, 5, 'w');
-    R(18, 14 + b, 1, 5, 'W');  R(29, 14 + b, 1, 5, 'W');
-    R(20, 19 + b, 8, 1, 'W');  R(22, 20 + b, 4, 1, 'W');
-    // Detalle bigote
-    R(21, 14 + b, 2, 1, 'W'); R(25, 14 + b, 2, 1, 'W');
-
-    // ============ CORONA (5 picos con joyas) ============
-    R(17, 5 + b, 14, 2, 'G');
-    R(17, 5 + b, 14, 1, 'g');
-    // Picos (5 picos)
-    P(17, 4 + b, 'g'); P(17, 3 + b, 'g'); P(17, 2 + b, 'g');
-    P(20, 4 + b, 'g'); P(20, 3 + b, 'g'); P(20, 2 + b, 'g');
-    P(23, 4 + b, 'g'); P(23, 2 + b, 'g'); P(24, 2 + b, 'g');
-    P(27, 4 + b, 'g'); P(27, 3 + b, 'g'); P(27, 2 + b, 'g');
-    P(30, 4 + b, 'g'); P(30, 3 + b, 'g'); P(30, 2 + b, 'g');
-    // Perlas en los picos
-    P(17, 1 + b, 'M'); P(20, 1 + b, 'M'); P(24, 1 + b, 'M');
-    P(27, 1 + b, 'M'); P(30, 1 + b, 'M');
-    // Rubí central y laterales
-    P(23, 3 + b, 'cr'); P(24, 3 + b, 'cr');
-    P(20, 5 + b, 'r'); P(27, 5 + b, 'r');
-    // Diamantes pequeños
-    P(18, 5 + b, 'M'); P(29, 5 + b, 'M');
-
-    // ============ ESCUDO ============
-    if (p.shieldUp) {
-      R(16, 14 + b, 16, 14, 'c');
-      R(16, 14 + b, 16, 1, 'C'); R(16, 27 + b, 16, 1, 'C');
-      R(16, 14 + b, 1, 14, 'C'); R(31, 14 + b, 1, 14, 'C');
-      R(31, 14 + b, 1, 14, 'C');
-      // Emblema heráldico (cruz con borde dorado)
-      R(22, 17 + b, 4, 8, 'g');
-      R(19, 20 + b, 10, 2, 'g');
-      R(23, 18 + b, 2, 6, 'G');
-      R(20, 20 + b, 8, 1, 'G');
-      // Remaches
-      P(17, 15 + b, 'M'); P(30, 15 + b, 'M');
-      P(17, 26 + b, 'M'); P(30, 26 + b, 'M');
-    } else {
-      R(10, 22 + b, 7, 12, 'c');
-      R(10, 22 + b, 7, 1, 'C'); R(10, 33 + b, 7, 1, 'C');
-      R(10, 22 + b, 1, 12, 'C'); R(16, 22 + b, 1, 12, 'C');
-      // Emblema
-      R(12, 25 + b, 3, 6, 'g');
-      R(11, 27 + b, 5, 2, 'g');
-      R(13, 26 + b, 1, 4, 'G');
-      R(12, 27 + b, 3, 1, 'G');
-      P(10, 23 + b, 'M'); P(16, 23 + b, 'M');
-    }
-
-    // ============ ESPADA (más detallada) ============
-    const hx = 34, hy = 30 + b;
-    const a = (p.sword === undefined ? 110 : p.sword) * Math.PI / 180;
-    const dx = Math.cos(a), dy = Math.sin(a);
-    // Pomo
-    P(hx - Math.round(dx * 2), hy - Math.round(dy * 2), 'g');
-    // Empuñadura
-    P(hx - Math.round(dx), hy - Math.round(dy), 'y');
-    P(hx, hy, 'y');
-    // Guarda (cruz)
-    P(hx + Math.round(-dy), hy + Math.round(dx), 'g');
-    P(hx - Math.round(-dy), hy - Math.round(dx), 'g');
-    P(hx + Math.round(-dy * 1.5), hy + Math.round(dx * 1.5), 'G');
-    P(hx - Math.round(-dy * 1.5), hy - Math.round(dx * 1.5), 'G');
-    // Hoja larga con reflejo
-    for (let i = 1; i <= 16; i++) {
-      const px = hx + Math.round(dx * i);
-      const py = hy + Math.round(dy * i);
-      P(px, py, i >= 13 ? 'M' : 'm');
-      if (i % 2 === 0 && i < 13) P(px + Math.round(-dy * 0.5), py + Math.round(dx * 0.5), 'M');
-    }
-    // Punta brillante
-    P(hx + Math.round(dx * 17), hy + Math.round(dy * 17), 'ew');
-
-    // ============ ESTELA DEL TAJO ============
-    if (p.trail) {
-      for (let i = 5; i <= 15; i += 2) {
-        P(hx + Math.round(Math.cos(a - 0.5) * i), hy + Math.round(Math.sin(a - 0.5) * i), 'M');
+  // 🧹 Limpia el sprite: chroma key + elimina velos semitransparentes.
+  // Devuelve la caja de contenido visible (para recorte y apoyo en el suelo).
+  function cleanSprite(canvas) {
+    const ctx = canvas.getContext('2d');
+    const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const d = img.data;
+    let minX = canvas.width, minY = canvas.height, maxX = -1, maxY = -1;
+    for (let y = 0; y < canvas.height; y++) {
+      for (let x = 0; x < canvas.width; x++) {
+        const i = (y * canvas.width + x) * 4;
+        const r = d[i], g = d[i + 1], b = d[i + 2];
+        if (g > 110 && g - r > 40 && g - b > 40) d[i + 3] = 0;  // 🟩 chroma key
+        if (d[i + 3] < ALPHA_CUT) d[i + 3] = 0;                 // 👻 fuera velos
+        if (d[i + 3] > 0) {
+          if (x < minX) minX = x;
+          if (x > maxX) maxX = x;
+          if (y < minY) minY = y;
+          if (y > maxY) maxY = y;
+        }
       }
+    }
+    ctx.putImageData(img, 0, 0);
+    return { minX, minY, maxX, maxY };
+  }
+
+  // 📐 Métricas de recorte: cuánto ocupa el personaje y cuánto margen hay abajo
+  function metricsFromBox(W, H, box) {
+    if (box.maxX < 0) return { padBottom: 0, contentRatio: 1, aspect: W / H };
+    return {
+      padBottom: (H - 1 - box.maxY) / H,
+      contentRatio: (box.maxY - box.minY + 1) / H,
+      aspect: W / H
+    };
+  }
+  function unionBox(a, b) {
+    return {
+      minX: Math.min(a.minX, b.minX), minY: Math.min(a.minY, b.minY),
+      maxX: Math.max(a.maxX, b.maxX), maxY: Math.max(a.maxY, b.maxY)
+    };
+  }
+
+  // Carga un PNG, lo limpia y devuelve textura + métricas
+  async function loadCleanPNG(url) {
+    const t = await texLoader.loadAsync(url);
+    const c = document.createElement('canvas');
+    c.width = t.image.width; c.height = t.image.height;
+    c.getContext('2d').drawImage(t.image, 0, 0);
+    const box = cleanSprite(c);
+    return { tex: prepTexture(new THREE.CanvasTexture(c)), metrics: metricsFromBox(c.width, c.height, box) };
+  }
+
+  // Textura de emergencia por si falta algún archivo
+  function placeholderTex() {
+    const c = document.createElement('canvas'); c.width = 24; c.height = 32;
+    const x = c.getContext('2d');
+    x.fillStyle = '#ffd75e'; x.fillRect(6, 10, 12, 12);
+    x.fillStyle = '#e8b48c'; x.fillRect(8, 4, 8, 6);
+    x.fillStyle = '#d9a733'; x.fillRect(7, 2, 10, 2);
+    x.fillStyle = '#1d2c66'; x.fillRect(8, 22, 3, 8); x.fillRect(13, 22, 3, 8);
+    return prepTexture(new THREE.CanvasTexture(c));
+  }
+
+  // Decodifica un GIF animado frame a frame y quita el chroma
+  async function loadGifFrames(url) {
+    if (!parseGIF || !decompressFrames) throw new Error('gifuct-js no disponible');
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const buf = await res.arrayBuffer();
+    const gif = parseGIF(buf);
+    const frames = decompressFrames(gif, true);
+    const W = gif.lsd.width, H = gif.lsd.height;
+    const base = document.createElement('canvas'); base.width = W; base.height = H;
+    const bctx = base.getContext('2d');
+    const out = [];
+    let ubox = { minX: W, minY: H, maxX: -1, maxY: -1 };
+    for (const f of frames) {
+      const patch = bctx.createImageData(f.dims.width, f.dims.height);
+      patch.data.set(f.patch);
+      bctx.putImageData(patch, f.dims.left, f.dims.top);
+      const snap = document.createElement('canvas'); snap.width = W; snap.height = H;
+      snap.getContext('2d').drawImage(base, 0, 0);
+      ubox = unionBox(ubox, cleanSprite(snap));   // 🧹 chroma + velos + caja de contenido
+      out.push({ tex: prepTexture(new THREE.CanvasTexture(snap)), delay: Math.max(f.delay || 100, 33) });
+      if (f.disposalType === 2) bctx.clearRect(f.dims.left, f.dims.top, f.dims.width, f.dims.height);
+    }
+    if (!out.length) throw new Error('GIF sin frames');
+    return { frames: out, metrics: metricsFromBox(W, H, ubox) };
+  }
+
+  updateLoading(90, "Cargando animaciones del rey...");
+  await yieldToBrowser();
+
+  // 🎁 Carga segura de gifuct-js (jsdelivr lo convierte a ESM con /+esm).
+  // Si el CDN fallara, el juego NO se rompe: los walking usan el idle.
+  if (!parseGIF) {
+    try {
+      const g = await import('https://cdn.jsdelivr.net/npm/gifuct-js@2.1.2/+esm');
+      parseGIF       = g.parseGIF       || (g.default && g.default.parseGIF);
+      decompressFrames = g.decompressFrames || (g.default && g.default.decompressFrames);
+    } catch (e) {
+      console.warn('⚠ No se pudo cargar gifuct-js; los walking GIF usarán el sprite idle.', e);
     }
   }
 
-  // ---- Hornear los 12 frames ----
-  drawKingFrame(0, {});
-  drawKingFrame(1, { breathe: 1 });
-  drawKingFrame(2, { legL: 1, cape: 1 });
-  drawKingFrame(3, { breathe: 1 });
-  drawKingFrame(4, { legR: 1, cape: -1 });
-  drawKingFrame(5, { breathe: 1 });
-  drawKingFrame(6, { sword: -120 });
-  drawKingFrame(7, { sword: -70, trail: 1 });
-  drawKingFrame(8, { sword: -15, trail: 1 });
-  drawKingFrame(9, { sword: 45, trail: 1 });
-  drawKingFrame(10, { sword: 100 });
-  drawKingFrame(11, { shieldUp: 1, sword: 140 });
+  for (const dir of KING_DIRS) {
+    kingAssets[dir] = { idle: null, attack: null, walk: [] };
+    try {
+      const r = await loadCleanPNG(IDLE_PATH + dir + '.png');
+      kingAssets[dir].idle = r.tex;
+      kingAssets[dir].idleM = r.metrics;
+    } catch (e) { console.warn('⚠ Falta idle de ' + dir, e); }
+    try {
+      const g = await loadGifFrames(ATTACK_PATH + ATTACK_FILE[dir]);
+      kingAssets[dir].attack = g.frames;   // ⚔️ ahora es una lista de frames animados
+      kingAssets[dir].attackM = g.metrics;
+    } catch (e) { console.warn('⚠ Falta attack de ' + dir + ' (usará idle)', e); }
+    try {
+      const g = await loadGifFrames(WALK_PATH + 'Idle_v3_walking_' + dir + '.gif');
+      kingAssets[dir].walk = g.frames;
+      kingAssets[dir].walkM = g.metrics;
+    } catch (e) { console.warn('⚠ Falta walking de ' + dir, e); }
+    await yieldToBrowser();
+  }
 
-  const kingTex = new THREE.CanvasTexture(atlas);
-  kingTex.magFilter = THREE.NearestFilter;   // píxel nítido
-  kingTex.minFilter = THREE.NearestFilter;
-  kingTex.generateMipmaps = false;
-  kingTex.colorSpace = THREE.SRGBColorSpace;
-  kingTex.repeat.set(1 / FRAME_COUNT, 1);
+  // Rellenos de seguridad (que nunca quede un hueco sin textura)
+  const ph = placeholderTex();
+  const phM = { padBottom: 0, contentRatio: 1, aspect: 24 / 32 };
+  for (const dir of KING_DIRS) {
+    const a = kingAssets[dir];
+    if (!a.idle)   { a.idle = ph; a.idleM = phM; }
+    if (!a.attack || !a.attack.length) { a.attack = [{ tex: a.idle, delay: 100 }]; a.attackM = a.idleM; }
+    if (!a.walk.length) { a.walk = [{ tex: a.idle, delay: 100 }]; a.walkM = a.idleM; }
+    if (!a.idleM)   a.idleM   = phM;
+    if (!a.attackM) a.attackM = a.idleM;
+    if (!a.walkM)   a.walkM   = a.idleM;
+  }
 
-  const kingMat = new THREE.MeshBasicMaterial({ map: kingTex, transparent: true, alphaTest: 0.1, side: THREE.DoubleSide });
-  const kingMesh = new THREE.Mesh(new THREE.PlaneGeometry(KING_HEIGHT, KING_HEIGHT), kingMat);
-  kingMesh.position.y = KING_HEIGHT / 2 - 0.1;
+  const kingMat = new THREE.MeshBasicMaterial({ map: kingAssets.south.idle, transparent: true, alphaTest: 0.1, side: THREE.DoubleSide });
+  const kingMesh = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), kingMat);
   king.add(kingMesh);
+
+  // 📐 Tamaño y apoyo inicial: el personaje mide KING_HEIGHT y los pies tocan el suelo
+  {
+    const m = kingAssets.south.idleM;
+    const planeH = KING_HEIGHT / m.contentRatio;
+    kingMesh.scale.set(planeH * m.aspect, planeH, 1);
+    kingMesh.position.y = planeH / 2 - planeH * m.padBottom - 0.05;  // -0.05 para "clavar" los pies
+  }
 
   // Sombra falsa + anillo de selección
   const shadow = new THREE.Mesh(new THREE.CircleGeometry(0.55, 24), new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.35 }));
   shadow.rotation.x = -Math.PI / 2; shadow.position.y = 0.06; king.add(shadow);
   const ring = new THREE.Mesh(new THREE.RingGeometry(0.9, 1.15, 32), new THREE.MeshBasicMaterial({ color: 0x39ff5a, transparent: true, opacity: 0.75, side: THREE.DoubleSide }));
   ring.rotation.x = -Math.PI / 2; ring.position.y = 0.08; king.add(ring);
+  
+  // 🎭 Adiós al "recuadro" SSAO sin capas ni pases extra:
+  // ocultamos al rey SOLO durante el pase de normales del SSAO.
+  // Su pase de belleza lo incluye (se ve) pero el SSAO no "ve" su plano (sin recuadro).
+  if (typeof ssao.renderOverride === 'function') {
+    const _ssaoOverride = ssao.renderOverride.bind(ssao);
+    ssao.renderOverride = (renderer, overrideMaterial, renderTarget, clearColor, clearAlpha) => {
+      king.visible = false;
+      _ssaoOverride(renderer, overrideMaterial, renderTarget, clearColor, clearAlpha);
+      king.visible = true;
+    };
+  }
 
-  // ---- Máquina de estados de animación ----
-  let kingState = 'idle', attackT = 0, walkAcc = 0, idleAcc = 0, lastFrame = -1;
-  const ATTACK_DUR = 0.45;
+  // ---- Máquina de estados de animación (sprites direccionales) ----
+  let kingState = 'idle', attackT = 0, attackDur = 0.45;
+  const ATTACK_DUR = 0.45;             // duración mínima del ataque
+  const WALK_ANIM_SPEED = 1.7;         // ⚡ reproducción acelerada del GIF de caminar
+  const ATTACK_ANIM_SPEED = 5.0;       // ⚔️ velocidad de reproducción del GIF de ataque
+  let currentDir = 'south';
+  let walkIdx = 0, walkMs = 0;
+  let attackIdx = 0, attackMs = 0;
+  let lastTex = null;
 
-  function updateKingSprite(moving, dt) {
-    if (mouseAttackQueued) { mouseAttackQueued = false; kingState = 'attack'; attackT = 0; }
+  function setKingTexture(tex, m) {
+    if (lastTex === tex) return;
+    kingMat.map = tex;
+    // El PERSONAJE (no el canvas) mide KING_HEIGHT; los pies quedan apoyados
+    const planeH = KING_HEIGHT / m.contentRatio;
+    kingMesh.scale.set(planeH * m.aspect, planeH, 1);
+    kingMesh.position.y = planeH / 2 - planeH * m.padBottom - 0.05;
+    lastTex = tex;
+  }
+
+  function updateKingSprite(moving, dt, dirName) {
+    if (dirName) currentDir = dirName;
+
+    // ⚔️ Si está atacando, forzar estado 'attack' y NO permitir cambiar a walk/idle
+    if (mouseAttackQueued) {
+      mouseAttackQueued = false;
+      kingState = 'attack';
+      attackT = 0; attackMs = 0; attackIdx = 0;
+      const total = kingAssets[currentDir].attack.reduce((s, f) => s + f.delay, 0);
+      attackDur = Math.max(ATTACK_DUR, (total / 1000) / ATTACK_ANIM_SPEED);
+    }
+
     if (kingState === 'attack') {
       attackT += dt;
-      if (attackT >= ATTACK_DUR) kingState = moving ? 'walk' : 'idle';
+      if (attackT >= attackDur) {
+        kingState = moving ? 'walk' : 'idle';
+      }
     } else if (mouseBlockHeld) {
       kingState = 'block';
     } else {
       kingState = moving ? 'walk' : 'idle';
     }
 
-    let frame;
-    if (kingState === 'idle')            { idleAcc += dt; frame = IDLE[Math.floor(idleAcc * 2) % 2]; }
-    else if (kingState === 'walk')       { walkAcc += dt; frame = WALK[Math.floor(walkAcc * 8) % 4]; }
-    else if (kingState === 'attack')     { frame = ATTACK[Math.min(ATTACK.length - 1, Math.floor((attackT / ATTACK_DUR) * ATTACK.length))]; }
-    else                                 { frame = BLOCK; }
+    const A = kingAssets[currentDir];
 
-    if (frame !== lastFrame) { kingTex.offset.x = frame / FRAME_COUNT; lastFrame = frame; }
+    if (kingState === 'attack') {
+      attackMs += dt * 1000 * ATTACK_ANIM_SPEED;
+      let frame = A.attack[attackIdx];
+      while (attackIdx < A.attack.length - 1 && attackMs >= frame.delay) {
+        attackMs -= frame.delay;
+        attackIdx++;
+        frame = A.attack[attackIdx];
+      }
+      setKingTexture(frame.tex, A.attackM);
+    } else if (kingState === 'walk') {
+      walkMs += dt * 1000 * WALK_ANIM_SPEED;
+      let frame = A.walk[walkIdx % A.walk.length];
+      while (walkMs >= frame.delay) {
+        walkMs -= frame.delay;
+        walkIdx = (walkIdx + 1) % A.walk.length;
+        frame = A.walk[walkIdx];
+      }
+      setKingTexture(frame.tex, A.walkM);
+    } else {
+      walkMs = 0;
+      setKingTexture(A.idle, A.idleM);
+    }
 
-    // Billboard: el sprite siempre mira a la cámara
     const yaw = Math.atan2(camera.position.x - king.position.x, camera.position.z - king.position.z);
     kingMesh.rotation.y = yaw - king.rotation.y;
   }
@@ -1223,144 +1391,160 @@ async function startGame(levelNum) {
     return group;
   }
 
-function addStructure(bld, def) {
+  // 🚪 Palabras clave para detectar puertas (evita tocar piezas de muralla)
+  // FUERTES: indican casi seguro una HOJA de puerta.
+  const DOOR_STRONG = ['door', 'puerta', 'porton', 'portón', 'portcullis', 'hoja', 'leaf'];
+  // DÉBILES: se usan solo si no hay ninguna fuerte.
+  const DOOR_WEAK = ['gate'];
+  // Si el nombre contiene esto, es MURO/VALLA: jamás debe girar.
+  const WALL_TERMS = ['wall', 'fence', 'muralla', 'valla', 'esquina', 'corner', 'straight', 'recta', 'roof', 'techo', 'arch', 'arco', 'frame', 'marco', 'post', 'poste', 'tower', 'torre', 'pillar', 'column'];
+  const DOOR_OPEN_SIGN = 1;   // si las puertas abren "hacia dentro", cámbialo a -1
+
+  // Se ejecuta UNA vez por modelo al cargarlo (no al colocarlo)
+    // Se ejecuta UNA vez por modelo al cargarlo (no al colocarlo)
+  function setupDoors(root) {
+    root.updateMatrixWorld(true);
+
+    // Caja de cualquier objeto en espacio LOCAL del modelo
+    function localBox(o) {
+      const wb = new THREE.Box3().setFromObject(o);
+      const lb = new THREE.Box3();
+      const v = new THREE.Vector3();
+      for (let ix = 0; ix < 2; ix++)
+        for (let iy = 0; iy < 2; iy++)
+          for (let iz = 0; iz < 2; iz++) {
+            v.set(ix ? wb.max.x : wb.min.x,
+                  iy ? wb.max.y : wb.min.y,
+                  iz ? wb.max.z : wb.min.z);
+            lb.expandByPoint(root.worldToLocal(v.clone()));
+          }
+      return lb;
+    }
+
+    const rootBox = localBox(root);
+    const rootSize = rootBox.getSize(new THREE.Vector3());
+    const rootMaxHoriz = Math.max(rootSize.x, rootSize.z);
+
+    // 1) Candidatos por nombre, en 3 pasadas (sin modificar el grafo)
+    const candidates = [];
+    const nameOf = o => (o.name || '').toLowerCase();
+
+    // Pasada A: nombres fuertes (door, puerta...)
+    root.traverse(o => { if (o.isMesh && DOOR_STRONG.some(k => nameOf(o).includes(k))) candidates.push(o); });
+
+    // Pasada B: nombres débiles (gate) pero NUNCA piezas de muro/valla
+    if (candidates.length === 0) {
+      root.traverse(o => {
+        if (o.isMesh) {
+          const n = nameOf(o);
+          if (DOOR_WEAK.some(k => n.includes(k)) && !WALL_TERMS.some(k => n.includes(k))) candidates.push(o);
+        }
+      });
+    }
+
+    // Pasada C: nombres débiles sin exclusión (se aplicará filtro de tamaño obligatorio)
+    let forceSizeFilter = false;
+    if (candidates.length === 0) {
+      forceSizeFilter = true;
+      root.traverse(o => { if (o.isMesh && DOOR_WEAK.some(k => nameOf(o).includes(k))) candidates.push(o); });
+    }
+
+    if (candidates.length === 0) {
+      const names = [];
+      root.traverse(o => { if (o.isMesh) names.push(o.name); });
+      console.log('🚪 Sin puerta detectada. Nodos del modelo:', names);
+      return;
+    }
+
+    // 2) Cajas locales de cada candidato
+    let infos = candidates.map(o => {
+      const box = localBox(o);
+      return { o, box, center: box.getCenter(new THREE.Vector3()), size: box.getSize(new THREE.Vector3()) };
+    });
+
+    // 🛡️ FILTRO DE TAMAÑO: una hoja de puerta NUNCA abarca casi todo el muro.
+    // Descarta candidatos que cubran >75% de la huerta del modelo.
+    const reasonable = infos.filter(i => Math.max(i.size.x, i.size.z) <= rootMaxHoriz * 0.75);
+    if (reasonable.length > 0) infos = reasonable;
+    else if (forceSizeFilter) {
+      // El único "candidato" es el muro entero: mejor no animar nada.
+      console.log('🚪 El único candidato a puerta abarca todo el muro → se ignora para no girar el muro.');
+      return;
+    }
+
+    console.log('🚪 Hojas de puerta en', root.name || 'modelo', ':', infos.map(i => i.o.name));
+
+    // Eje horizontal del ancho de la puerta (X o Z según el modelo)
+    const axis = infos[0].size.x >= infos[0].size.z ? 'x' : 'z';
+    infos.sort((a, b) => a.center[axis] - b.center[axis]);
+
+    // 3) Pivote en la BISAGRA (coords locales) + re-parent con attach()
+    const centers = [];
+    infos.forEach((info, i) => {
+      const isLeft = infos.length === 1 ? true : (i === 0);
+      const hinge = info.center.clone();
+      hinge[axis] = isLeft ? info.box.min[axis] : info.box.max[axis];
+
+      const pivot = new THREE.Object3D();
+      pivot.name = 'DoorPivot_' + i;
+      pivot.position.copy(hinge);        // en espacio LOCAL del modelo
+      root.add(pivot);
+      root.updateMatrixWorld(true);
+      pivot.attach(info.o);              // conserva el transform exacto de la hoja
+
+      pivot.userData.isDoorPivot = true;
+      pivot.userData.openDir = (infos.length === 1) ? 1 : (isLeft ? 1 : -1);
+      centers.push(info.center);
+    });
+
+    // Centro del vano en coords LOCALES (para la zona de paso de la colisión)
+    const c = new THREE.Vector3();
+    centers.forEach(v => c.add(v));
+    c.divideScalar(centers.length);
+    root.userData.doorCenter = [c.x, c.y, c.z];
+  }
+
+  function addStructure(bld, def, team) {
     const bar = createHealthBar3D();
     bld.add(bar);
     bld.updateMatrixWorld(true);
     const box = new THREE.Box3().setFromObject(bld);
     bar.position.y = (box.max.y - bld.position.y) + 0.8;
 
-    // --- 🚪 Detectar todas las hojas de puerta del modelo GLB ---
+    // --- 🚪 Solo recoger los pivotes creados por setupDoors al cargar ---
     const doorLeaves = [];
     bld.traverse(o => {
-      if (o.isMesh) {
-        const n = (o.name || '').toLowerCase();
-        if (n.includes('door') || n.includes('gate') || n.includes('puerta') || 
-            n.includes('porton') || n.includes('portón') || n.includes('flap') || 
-            n.includes('leaf') || n.includes('panel') || n.includes('portcullis')) {
-          
-          // Calcular bounding box de la hoja
-          const box = new THREE.Box3().setFromObject(o);
-          const size = box.getSize(new THREE.Vector3());
-          const center = new THREE.Vector3();
-          box.getCenter(center);
-          const localCenter = bld.worldToLocal(center.clone());
-          
-          // 🎯 Calcular posición de la bisagra (borde lateral de la puerta)
-          // Para puertas dobles: hoja izq gira en su borde derecho, hoja der en su borde izquierdo
-          // Para puerta simple: gira en uno de sus bordes laterales
-          const halfWidth = size.x / 2;
-          const pivotOffset = new THREE.Vector3();
-          
-          // La bisagra está en el borde de la puerta (no en el centro)
-          // Si hay dos hojas, la bisagra está en el borde interior (lado opuesto al centro del vano)
-          if (doorLeaves.length === 0) {
-            // Primera hoja detectada - por ahora asumimos bisagra en el borde
-            pivotOffset.x = halfWidth; // pivote en el borde derecho de esta hoja
-          }
-          
-          // Crear un pivote (Object3D) en la posición de la bisagra
-          const pivot = new THREE.Object3D();
-          const worldCenter = center.clone();
-          const worldPivot = worldCenter.clone();
-          worldPivot.x += halfWidth; // mover al borde de la puerta
-          
-          const localPivot = bld.worldToLocal(worldPivot);
-          pivot.position.copy(localPivot);
-          
-          // Re-parentar el mesh al pivote
-          const originalParent = o.parent;
-          const originalPosition = o.position.clone();
-          const originalRotation = o.rotation.clone();
-          
-          originalParent.remove(o);
-          pivot.add(o);
-          bld.add(pivot);
-          
-          // Ajustar posición del mesh respecto al pivote
-          o.position.set(-halfWidth, originalPosition.y - localPivot.y, originalPosition.z - localPivot.z);
-          o.rotation.copy(originalRotation);
-          
-          doorLeaves.push({
-            pivot: pivot,              // El pivote que vamos a rotar
-            mesh: o,                   // El mesh de la puerta
-            baseRot: pivot.rotation.y,
-            targetRot: pivot.rotation.y,
-            localPos: localCenter,
-          });
-        }
+      if (o.userData && o.userData.isDoorPivot) {
+        doorLeaves.push({
+          pivot: o,
+          targetRot: o.rotation.y,
+          openDir: o.userData.openDir || 1,
+        });
       }
     });
 
-    // Si hay varias hojas, identificar izquierda/derecha por posición X local
-    if (doorLeaves.length >= 2) {
-      doorLeaves.sort((a, b) => a.localPos.x - b.localPos.x);
-      
-      // Re-calcular pivotes correctamente para puertas dobles
-      // Hoja izquierda (X menor): pivote en su borde derecho
-      // Hoja derecha (X mayor): pivote en su borde izquierdo
-      
-      for (let i = 0; i < doorLeaves.length; i++) {
-        const leaf = doorLeaves[i];
-        const isLeft = (i === 0); // primera es izquierda
-        
-        // Obtener bounding box del mesh actual
-        leaf.mesh.geometry.computeBoundingBox();
-        const meshBox = leaf.mesh.geometry.boundingBox.clone();
-        const meshSize = meshBox.getSize(new THREE.Vector3());
-        
-        // Reposicionar el pivote según sea hoja izquierda o derecha
-        if (isLeft) {
-          // Hoja izquierda: pivote en su borde derecho
-          leaf.pivot.position.x += meshSize.x / 2;
-          leaf.mesh.position.x = -meshSize.x / 2;
-          leaf.isLeft = true;
-        } else {
-          // Hoja derecha: pivote en su borde izquierdo
-          leaf.pivot.position.x -= meshSize.x / 2;
-          leaf.mesh.position.x = meshSize.x / 2;
-          leaf.isLeft = false;
-        }
-      }
-    } else if (doorLeaves.length === 1) {
-      // Puerta de una sola hoja: pivote en el borde izquierdo (convención)
-      const leaf = doorLeaves[0];
-      leaf.mesh.geometry.computeBoundingBox();
-      const meshBox = leaf.mesh.geometry.boundingBox.clone();
-      const meshSize = meshBox.getSize(new THREE.Vector3());
-      
-      // Ajustar pivote al borde izquierdo
-      leaf.pivot.position.x -= meshSize.x / 2;
-      leaf.mesh.position.x = meshSize.x / 2;
-      leaf.isLeft = true;
-    }
-
-    // Calcular centro global de todas las hojas (para la zona de paso)
     let doorLocalPos = null;
-    if (doorLeaves.length > 0) {
-      const sum = new THREE.Vector3();
-      for (const leaf of doorLeaves) sum.add(leaf.localPos);
-      sum.divideScalar(doorLeaves.length);
-      doorLocalPos = sum;
+    if (bld.userData && bld.userData.doorCenter) {
+      doorLocalPos = new THREE.Vector3().fromArray(bld.userData.doorCenter);
     }
 
     const data = {
       mesh: bld,
       def: def,
+      team: team || 'neutral',   // 👑 'player' | 'enemy' | 'neutral'
       hp: def.hp,
       maxHp: def.hp,
       healthBar: bar,
       radius: def.size * 0.45,
-      doorLeaves: doorLeaves,            // array de hojas detectadas
-      doorOpen: false,                   // estado actual (abierta/cerrada)
-      doorLocalPos: doorLocalPos,        // centro del vano para la colisión
+      doorLeaves: doorLeaves,
+      doorOpen: false,
+      doorLocalPos: doorLocalPos,
     };
     structures.push(data);
 
     // Referencia en cada mesh para raycasting
     bld.traverse(o => { if (o.isMesh) o.userData.structureData = data; });
 
-    // Ocultar barra si está al 100%
     updateHealthBar3D(data);
     return data;
   }
@@ -1545,7 +1729,7 @@ function addStructure(bld, def) {
     bld.rotation.y = build.ghost.rotation.y;
     bld.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
     scene.add(bld);
-    addStructure(bld, def);
+    addStructure(bld, def, 'player');   // 👑 lo que construye el jugador es suyo
     // El modo colocación sigue activo para poner varias; click der / ESC para salir
   }
 
@@ -1557,12 +1741,74 @@ function addStructure(bld, def) {
     updateLoading(92 + Math.round((i / ALL_STRUCTURES.length) * 7), `Cargando estructuras (${i + 1}/${ALL_STRUCTURES.length})...`);
     try {
       const gltf = await gltfLoader.loadAsync(b.path + b.file);
+      setupDoors(gltf.scene);   // 🚪 prepara pivotes UNA vez por modelo
       build.models[b.id] = { scene: gltf.scene };
     } catch (err) {
       console.warn('⚠ No se pudo cargar ' + b.file, err);
       const item = document.getElementById('build-item-' + b.id);
       if (item) item.disabled = true;
     }
+    await yieldToBrowser();
+  }
+  // ---- 🔴 Cargar los modelos rojos (ciudad enemiga) ----
+  const RED_PATH = 'assets/structures/buildings/red/';
+  const redModels = {};
+  for (const b of BUILDINGS) {
+    updateLoading(99, `Cargando ciudad enemiga (${b.id})...`);
+    try {
+      const gltf = await gltfLoader.loadAsync(RED_PATH + b.file.replace('_blue', '_red'));
+      setupDoors(gltf.scene);
+      redModels[b.id] = { scene: gltf.scene };
+    } catch (err) { console.warn('⚠ No se pudo cargar el modelo rojo de ' + b.id, err); }
+    await yieldToBrowser();
+  }
+
+  // Coloca una estructura directamente en el mapa (azul o roja)
+  function placeAt(models, id, x, z, rotY, team) {
+    const model = models[id];
+    const def = ALL_STRUCTURES.find(s => s.id === id);
+    if (!model || !def) return;
+    const bld = model.scene.clone(true);
+    bld.position.set(0, 0, 0); bld.rotation.set(0, 0, 0); bld.scale.set(1, 1, 1);
+    bld.updateMatrixWorld(true);
+    let box = new THREE.Box3().setFromObject(bld);
+    const dim = box.getSize(new THREE.Vector3());
+    bld.scale.setScalar(def.size / Math.max(dim.x, dim.z));
+    bld.rotation.y = rotY || 0;
+    bld.updateMatrixWorld(true);
+    box = new THREE.Box3().setFromObject(bld);
+    const c = box.getCenter(new THREE.Vector3());
+    const h = getHeight(x, z);
+    bld.position.set(x - c.x, h - box.min.y, z - c.z);   // apoyada en el terreno
+    bld.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+    scene.add(bld);
+    addStructure(bld, def, team);   // tiene vida, colisión, team y sale en el minimapa
+  }
+
+  // 🏰 Tu castillo azul en la esquina inferior izquierda
+  placeAt(build.models, 'castle', playerBase.x, playerBase.z, 0, 'player');
+
+  // 🔥 Ciudad enemiga roja en la esquina opuesta
+  const CITY = [
+    { id: 'castle',       dx: 0,   dz: 0,   rot: Math.PI },
+    { id: 'barracks',     dx: -16, dz: -8,  rot: Math.PI / 2 },
+    { id: 'archeryrange', dx: 16,  dz: -8,  rot: -Math.PI / 2 },
+    { id: 'blacksmith',   dx: -16, dz: 10,  rot: Math.PI / 2 },
+    { id: 'church',       dx: 16,  dz: 10,  rot: -Math.PI / 2 },
+    { id: 'market',       dx: 0,   dz: -18, rot: Math.PI },
+    { id: 'tavern',       dx: 0,   dz: 16,  rot: Math.PI },
+    { id: 'home_A',       dx: -30, dz: 0,   rot: Math.PI / 2 },
+    { id: 'home_B',       dx: 30,  dz: 0,   rot: -Math.PI / 2 },
+    { id: 'well',         dx: 7,   dz: 24,  rot: 0 },
+    { id: 'tower_A',      dx: -28, dz: -24, rot: 0 },
+    { id: 'tower_B',      dx: 28,  dz: -24, rot: 0 },
+    { id: 'lumbermill',   dx: -32, dz: 18,  rot: Math.PI / 2 },
+    { id: 'windmill',     dx: 32,  dz: 18,  rot: -Math.PI / 2 },
+    { id: 'watermill',    dx: 0,   dz: 32,  rot: Math.PI },
+    { id: 'mine',         dx: -8,  dz: -30, rot: Math.PI },
+  ];
+  for (const b of CITY) {
+    placeAt(redModels, b.id, enemyBase.x + b.dx, enemyBase.z + b.dz, b.rot, 'enemy');
     await yieldToBrowser();
   }
 
@@ -1618,6 +1864,14 @@ function addStructure(bld, def) {
       minimapCtx.fillRect(mx - 1.5, my - 1.5, 3, 3);
     }
 
+    // Esclavos (puntos azules claros)
+    minimapCtx.fillStyle = '#7ab8ff';
+    for (let i = 0; i < slaves.length; i++) {
+      const s = slaves[i];
+      const mx = (s.mesh.position.x / WORLD_SIZE + 0.5) * MINIMAP_RES;
+      const my = (s.mesh.position.z / WORLD_SIZE + 0.5) * MINIMAP_RES;
+      minimapCtx.fillRect(mx - 1.2, my - 1.2, 2.4, 2.4);
+    }
     // Rey (círculo blanco con borde)
     const kx = (king.position.x / WORLD_SIZE + 0.5) * MINIMAP_RES;
     const ky = (king.position.z / WORLD_SIZE + 0.5) * MINIMAP_RES;
@@ -1640,6 +1894,286 @@ function addStructure(bld, def) {
     minimapCtx.stroke();
   }
 
+  /* ============================================================
+     SISTEMA DE ESCLAVOS (NPCs)
+  ============================================================ */
+  const slaves = [];
+  const SLAVE_COST = 10;          // 💰 cada esclavo cuesta 10 de oro
+  const SLAVE_TRAIN_TIME = 10;    // ⏱️ tarda 10 segundos en fabricarse
+  const SLAVE_SPEED = 8;
+  const SLAVE_FOLLOW_DIST = 5;
+  const SLAVE_ATTACK_RANGE = 4;
+  const SLAVE_DETECT_RANGE = 14;
+  const SLAVE_DAMAGE = 25;
+  // 💰 Recursos del jugador
+  let gold = 500, wood = 200, stone = 100;
+  const resGoldEl  = document.getElementById('res-gold');
+  const resWoodEl  = document.getElementById('res-wood');
+  const resStoneEl = document.getElementById('res-stone');
+
+  function updateResourcesUI() {
+    resGoldEl.textContent  = Math.floor(gold);
+    resWoodEl.textContent  = Math.floor(wood);
+    resStoneEl.textContent = Math.floor(stone);
+  }
+
+  // 🏭 Producción pasiva de los edificios del jugador (por segundo):
+  // Castillo = impuestos (oro) · Aserradero = madera · Mina = piedra + algo de oro · Mercado = oro
+  const PRODUCERS = {
+    castle:     { gold: 1.0 },
+    lumbermill: { wood: 1.0 },
+    mine:       { stone: 0.8, gold: 0.3 },
+    market:     { gold: 0.5 },
+  };
+  function updateResources(dt) {
+    for (const s of structures) {
+      const p = PRODUCERS[s.def.id];
+      if (!p || s.team !== 'player' || s.hp <= 0) continue;
+      if (p.gold)  gold  += p.gold  * dt;
+      if (p.wood)  wood  += p.wood  * dt;
+      if (p.stone) stone += p.stone * dt;
+    }
+    updateResourcesUI();
+  }
+
+  // Pixel art del esclavo: afrodescendiente con taparrabos blanco
+  function createSlaveSprite() {
+    const c = document.createElement('canvas');
+    c.width = 24; c.height = 32;
+    const x = c.getContext('2d');
+    // Pelo (negro abundante)
+    x.fillStyle = '#1a1008';
+    x.fillRect(7, 0, 10, 5);
+    // Cara
+    x.fillStyle = '#4a2a18';
+    x.fillRect(8, 3, 8, 7);
+    // Ojos
+    x.fillStyle = '#ffffff';
+    x.fillRect(9, 5, 2, 2); x.fillRect(13, 5, 2, 2);
+    x.fillStyle = '#1a1008';
+    x.fillRect(10, 5, 1, 2); x.fillRect(14, 5, 1, 2);
+    // Boca
+    x.fillStyle = '#2a1a10';
+    x.fillRect(10, 8, 4, 1);
+    // Torso
+    x.fillStyle = '#3a2010';
+    x.fillRect(7, 10, 10, 10);
+    // Brazos
+    x.fillStyle = '#3a2010';
+    x.fillRect(4, 11, 3, 8); x.fillRect(17, 11, 3, 8);
+    // Taparrabos blanco
+    x.fillStyle = '#f5f0e8';
+    x.fillRect(7, 19, 10, 4);
+    x.fillStyle = '#d8d0c0';
+    x.fillRect(7, 22, 10, 1);
+    // Piernas
+    x.fillStyle = '#3a2010';
+    x.fillRect(8, 23, 3, 7); x.fillRect(13, 23, 3, 7);
+    // Pies
+    x.fillStyle = '#1a1008';
+    x.fillRect(7, 29, 4, 2); x.fillRect(13, 29, 4, 2);
+
+    const tex = prepTexture(new THREE.CanvasTexture(c));
+    return tex;
+  }
+
+  const slaveTex = createSlaveSprite();
+  const slaveMat = new THREE.MeshBasicMaterial({ map: slaveTex, transparent: true, alphaTest: 0.1, side: THREE.DoubleSide });
+  const SLAVE_HEIGHT = 4.5;
+
+  function createSlave(x, z) {
+    const group = new THREE.Group();
+    const mesh = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), slaveMat.clone());
+    const aspect = 24 / 32;
+    mesh.scale.set(SLAVE_HEIGHT * aspect, SLAVE_HEIGHT, 1);
+    mesh.position.y = SLAVE_HEIGHT / 2 - 0.05;
+    group.add(mesh);
+
+    const shadow = new THREE.Mesh(new THREE.CircleGeometry(0.4, 16), new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.3 }));
+    shadow.rotation.x = -Math.PI / 2; shadow.position.y = 0.05;
+    group.add(shadow);
+
+    // Anillo de selección (oculto por defecto)
+    const ring = new THREE.Mesh(new THREE.RingGeometry(0.5, 0.65, 24), new THREE.MeshBasicMaterial({ color: 0x39ff5a, transparent: true, opacity: 0, side: THREE.DoubleSide }));
+    ring.rotation.x = -Math.PI / 2; ring.position.y = 0.07;
+    group.add(ring);
+
+    group.position.set(x, Math.max(getHeight(x, z), WATER_LEVEL + 0.5), z);
+    scene.add(group);
+
+    const slave = {
+      mesh: group,
+      sprite: mesh,
+      ring: ring,
+      state: 'idle',
+      target: null,
+      attackCooldown: 0,
+      speed: SLAVE_SPEED,
+      walkAnim: 0,
+    };
+    slaves.push(slave);
+    return slave;
+  }
+
+  // ⚒️ Cola de fabricación: 1 esclavo en fábrica + el resto en espera
+  const slaveQueue = [];
+  let trainProgress = 0;
+
+  function hireSlave() {
+    if (gold < SLAVE_COST) return;
+    gold -= SLAVE_COST;                 // se paga al encargar
+    slaveQueue.push(true);              // entra en la cola
+    updateResourcesUI();
+    refreshQueueUI();
+  }
+
+  function spawnSlaveAtCastle() {
+    const castle = structures.find(s => s.def.id === 'castle' && s.team === 'player');
+    if (!castle) return;
+    const angle = Math.random() * Math.PI * 2;
+    const r = 8 + Math.random() * 4;
+    createSlave(castle.mesh.position.x + Math.cos(angle) * r,
+                castle.mesh.position.z + Math.sin(angle) * r);
+  }
+
+  function updateTraining(dt) {
+    if (slaveQueue.length > 0) {
+      trainProgress += dt;
+      if (trainProgress >= SLAVE_TRAIN_TIME) {   // se terminó de fabricar
+        trainProgress = 0;
+        slaveQueue.shift();
+        spawnSlaveAtCastle();
+        refreshQueueUI();
+      }
+    } else {
+      trainProgress = 0;
+    }
+    updateProductionUI();
+  }
+
+  // ---- Interfaz del panel de producción ----
+  const prodEl        = document.getElementById('castle-production');
+  const trainFillEl   = document.getElementById('train-fill');
+  const trainStatusEl = document.getElementById('train-status');
+  const trainQueueEl  = document.getElementById('train-queue');
+  const btnTrainEl    = document.getElementById('btn-train-slave');
+
+  btnTrainEl.addEventListener('click', () => hireSlave());
+
+  function refreshQueueUI() {
+    trainQueueEl.innerHTML = '';
+    if (slaveQueue.length === 0) {
+      trainQueueEl.innerHTML = '<span style="font-size:11px;color:#888;">Cola vacía</span>';
+      return;
+    }
+    slaveQueue.forEach((q, i) => {
+      const slot = document.createElement('div');
+      slot.className = 'queue-slot' + (i === 0 ? ' active' : '');
+      slot.textContent = '👤';
+      slot.title = (i === 0) ? 'En fabricación' : 'En cola de espera';
+      trainQueueEl.appendChild(slot);
+    });
+  }
+
+  function updateProductionUI() {
+    const isPlayerCastle = selectedStructure &&
+      selectedStructure.def.id === 'castle' && selectedStructure.team === 'player';
+    prodEl.style.display = isPlayerCastle ? 'block' : 'none';
+    if (!isPlayerCastle) return;
+
+    if (slaveQueue.length > 0) {
+      trainFillEl.style.width = (trainProgress / SLAVE_TRAIN_TIME * 100) + '%';
+      trainStatusEl.textContent =
+        '⚒ Fabricando esclavo... ' + Math.max(0, SLAVE_TRAIN_TIME - trainProgress).toFixed(1) + ' s' +
+        (slaveQueue.length > 1 ? ' · En cola: ' + (slaveQueue.length - 1) : '');
+    } else {
+      trainFillEl.style.width = '0%';
+      trainStatusEl.textContent = 'Sin producción activa';
+    }
+    btnTrainEl.disabled = gold < SLAVE_COST;
+  }
+
+  updateResourcesUI();
+  refreshQueueUI();
+
+  function updateSlaveHighlights() {
+    for (const s of slaves) {
+      s.ring.material.opacity = selectedSlaves.includes(s) ? 0.75 : 0;
+    }
+  }
+
+  function updateSlaves(dt) {
+    for (const s of slaves) {
+      if (s.state === 'follow') {
+        const dist = s.mesh.position.distanceTo(king.position);
+        if (dist > SLAVE_FOLLOW_DIST) {
+          const dir = new THREE.Vector3().subVectors(king.position, s.mesh.position);
+          dir.y = 0;
+          dir.normalize();
+          const nx = s.mesh.position.x + dir.x * s.speed * dt;
+          const nz = s.mesh.position.z + dir.z * s.speed * dt;
+          if (!collidesWithTree(nx, nz, 0.5) && !collidesWithStructure(nx, nz, 0.5)) {
+            s.mesh.position.x = nx;
+            s.mesh.position.z = nz;
+          }
+          s.mesh.rotation.y = Math.atan2(dir.x, dir.z);
+          s.walkAnim += dt * 8;
+        } else {
+          s.walkAnim = 0;
+        }
+        // Detectar estructuras enemigas cercanas
+        for (const struct of structures) {
+          if (struct.team === 'enemy' && struct.hp > 0) {
+            const d = s.mesh.position.distanceTo(struct.mesh.position);
+            if (d < SLAVE_DETECT_RANGE) {
+              s.state = 'attack';
+              s.target = struct;
+              break;
+            }
+          }
+        }
+      } else if (s.state === 'attack') {
+        if (s.target && s.target.hp > 0) {
+          const d = s.mesh.position.distanceTo(s.target.mesh.position);
+          if (d > SLAVE_ATTACK_RANGE) {
+            const dir = new THREE.Vector3().subVectors(s.target.mesh.position, s.mesh.position);
+            dir.y = 0;
+            dir.normalize();
+            const nx = s.mesh.position.x + dir.x * s.speed * dt;
+            const nz = s.mesh.position.z + dir.z * s.speed * dt;
+            if (!collidesWithTree(nx, nz, 0.5)) {
+              s.mesh.position.x = nx;
+              s.mesh.position.z = nz;
+            }
+            s.mesh.rotation.y = Math.atan2(dir.x, dir.z);
+            s.walkAnim += dt * 8;
+          } else {
+            s.attackCooldown -= dt;
+            if (s.attackCooldown <= 0) {
+              damageStructure(s.target, SLAVE_DAMAGE);
+              s.attackCooldown = 1.0;
+            }
+            s.walkAnim = 0;
+          }
+        } else {
+          s.state = 'follow';
+          s.target = null;
+        }
+      } else {
+        s.walkAnim = 0;
+      }
+      s.mesh.position.y = Math.max(getHeight(s.mesh.position.x, s.mesh.position.z), WATER_LEVEL + 0.5);
+      // Billboard
+      const yaw = Math.atan2(camera.position.x - s.mesh.position.x, camera.position.z - s.mesh.position.z);
+      s.sprite.rotation.y = yaw - s.mesh.rotation.y;
+      // Animación de caminar (sube y baja)
+      if (s.state !== 'idle' && s.walkAnim > 0) {
+        s.sprite.position.y = SLAVE_HEIGHT / 2 - 0.05 + Math.abs(Math.sin(s.walkAnim)) * 0.15;
+      } else {
+        s.sprite.position.y = SLAVE_HEIGHT / 2 - 0.05;
+      }
+    }
+  }
   /* --- LISTO --- */
   updateLoading(100, `¡Bienvenido a ${CFG.name}!`);
 
@@ -1666,28 +2200,90 @@ function addStructure(bld, def) {
   window.addEventListener('keydown', keydownHandler);
   window.addEventListener('keyup', keyupHandler);
 
-  /* Ratón: click izq ataca, click der bloquea, click medio rota cámara */
-  let cameraAzimuth = 0;          // ángulo horizontal de la cámara
-  const CAMERA_RADIUS = 30;       // distancia horizontal al rey
-  const CAMERA_HEIGHT = 42;       // altura de la cámara
-  let isMiddleMouseDown = false;
-  let lastMouseX = 0;
+  /* Ratón: click izq ataca/selecciona, click der rota cámara + menús contextuales, rueda = zoom */
+  let cameraAzimuth = 0;
+  let cameraPitch   = 0.95;
+  let cameraDistance = 52;
+  const CAMERA_DIST_MIN = 20;
+  const CAMERA_DIST_MAX = 120;
+  const PITCH_MIN = 0.25;
+  const PITCH_MAX = 1.40;
+
+  let isRotatingCamera = false;
+  let lastMouseX = 0, lastMouseY = 0;
+  let rightClickStart = { x: 0, y: 0, time: 0 };
+
+  // Sistema de selección por arrastre
+  let isSelecting = false;
+  let selectStartX = 0, selectStartY = 0;
+  const selectRect = document.getElementById('select-rect');
+  let selectedSlaves = [];
+
+  // Menús contextuales
+  const castleMenuEl = document.getElementById('castle-menu');
+  const npcMenuEl = document.getElementById('npc-menu');
+
+  function showCastleMenu(x, y) {
+    castleMenuEl.style.left = x + 'px';
+    castleMenuEl.style.top = y + 'px';
+    castleMenuEl.classList.add('visible');
+    npcMenuEl.classList.remove('visible');
+  }
+  function showNpcMenu(x, y) {
+    npcMenuEl.style.left = x + 'px';
+    npcMenuEl.style.top = y + 'px';
+    npcMenuEl.classList.add('visible');
+    castleMenuEl.classList.remove('visible');
+  }
+  function hideContextMenus() {
+    castleMenuEl.classList.remove('visible');
+    npcMenuEl.classList.remove('visible');
+  }
+
+  document.getElementById('hire-slaves').onclick = () => {
+    hireSlave();
+    hideContextMenus();
+  };
+  document.getElementById('npc-follow').onclick = () => {
+    for (const s of selectedSlaves) s.state = 'follow';
+    hideContextMenus();
+  };
+  document.getElementById('npc-stop').onclick = () => {
+    for (const s of selectedSlaves) s.state = 'idle';
+    hideContextMenus();
+  };
 
   window.addEventListener('mousedown', (e) => {
-    if (e.target !== renderer.domElement) return;   // ignorar clicks sobre la interfaz
+    if (e.target !== renderer.domElement) {
+      hideContextMenus();
+      return;
+    }
 
     if (e.button === 0) {
+      hideContextMenus();
       if (build.placing) { buildPlace(); return; }
       if (buildMenuEl.classList.contains('visible')) { closeBuildMenu(); return; }
-      
-      // 🛡️ Evitar ataque doble en un doble click (solo el primer click ataca)
+
+      // Empezar selección por arrastre
+      isSelecting = true;
+      selectStartX = e.clientX;
+      selectStartY = e.clientY;
+      selectRect.style.left = e.clientX + 'px';
+      selectRect.style.top = e.clientY + 'px';
+      selectRect.style.width = '0px';
+      selectRect.style.height = '0px';
+      selectRect.style.display = 'block';
+
       const now = performance.now();
-      if (now - (window.__lastLeftClick || 0) < 400) return;
+      if (now - (window.__lastLeftClick || 0) < 400) {
+        isSelecting = false;
+        selectRect.style.display = 'none';
+        return;
+      }
       window.__lastLeftClick = now;
-      
+
       mouseAttackQueued = true;
 
-      // Raycast contra estructuras colocadas
       const allMeshes = [];
       structures.forEach(s => s.mesh.traverse(o => { if (o.isMesh) allMeshes.push(o); }));
       if (allMeshes.length > 0) {
@@ -1697,75 +2293,159 @@ function addStructure(bld, def) {
           const data = hits[0].object.userData.structureData;
           if (data) {
             selectStructure(data);
-            const dist = king.position.distanceTo(data.mesh.position);
-            if (dist < KING_ATTACK_RANGE) damageStructure(data, KING_ATTACK_DAMAGE);
+            if (data.team === 'player') {
+              mouseAttackQueued = false;
+            } else if (data.team === 'enemy') {
+              const dist = king.position.distanceTo(data.mesh.position);
+              if (dist < KING_ATTACK_RANGE) damageStructure(data, KING_ATTACK_DAMAGE);
+            } else {
+              mouseAttackQueued = false;
+            }
             return;
           }
         }
       }
-      deselectStructure();   // click en vacío deselecciona
+      deselectStructure();
     }
     if (e.button === 2) {
+      hideContextMenus();
       if (build.placing) { cancelPlacement(); return; }
+
+      rightClickStart = { x: e.clientX, y: e.clientY, time: performance.now() };
+      isRotatingCamera = true;
+      lastMouseX = e.clientX;
+      lastMouseY = e.clientY;
       mouseBlockHeld = true;
     }
-    if (e.button === 1) {         // botón central (ruedita)
-      isMiddleMouseDown = true;
-      lastMouseX = e.clientX;
-      e.preventDefault();
-    }
   });
+
   window.addEventListener('mouseup', (e) => {
-    if (e.button === 2) mouseBlockHeld = false;
-    if (e.button === 1) isMiddleMouseDown = false;
-  });
-  window.addEventListener('mousemove', (e) => {
-    if (isMiddleMouseDown) {
-      const dx = e.clientX - lastMouseX;
-      cameraAzimuth -= dx * 0.005;   // sensibilidad de rotación
-      lastMouseX = e.clientX;
+    if (e.button === 0) {
+      if (isSelecting) {
+        isSelecting = false;
+        selectRect.style.display = 'none';
+        const x1 = Math.min(selectStartX, e.clientX);
+        const y1 = Math.min(selectStartY, e.clientY);
+        const x2 = Math.max(selectStartX, e.clientX);
+        const y2 = Math.max(selectStartY, e.clientY);
+        const rectW = x2 - x1, rectH = y2 - y1;
+
+        if (rectW > 5 || rectH > 5) {
+          // Es una selección por arrastre
+          selectedSlaves = [];
+          for (const s of slaves) {
+            const pos = s.mesh.position.clone().project(camera);
+            if (pos.z > 1) continue; // detrás de la cámara
+            const sx = (pos.x * 0.5 + 0.5) * innerWidth;
+            const sy = (-pos.y * 0.5 + 0.5) * innerHeight;
+            if (sx >= x1 && sx <= x2 && sy >= y1 && sy <= y2) {
+              selectedSlaves.push(s);
+            }
+          }
+          updateSlaveHighlights();
+          mouseAttackQueued = false; // anular el ataque si fue una selección
+        } else {
+          // Click simple - ya manejado en mousedown
+        }
+      }
+    }
+    if (e.button === 2) {
+      mouseBlockHeld = false;
+      const dx = e.clientX - rightClickStart.x;
+      const dy = e.clientY - rightClickStart.y;
+      const dt = performance.now() - rightClickStart.time;
+      const dist = Math.sqrt(dx*dx + dy*dy);
+
+      if (dist < 5 && dt < 500) {
+        // Click corto (no drag) -> menú contextual
+        buildRay.setFromCamera(mouseNDC, camera);
+        const allMeshes = [];
+        structures.forEach(s => s.mesh.traverse(o => { if (o.isMesh) allMeshes.push(o); }));
+        const hits = buildRay.intersectObjects(allMeshes, false);
+
+        if (hits.length > 0) {
+          const data = hits[0].object.userData.structureData;
+          if (data && data.def.id === 'castle' && data.team === 'player') {
+            showCastleMenu(e.clientX, e.clientY);
+            isRotatingCamera = false;
+            return;
+          }
+        }
+        if (selectedSlaves.length > 0) {
+          showNpcMenu(e.clientX, e.clientY);
+          isRotatingCamera = false;
+          return;
+        }
+      }
+      isRotatingCamera = false;
     }
   });
-  // 🚪 DOBLE CLICK: abrir/cerrar puertas (soporta 1 o 2 hojas)
+
+  window.addEventListener('mousemove', (e) => {
+    if (isSelecting) {
+      const x = Math.min(selectStartX, e.clientX);
+      const y = Math.min(selectStartY, e.clientY);
+      const w = Math.abs(e.clientX - selectStartX);
+      const h = Math.abs(e.clientY - selectStartY);
+      selectRect.style.left = x + 'px';
+      selectRect.style.top = y + 'px';
+      selectRect.style.width = w + 'px';
+      selectRect.style.height = h + 'px';
+    }
+    if (isRotatingCamera) {
+      const dx = e.clientX - lastMouseX;
+      const dy = e.clientY - lastMouseY;
+      cameraAzimuth -= dx * 0.005;
+      cameraPitch = THREE.MathUtils.clamp(cameraPitch - dy * 0.005, PITCH_MIN, PITCH_MAX);
+      lastMouseX = e.clientX;
+      lastMouseY = e.clientY;
+    }
+  });
+
+  // Rueda del mouse para zoom
+  window.addEventListener('wheel', (e) => {
+    cameraDistance = THREE.MathUtils.clamp(cameraDistance + e.deltaY * 0.05, CAMERA_DIST_MIN, CAMERA_DIST_MAX);
+  }, { passive: true });
+
   window.addEventListener('dblclick', (e) => {
     if (e.target !== renderer.domElement) return;
     if (build.placing) return;
-    
+
     buildRay.setFromCamera(mouseNDC, camera);
     const allMeshes = [];
     structures.forEach(s => s.mesh.traverse(o => { if (o.isMesh) allMeshes.push(o); }));
     const hits = buildRay.intersectObjects(allMeshes, false);
-    
+
     if (hits.length > 0) {
       const data = hits[0].object.userData.structureData;
       if (data && data.doorLeaves && data.doorLeaves.length > 0) {
         data.doorOpen = !data.doorOpen;
         for (const leaf of data.doorLeaves) {
-          if (data.doorOpen) {
-            if (data.doorLeaves.length === 1) {
-              // Puerta simple: abre 90° hacia afuera
-              leaf.targetRot = leaf.baseRot - Math.PI / 2;
-            } else if (leaf.isLeft) {
-              // Hoja izquierda de puerta doble: abre hacia afuera-izq (gira hacia la derecha desde su pivote)
-              leaf.targetRot = leaf.baseRot - Math.PI / 2;
-            } else {
-              // Hoja derecha de puerta doble: abre hacia afuera-der (gira hacia la izquierda desde su pivote)
-              leaf.targetRot = leaf.baseRot + Math.PI / 2;
-            }
-          } else {
-            // Cerrar: todas vuelven a su rotación base
-            leaf.targetRot = leaf.baseRot;
-          }
+          leaf.targetRot = data.doorOpen ? leaf.openDir * DOOR_OPEN_SIGN * (Math.PI / 2) : 0;
         }
       }
     }
   });
   window.addEventListener('contextmenu', (e) => e.preventDefault());
-  window.addEventListener('auxclick', (e) => { if (e.button === 1) e.preventDefault(); });
 
   const clock = new THREE.Clock();
-  let walkT = 0;
-  camera.position.copy(king.position).add(new THREE.Vector3(0, CAMERA_HEIGHT, CAMERA_RADIUS));
+  camera.position.set(
+    king.position.x + Math.sin(cameraAzimuth) * Math.cos(cameraPitch) * cameraDistance,
+    king.position.y + Math.sin(cameraPitch) * cameraDistance,
+    king.position.z + Math.cos(cameraAzimuth) * Math.cos(cameraPitch) * cameraDistance
+  );
+
+  // Convierte el movimiento a una de las 8 direcciones de sprites,
+  // RELATIVA A LA CÁMARA (así se ve bien aunque gires la cámara)
+  function screenDirName(d) {
+    const fwd   = new THREE.Vector3(-Math.sin(cameraAzimuth), 0, -Math.cos(cameraAzimuth));
+    const right = new THREE.Vector3( Math.cos(cameraAzimuth), 0, -Math.sin(cameraAzimuth));
+    const sx = d.dot(right);   // + → este (derecha en pantalla)
+    const sy = d.dot(fwd);     // + → norte (arriba en pantalla)
+    const ang = Math.atan2(sx, sy);
+    const idx = ((Math.round(ang / (Math.PI / 4)) % 8) + 8) % 8;
+    return ['north','north-east','east','south-east','south','south-west','west','north-west'][idx];
+  }
 
   function update(dt, t) {
     const dir = new THREE.Vector3();
@@ -1773,28 +2453,34 @@ function addStructure(bld, def) {
     const forward = new THREE.Vector3(-Math.sin(cameraAzimuth), 0, -Math.cos(cameraAzimuth));
     const right   = new THREE.Vector3( Math.cos(cameraAzimuth), 0, -Math.sin(cameraAzimuth));
 
-    if (keys['KeyW'] || keys['ArrowUp'])    dir.add(forward);
-    if (keys['KeyS'] || keys['ArrowDown'])  dir.sub(forward);
-    if (keys['KeyD'] || keys['ArrowRight']) dir.add(right);
-    if (keys['KeyA'] || keys['ArrowLeft'])  dir.sub(right);
+    // 🛑 Bloquear movimiento si el rey está atacando
+    const isAttacking = kingState === 'attack';
+    if (!isAttacking) {
+      if (keys['KeyW'] || keys['ArrowUp'])    dir.add(forward);
+      if (keys['KeyS'] || keys['ArrowDown'])  dir.sub(forward);
+      if (keys['KeyD'] || keys['ArrowRight']) dir.add(right);
+      if (keys['KeyA'] || keys['ArrowLeft'])  dir.sub(right);
+    }
 
-    const moving = dir.lengthSq() > 0;
+    const moving = dir.lengthSq() > 0 && !isAttacking;
+    let dirName = null;
     if (moving) {
       dir.normalize();
+      dirName = screenDirName(dir);
       const speed = KING_SPEED * (mouseBlockHeld ? 0.45 : 1);
       let nx = THREE.MathUtils.clamp(king.position.x + dir.x * speed * dt, -BOUND, BOUND);
       let nz = THREE.MathUtils.clamp(king.position.z + dir.z * speed * dt, -BOUND, BOUND);
-      if (getHeight(nx, king.position.z) >= WATER_LEVEL - 1.0 && !collidesWithStructure(nx, king.position.z, KING_RADIUS)) king.position.x = nx;
-      if (getHeight(king.position.x, nz) >= WATER_LEVEL - 1.0 && !collidesWithStructure(king.position.x, nz, KING_RADIUS)) king.position.z = nz;
+      if (getHeight(nx, king.position.z) >= WATER_LEVEL - 1.0 && !collidesWithStructure(nx, king.position.z, KING_RADIUS) && !collidesWithTree(nx, king.position.z, KING_RADIUS)) king.position.x = nx;
+      if (getHeight(king.position.x, nz) >= WATER_LEVEL - 1.0 && !collidesWithStructure(king.position.x, nz, KING_RADIUS) && !collidesWithTree(king.position.x, nz, KING_RADIUS)) king.position.z = nz;
 
       const targetRot = Math.atan2(dir.x, dir.z);
       let diff = targetRot - king.rotation.y;
       diff = Math.atan2(Math.sin(diff), Math.cos(diff));
       king.rotation.y += diff * Math.min(1, dt * 12);
 
-      updateKingSprite(true, dt);
+      updateKingSprite(true, dt, dirName);
     } else {
-      updateKingSprite(false, dt);
+      updateKingSprite(false, dt, null);
     }
 
     king.position.y = Math.max(getHeight(king.position.x, king.position.z), WATER_LEVEL + 0.5);
@@ -1805,9 +2491,9 @@ function addStructure(bld, def) {
     flowerMat.uniforms.uTime.value = t;
 
     const desired = new THREE.Vector3(
-      king.position.x + Math.sin(cameraAzimuth) * CAMERA_RADIUS,
-      king.position.y + CAMERA_HEIGHT,
-      king.position.z + Math.cos(cameraAzimuth) * CAMERA_RADIUS
+      king.position.x + Math.sin(cameraAzimuth) * Math.cos(cameraPitch) * cameraDistance,
+      king.position.y + Math.sin(cameraPitch) * cameraDistance,
+      king.position.z + Math.cos(cameraAzimuth) * Math.cos(cameraPitch) * cameraDistance
     );
     camera.position.lerp(desired, 1 - Math.exp(-6 * dt));
     camera.lookAt(king.position.x, king.position.y + 2, king.position.z);
@@ -1829,6 +2515,9 @@ function addStructure(bld, def) {
     }
 
     // Minimapa cada frame (muy barato: 200x200)
+    updateResources(dt);
+    updateTraining(dt);
+    updateSlaves(dt);
     updateMinimap();
   }
 
@@ -1858,5 +2547,22 @@ document.querySelectorAll('.level-card').forEach(card => {
   };
 });
 </script>
+<!-- Menú contextual del castillo -->
+<div id="castle-menu">
+  <h3>🏰 CASTILLO</h3>
+  <button class="menu-option" id="hire-slaves">👥 Contratar esclavo <span class="cost">10 🪙</span></button>
+  <button class="menu-option" disabled>🔧 Mejorar murallas</button>
+  <button class="menu-option" disabled>🏹 Entrenar arqueros</button>
+</div>
+
+<!-- Menú de órdenes para NPCs -->
+<div id="npc-menu">
+  <h3>⚔ ÓRDENES</h3>
+  <button class="menu-option" id="npc-follow">🏃 Seguirme</button>
+  <button class="menu-option" id="npc-stop">✋ Dejar de seguirme</button>
+</div>
+
+<!-- Rectángulo de selección -->
+<div id="select-rect"></div>
 </body>
 </html>

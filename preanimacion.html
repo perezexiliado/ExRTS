@@ -804,6 +804,18 @@ async function startGame(levelNum) {
   const leavesMat = new THREE.MeshStandardMaterial({ color: CFG.treeLeafColor, roughness: 0.9 });
   const rockMat = new THREE.MeshStandardMaterial({ color: CFG.rockColor, roughness: 1.0 });
 
+  // 🌲 Colisión circular del rey contra los troncos de los árboles
+  const treeColliders = [];
+  function collidesWithTree(x, z, radius) {
+    for (let i = 0; i < treeColliders.length; i++) {
+      const c = treeColliders[i];
+      const dx = x - c.x, dz = z - c.z;
+      const md = radius + c.r;
+      if (dx * dx + dz * dz < md * md) return true;
+    }
+    return false;
+  }
+
   function makeTree(x, z) {
     const g = new THREE.Group();
     const s = 0.9 + Math.random() * 0.9;
@@ -821,6 +833,8 @@ async function startGame(levelNum) {
     g.position.set(x, getHeight(x, z), z);
     g.rotation.y = Math.random() * Math.PI;
     scene.add(g);
+    // 🌲 Colisión del tronco, proporcional al tamaño del árbol
+    treeColliders.push({ x, z, r: 0.4 * s });
   }
 
   function makeCactus(x, z) {
@@ -840,7 +854,7 @@ async function startGame(levelNum) {
     scene.add(g);
   }
 
-  // Árbol según nivel (×3 para cubrir el mapa ×4 sin saturar)
+  // Árbol según nivel (el desierto conserva sus cactus)
   if (levelNum === 3) {
     // Desierto: cactus
     for (let i = 0; i < CFG.treeCount * 3; i++) {
@@ -890,8 +904,24 @@ async function startGame(levelNum) {
   const PX = 48, FRAME_COUNT = 12;
   const IDLE = [0, 1], WALK = [2, 3, 4, 5], ATTACK = [6, 7, 8, 9, 10], BLOCK = 11;
 
+  // 🏰 Bases: jugador abajo-izquierda, ciudad enemiga en la esquina opuesta
+  function findLandSpot(cx, cz) {
+    for (let r = 0; r <= 80; r += 10) {
+      for (let a = 0; a < 8; a++) {
+        const ang = (a / 8) * Math.PI * 2;
+        const x = THREE.MathUtils.clamp(cx + Math.cos(ang) * r, -BOUND, BOUND);
+        const z = THREE.MathUtils.clamp(cz + Math.sin(ang) * r, -BOUND, BOUND);
+        const h = getHeight(x, z);
+        if (h > WATER_LEVEL + 2 && h < 9) return { x, z };  // tierra construible
+      }
+    }
+    return { x: cx, z: cz };
+  }
+  const playerBase = findLandSpot(-170, 170);   // esquina inferior izquierda
+  const enemyBase  = findLandSpot(170, -170);   // esquina opuesta
+
   const king = new THREE.Group();
-  king.position.set(0, Math.max(getHeight(0, 0), WATER_LEVEL + 2), 0);
+  king.position.set(playerBase.x + 12, Math.max(getHeight(playerBase.x + 12, playerBase.z - 12), WATER_LEVEL + 2), playerBase.z - 12);
   scene.add(king);
 
   let mouseAttackQueued = false, mouseBlockHeld = false;
@@ -1223,12 +1253,142 @@ async function startGame(levelNum) {
     return group;
   }
 
+  // 🚪 Palabras clave para detectar puertas (evita tocar piezas de muralla)
+  // FUERTES: indican casi seguro una HOJA de puerta.
+  const DOOR_STRONG = ['door', 'puerta', 'porton', 'portón', 'portcullis', 'hoja', 'leaf'];
+  // DÉBILES: se usan solo si no hay ninguna fuerte.
+  const DOOR_WEAK = ['gate'];
+  // Si el nombre contiene esto, es MURO/VALLA: jamás debe girar.
+  const WALL_TERMS = ['wall', 'fence', 'muralla', 'valla', 'esquina', 'corner', 'straight', 'recta', 'roof', 'techo', 'arch', 'arco', 'frame', 'marco', 'post', 'poste', 'tower', 'torre', 'pillar', 'column'];
+  const DOOR_OPEN_SIGN = 1;   // si las puertas abren "hacia dentro", cámbialo a -1
+
+  // Se ejecuta UNA vez por modelo al cargarlo (no al colocarlo)
+    // Se ejecuta UNA vez por modelo al cargarlo (no al colocarlo)
+  function setupDoors(root) {
+    root.updateMatrixWorld(true);
+
+    // Caja de cualquier objeto en espacio LOCAL del modelo
+    function localBox(o) {
+      const wb = new THREE.Box3().setFromObject(o);
+      const lb = new THREE.Box3();
+      const v = new THREE.Vector3();
+      for (let ix = 0; ix < 2; ix++)
+        for (let iy = 0; iy < 2; iy++)
+          for (let iz = 0; iz < 2; iz++) {
+            v.set(ix ? wb.max.x : wb.min.x,
+                  iy ? wb.max.y : wb.min.y,
+                  iz ? wb.max.z : wb.min.z);
+            lb.expandByPoint(root.worldToLocal(v.clone()));
+          }
+      return lb;
+    }
+
+    const rootBox = localBox(root);
+    const rootSize = rootBox.getSize(new THREE.Vector3());
+    const rootMaxHoriz = Math.max(rootSize.x, rootSize.z);
+
+    // 1) Candidatos por nombre, en 3 pasadas (sin modificar el grafo)
+    const candidates = [];
+    const nameOf = o => (o.name || '').toLowerCase();
+
+    // Pasada A: nombres fuertes (door, puerta...)
+    root.traverse(o => { if (o.isMesh && DOOR_STRONG.some(k => nameOf(o).includes(k))) candidates.push(o); });
+
+    // Pasada B: nombres débiles (gate) pero NUNCA piezas de muro/valla
+    if (candidates.length === 0) {
+      root.traverse(o => {
+        if (o.isMesh) {
+          const n = nameOf(o);
+          if (DOOR_WEAK.some(k => n.includes(k)) && !WALL_TERMS.some(k => n.includes(k))) candidates.push(o);
+        }
+      });
+    }
+
+    // Pasada C: nombres débiles sin exclusión (se aplicará filtro de tamaño obligatorio)
+    let forceSizeFilter = false;
+    if (candidates.length === 0) {
+      forceSizeFilter = true;
+      root.traverse(o => { if (o.isMesh && DOOR_WEAK.some(k => nameOf(o).includes(k))) candidates.push(o); });
+    }
+
+    if (candidates.length === 0) {
+      const names = [];
+      root.traverse(o => { if (o.isMesh) names.push(o.name); });
+      console.log('🚪 Sin puerta detectada. Nodos del modelo:', names);
+      return;
+    }
+
+    // 2) Cajas locales de cada candidato
+    let infos = candidates.map(o => {
+      const box = localBox(o);
+      return { o, box, center: box.getCenter(new THREE.Vector3()), size: box.getSize(new THREE.Vector3()) };
+    });
+
+    // 🛡️ FILTRO DE TAMAÑO: una hoja de puerta NUNCA abarca casi todo el muro.
+    // Descarta candidatos que cubran >75% de la huerta del modelo.
+    const reasonable = infos.filter(i => Math.max(i.size.x, i.size.z) <= rootMaxHoriz * 0.75);
+    if (reasonable.length > 0) infos = reasonable;
+    else if (forceSizeFilter) {
+      // El único "candidato" es el muro entero: mejor no animar nada.
+      console.log('🚪 El único candidato a puerta abarca todo el muro → se ignora para no girar el muro.');
+      return;
+    }
+
+    console.log('🚪 Hojas de puerta en', root.name || 'modelo', ':', infos.map(i => i.o.name));
+
+    // Eje horizontal del ancho de la puerta (X o Z según el modelo)
+    const axis = infos[0].size.x >= infos[0].size.z ? 'x' : 'z';
+    infos.sort((a, b) => a.center[axis] - b.center[axis]);
+
+    // 3) Pivote en la BISAGRA (coords locales) + re-parent con attach()
+    const centers = [];
+    infos.forEach((info, i) => {
+      const isLeft = infos.length === 1 ? true : (i === 0);
+      const hinge = info.center.clone();
+      hinge[axis] = isLeft ? info.box.min[axis] : info.box.max[axis];
+
+      const pivot = new THREE.Object3D();
+      pivot.name = 'DoorPivot_' + i;
+      pivot.position.copy(hinge);        // en espacio LOCAL del modelo
+      root.add(pivot);
+      root.updateMatrixWorld(true);
+      pivot.attach(info.o);              // conserva el transform exacto de la hoja
+
+      pivot.userData.isDoorPivot = true;
+      pivot.userData.openDir = (infos.length === 1) ? 1 : (isLeft ? 1 : -1);
+      centers.push(info.center);
+    });
+
+    // Centro del vano en coords LOCALES (para la zona de paso de la colisión)
+    const c = new THREE.Vector3();
+    centers.forEach(v => c.add(v));
+    c.divideScalar(centers.length);
+    root.userData.doorCenter = [c.x, c.y, c.z];
+  }
+
   function addStructure(bld, def) {
     const bar = createHealthBar3D();
     bld.add(bar);
     bld.updateMatrixWorld(true);
     const box = new THREE.Box3().setFromObject(bld);
     bar.position.y = (box.max.y - bld.position.y) + 0.8;
+
+    // --- 🚪 Solo recoger los pivotes creados por setupDoors al cargar ---
+    const doorLeaves = [];
+    bld.traverse(o => {
+      if (o.userData && o.userData.isDoorPivot) {
+        doorLeaves.push({
+          pivot: o,
+          targetRot: o.rotation.y,
+          openDir: o.userData.openDir || 1,
+        });
+      }
+    });
+
+    let doorLocalPos = null;
+    if (bld.userData && bld.userData.doorCenter) {
+      doorLocalPos = new THREE.Vector3().fromArray(bld.userData.doorCenter);
+    }
 
     const data = {
       mesh: bld,
@@ -1237,13 +1397,15 @@ async function startGame(levelNum) {
       maxHp: def.hp,
       healthBar: bar,
       radius: def.size * 0.45,
+      doorLeaves: doorLeaves,
+      doorOpen: false,
+      doorLocalPos: doorLocalPos,
     };
     structures.push(data);
 
     // Referencia en cada mesh para raycasting
     bld.traverse(o => { if (o.isMesh) o.userData.structureData = data; });
 
-    // Ocultar barra si está al 100%
     updateHealthBar3D(data);
     return data;
   }
@@ -1308,7 +1470,26 @@ async function startGame(levelNum) {
     for (const s of structures) {
       const dx = x - s.mesh.position.x;
       const dz = z - s.mesh.position.z;
-      if (dx*dx + dz*dz < (radius + s.radius) * (radius + s.radius)) return true;
+      const distSq = dx*dx + dz*dz;
+      const maxDist = radius + s.radius;
+      if (distSq < maxDist * maxDist) {
+        // 🚪 Si la puerta está abierta, permitir paso cerca de la apertura
+        if (s.doorOpen && s.doorLocalPos) {
+          const doorWorld = s.doorLocalPos.clone().applyMatrix4(s.mesh.matrixWorld);
+          const ddx = x - doorWorld.x;
+          const ddz = z - doorWorld.z;
+          const doorDistSq = ddx*ddx + ddz*ddz;
+          // Radio del "hueco": más amplio si tiene dos hojas
+          const leafCount = s.doorLeaves ? s.doorLeaves.length : 1;
+          const passageRadius = leafCount >= 2
+            ? Math.max(4.0, s.radius * 0.85)   // doble hoja: hueco más grande
+            : Math.max(2.5, s.radius * 0.55);  // hoja simple: hueco normal
+          if (doorDistSq < passageRadius * passageRadius) {
+            return false;
+          }
+        }
+        return true;
+      }
     }
     return false;
   }
@@ -1421,12 +1602,74 @@ async function startGame(levelNum) {
     updateLoading(92 + Math.round((i / ALL_STRUCTURES.length) * 7), `Cargando estructuras (${i + 1}/${ALL_STRUCTURES.length})...`);
     try {
       const gltf = await gltfLoader.loadAsync(b.path + b.file);
+      setupDoors(gltf.scene);   // 🚪 prepara pivotes UNA vez por modelo
       build.models[b.id] = { scene: gltf.scene };
     } catch (err) {
       console.warn('⚠ No se pudo cargar ' + b.file, err);
       const item = document.getElementById('build-item-' + b.id);
       if (item) item.disabled = true;
     }
+    await yieldToBrowser();
+  }
+  // ---- 🔴 Cargar los modelos rojos (ciudad enemiga) ----
+  const RED_PATH = 'assets/structures/buildings/red/';
+  const redModels = {};
+  for (const b of BUILDINGS) {
+    updateLoading(99, `Cargando ciudad enemiga (${b.id})...`);
+    try {
+      const gltf = await gltfLoader.loadAsync(RED_PATH + b.file.replace('_blue', '_red'));
+      setupDoors(gltf.scene);
+      redModels[b.id] = { scene: gltf.scene };
+    } catch (err) { console.warn('⚠ No se pudo cargar el modelo rojo de ' + b.id, err); }
+    await yieldToBrowser();
+  }
+
+  // Coloca una estructura directamente en el mapa (azul o roja)
+  function placeAt(models, id, x, z, rotY) {
+    const model = models[id];
+    const def = ALL_STRUCTURES.find(s => s.id === id);
+    if (!model || !def) return;
+    const bld = model.scene.clone(true);
+    bld.position.set(0, 0, 0); bld.rotation.set(0, 0, 0); bld.scale.set(1, 1, 1);
+    bld.updateMatrixWorld(true);
+    let box = new THREE.Box3().setFromObject(bld);
+    const dim = box.getSize(new THREE.Vector3());
+    bld.scale.setScalar(def.size / Math.max(dim.x, dim.z));
+    bld.rotation.y = rotY || 0;
+    bld.updateMatrixWorld(true);
+    box = new THREE.Box3().setFromObject(bld);
+    const c = box.getCenter(new THREE.Vector3());
+    const h = getHeight(x, z);
+    bld.position.set(x - c.x, h - box.min.y, z - c.z);   // apoyada en el terreno
+    bld.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+    scene.add(bld);
+    addStructure(bld, def);   // tiene vida, colisión y sale en el minimapa
+  }
+
+  // 🏰 Tu castillo azul en la esquina inferior izquierda
+  placeAt(build.models, 'castle', playerBase.x, playerBase.z, 0);
+
+  // 🔥 Ciudad enemiga roja en la esquina opuesta
+  const CITY = [
+    { id: 'castle',       dx: 0,   dz: 0,   rot: Math.PI },
+    { id: 'barracks',     dx: -16, dz: -8,  rot: Math.PI / 2 },
+    { id: 'archeryrange', dx: 16,  dz: -8,  rot: -Math.PI / 2 },
+    { id: 'blacksmith',   dx: -16, dz: 10,  rot: Math.PI / 2 },
+    { id: 'church',       dx: 16,  dz: 10,  rot: -Math.PI / 2 },
+    { id: 'market',       dx: 0,   dz: -18, rot: Math.PI },
+    { id: 'tavern',       dx: 0,   dz: 16,  rot: Math.PI },
+    { id: 'home_A',       dx: -30, dz: 0,   rot: Math.PI / 2 },
+    { id: 'home_B',       dx: 30,  dz: 0,   rot: -Math.PI / 2 },
+    { id: 'well',         dx: 7,   dz: 24,  rot: 0 },
+    { id: 'tower_A',      dx: -28, dz: -24, rot: 0 },
+    { id: 'tower_B',      dx: 28,  dz: -24, rot: 0 },
+    { id: 'lumbermill',   dx: -32, dz: 18,  rot: Math.PI / 2 },
+    { id: 'windmill',     dx: 32,  dz: 18,  rot: -Math.PI / 2 },
+    { id: 'watermill',    dx: 0,   dz: 32,  rot: Math.PI },
+    { id: 'mine',         dx: -8,  dz: -30, rot: Math.PI },
+  ];
+  for (const b of CITY) {
+    placeAt(redModels, b.id, enemyBase.x + b.dx, enemyBase.z + b.dz, b.rot);
     await yieldToBrowser();
   }
 
@@ -1543,6 +1786,12 @@ async function startGame(levelNum) {
     if (e.button === 0) {
       if (build.placing) { buildPlace(); return; }
       if (buildMenuEl.classList.contains('visible')) { closeBuildMenu(); return; }
+      
+      // 🛡️ Evitar ataque doble en un doble click (solo el primer click ataca)
+      const now = performance.now();
+      if (now - (window.__lastLeftClick || 0) < 400) return;
+      window.__lastLeftClick = now;
+      
       mouseAttackQueued = true;
 
       // Raycast contra estructuras colocadas
@@ -1584,6 +1833,27 @@ async function startGame(levelNum) {
       lastMouseX = e.clientX;
     }
   });
+  // 🚪 DOBLE CLICK: abrir/cerrar puertas (soporta 1 o 2 hojas)
+  window.addEventListener('dblclick', (e) => {
+    if (e.target !== renderer.domElement) return;
+    if (build.placing) return;
+    
+    buildRay.setFromCamera(mouseNDC, camera);
+    const allMeshes = [];
+    structures.forEach(s => s.mesh.traverse(o => { if (o.isMesh) allMeshes.push(o); }));
+    const hits = buildRay.intersectObjects(allMeshes, false);
+    
+    if (hits.length > 0) {
+      const data = hits[0].object.userData.structureData;
+      if (data && data.doorLeaves && data.doorLeaves.length > 0) {
+        data.doorOpen = !data.doorOpen;
+        for (const leaf of data.doorLeaves) {
+          // Cada hoja gira 90° según su bisagra y sentido guardados al cargar
+          leaf.targetRot = data.doorOpen ? leaf.openDir * DOOR_OPEN_SIGN * (Math.PI / 2) : 0;
+        }
+      }
+    }
+  });
   window.addEventListener('contextmenu', (e) => e.preventDefault());
   window.addEventListener('auxclick', (e) => { if (e.button === 1) e.preventDefault(); });
 
@@ -1608,8 +1878,8 @@ async function startGame(levelNum) {
       const speed = KING_SPEED * (mouseBlockHeld ? 0.45 : 1);
       let nx = THREE.MathUtils.clamp(king.position.x + dir.x * speed * dt, -BOUND, BOUND);
       let nz = THREE.MathUtils.clamp(king.position.z + dir.z * speed * dt, -BOUND, BOUND);
-      if (getHeight(nx, king.position.z) >= WATER_LEVEL - 1.0 && !collidesWithStructure(nx, king.position.z, KING_RADIUS)) king.position.x = nx;
-      if (getHeight(king.position.x, nz) >= WATER_LEVEL - 1.0 && !collidesWithStructure(king.position.x, nz, KING_RADIUS)) king.position.z = nz;
+      if (getHeight(nx, king.position.z) >= WATER_LEVEL - 1.0 && !collidesWithStructure(nx, king.position.z, KING_RADIUS) && !collidesWithTree(nx, king.position.z, KING_RADIUS)) king.position.x = nx;
+      if (getHeight(king.position.x, nz) >= WATER_LEVEL - 1.0 && !collidesWithStructure(king.position.x, nz, KING_RADIUS) && !collidesWithTree(king.position.x, nz, KING_RADIUS)) king.position.z = nz;
 
       const targetRot = Math.atan2(dir.x, dir.z);
       let diff = targetRot - king.rotation.y;
@@ -1641,6 +1911,15 @@ async function startGame(levelNum) {
     // Las barras de vida miran siempre a la cámara (billboard)
     for (let i = 0; i < structures.length; i++) {
       structures[i].healthBar.quaternion.copy(camera.quaternion);
+    }
+    // 🚪 Animar todas las hojas de puerta (interpolación suave)
+    for (const s of structures) {
+      if (s.doorLeaves) {
+        for (const leaf of s.doorLeaves) {
+          const diff = leaf.targetRot - leaf.pivot.rotation.y;
+          leaf.pivot.rotation.y += diff * Math.min(1, dt * 4);
+        }
+      }
     }
 
     // Minimapa cada frame (muy barato: 200x200)
