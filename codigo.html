@@ -133,45 +133,104 @@
   }
   .modal-close:hover { background: rgba(185, 141, 62, 0.2); }
 
-  /* --- MENÚ DE CONSTRUCCIÓN --- */
-  #build-menu {
-    position: fixed; left: 50%; bottom: 16px; transform: translateX(-50%);
-    z-index: 30; display: none;
-    background: rgba(20, 14, 6, 0.88);
-    border: 2px solid #b98d3e; border-radius: 10px;
-    padding: 10px 12px;
-    box-shadow: 0 6px 24px rgba(0,0,0,.5);
-  }
-  #build-menu.visible { display: block; }
-  #build-menu h3 {
-    margin: 0 0 8px; color: #ffd76a; font-size: 13px;
-    letter-spacing: 2px; text-align: center; user-select: none;
-  }
-  .build-grid { display: grid; grid-template-columns: repeat(8, 96px); gap: 6px; }
-  .build-section {
-    color: #b98d3e; font-size: 11px; letter-spacing: 2px;
-    margin: 6px 0 4px; text-align: center; user-select: none;
-  }
-  .build-item {
-    background: linear-gradient(180deg, rgba(60,42,20,.9), rgba(30,20,10,.9));
-    border: 2px solid #6a5228; border-radius: 6px;
-    color: #e8d5a0; padding: 6px 2px; font-size: 10.5px; line-height: 1.2;
-    cursor: pointer; text-align: center; user-select: none;
-    font-family: "Trebuchet MS", Arial, sans-serif;
-    transition: all .15s;
-  }
-  .build-item:hover { border-color: #ffd76a; color: #fff; transform: translateY(-2px); }
-  .build-item:disabled { opacity: .35; cursor: not-allowed; transform: none; }
-  .build-item .icon { font-size: 20px; display: block; margin-bottom: 3px; }
-  #build-hint {
-    position: fixed; top: 12px; left: 50%; transform: translateX(-50%);
-    z-index: 30; display: none;
-    background: rgba(20,14,6,.85); border: 2px solid #b98d3e; border-radius: 8px;
-    color: #ffd76a; padding: 8px 18px; font-size: 13px; user-select: none;
-  }
-  #build-hint.visible { display: block; }
-  #build-hint b { color: #fff; }
+/* --- MENÚ DE CONSTRUCCIÓN (minimalista) --- */
+#build-menu {
+  position: fixed; right: 16px; top: 50%; transform: translateY(-50%);
+  z-index: 30; display: none;
+  background: rgba(14, 10, 6, 0.92);
+  border: 1px solid rgba(185, 141, 62, 0.4); border-radius: 8px;
+  padding: 8px;
+  box-shadow: 0 4px 20px rgba(0,0,0,.7);
+  max-height: 85vh; overflow-y: auto;
+  width: 72px;
+  scrollbar-width: thin; scrollbar-color: #b98d3e transparent;
+}
+#build-menu.visible { display: block; }
+#build-menu h3 {
+  margin: 2px 0 6px; color: #ffd76a; font-size: 10px;
+  letter-spacing: 2px; text-align: center; user-select: none;
+}
+.build-grid { display: flex; flex-direction: column; gap: 4px; }
+.build-section {
+  color: #6a5228; font-size: 8px; letter-spacing: 2px;
+  margin: 6px 0 2px; text-align: center; user-select: none;
+  border-top: 1px solid rgba(185,141,62,.2); padding-top: 4px;
+}
+.build-item {
+  background: rgba(40,28,14,.8);
+  border: 1px solid rgba(106,82,40,.5); border-radius: 5px;
+  color: #e8d5a0; padding: 5px 2px; font-size: 0; line-height: 1;
+  cursor: pointer; text-align: center; user-select: none;
+  font-family: "Trebuchet MS", Arial, sans-serif;
+  transition: all .15s;
+  width: 56px; height: 56px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  position: relative;
+}
+.build-item:hover {
+  border-color: #ffd76a; color: #fff;
+  background: rgba(80,56,28,.9);
+  box-shadow: 0 0 8px rgba(255,215,106,.25);
+}
+.build-item:disabled { opacity: .3; cursor: not-allowed; }
+.build-item .icon { font-size: 22px; display: block; margin-bottom: 0; }
+.build-item .cost-mini {
+  position: absolute; bottom: 1px; right: 3px;
+  font-size: 8px; color: #b98d3e; letter-spacing: 0;
+}
+.build-item:hover .cost-mini { color: #ffd76a; }
 
+  /* --- PANEL INFORMATIVO DE ESCLAVO --- */
+#slave-info {
+  position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%);
+  z-index: 25; display: none;
+  background: linear-gradient(180deg, rgba(30, 22, 10, 0.95), rgba(18, 12, 6, 0.95));
+  border: 2px solid #b98d3e; border-radius: 10px;
+  padding: 10px 14px; min-width: 260px;
+  color: #e8d5a0; font-size: 13px; user-select: none;
+  box-shadow: 0 6px 20px rgba(0,0,0,.6);
+  flex-direction: row; align-items: center; gap: 14px;
+}
+#slave-info.visible { display: flex; }
+.slave-info-left { display: flex; align-items: center; gap: 10px; }
+.slave-icon {
+  font-size: 32px; line-height: 1;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,.5));
+}
+.slave-details { display: flex; flex-direction: column; gap: 3px; }
+#slave-name {
+  color: #ffd76a; font-weight: bold; font-size: 15px; letter-spacing: 1px;
+}
+#slave-hp-text {
+  color: #ccc; font-size: 11px; font-family: "Courier New", monospace;
+}
+.slave-hp-bar {
+  width: 140px; height: 10px; background: #1a0808; border-radius: 5px;
+  overflow: hidden; border: 1px solid #6a5228; margin-top: 2px;
+}
+.slave-hp-fill {
+  height: 100%; width: 100%;
+  background: linear-gradient(90deg, #39ff5a, #a0e050);
+  transition: width 0.25s ease-out;
+}
+.slave-build-btn {
+  background: linear-gradient(180deg, rgba(60,42,20,.95), rgba(30,20,10,.95));
+  border: 2px solid #b98d3e; border-radius: 8px;
+  color: #ffd76a; font-size: 22px; line-height: 1;
+  padding: 8px 14px; cursor: pointer;
+  font-family: "Trebuchet MS", Arial, sans-serif;
+  transition: all .2s;
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+}
+.slave-build-btn span {
+  font-size: 10px; color: #b98d3e; letter-spacing: 1px;
+}
+.slave-build-btn:hover {
+  border-color: #ffd76a; color: #fff;
+  transform: translateY(-2px);
+  box-shadow: 0 3px 10px rgba(255,215,106,.3);
+}
+.slave-build-btn:hover span { color: #fff; }
   /* --- PANEL INFORMATIVO DE ESTRUCTURA --- */
   #structure-info {
     position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%);
@@ -314,15 +373,27 @@
     <span class="res" title="Madera">🪵 <b id="res-wood">0</b></span>
     <span class="res" title="Piedra">🪨 <b id="res-stone">0</b></span>
   </div>
-  <div id="hud-help">
-    <b>👑 W A S D</b> mover · Click <b>izq</b> atacar · Click <b>der</b> bloquear · <b>C</b> construir · El agua profunda bloquea el paso
-  </div>
+<div id="hud-help">
+  <b>👑 W A S D</b> mover · Click <b>esclavo</b> = información · <b>Click izq</b> atacar · <b>Click der</b> rotar cámara
+</div>
 </div>
 <button id="exit-btn">↩ Menú Principal</button>
 
 <!-- Aviso de modo colocación -->
 <div id="build-hint">🏗️ Colocando: <b id="build-hint-name"></b> · Click izq: colocar · R: rotar · Click der / ESC: cancelar</div>
 
+<!-- Panel informativo del esclavo seleccionado -->
+<div id="slave-info">
+  <div class="slave-info-left">
+    <div class="slave-icon">👤</div>
+    <div class="slave-details">
+      <div id="slave-name">Esclavo</div>
+      <div id="slave-hp-text">100 / 100</div>
+      <div class="slave-hp-bar"><div class="slave-hp-fill" id="slave-hp-fill"></div></div>
+    </div>
+  </div>
+  <button id="btn-slave-build" class="slave-build-btn">🏗️<br><span>Construir</span></button>
+</div>
 <!-- Panel informativo de estructura seleccionada -->
 <div id="structure-info">
   <div class="info-header">
@@ -411,10 +482,24 @@
 <div class="modal" id="modal-options">
   <div class="modal-box">
     <h2>⚙ Opciones</h2>
-    <p>Calidad gráfica: <b style="color:#ffd76a">Alta</b><br>
-    Dificultad: <b style="color:#ffd76a">Normal</b><br>
-    Volumen: <b style="color:#ffd76a">80%</b></p>
-    <p style="font-size:12px; color:#888;">(Ajustes de ejemplo — próximamente editables)</p>
+    <div style="text-align:left; margin: 14px 0;">
+      <p style="margin:6px 0;">Calidad gráfica: <b style="color:#ffd76a; float:right;">Alta</b></p>
+      <p style="margin:6px 0;">Dificultad: <b style="color:#ffd76a; float:right;">Normal</b></p>
+      <div style="margin:14px 0 8px; border-top:1px solid #6a5228; padding-top:10px;">
+        <label style="color:#ffd76a; font-size:13px; display:block; margin-bottom:6px;">
+          🎵 Volumen de música: <b id="music-vol-label" style="color:#fff; float:right;">50%</b>
+        </label>
+        <input type="range" id="music-volume" min="0" max="100" value="50" 
+               style="width:100%; accent-color:#b98d3e; cursor:pointer;">
+      </div>
+      <div style="margin:6px 0;">
+        <label style="color:#ffd76a; font-size:13px; display:block; margin-bottom:6px;">
+          🔊 Volumen de efectos: <b id="sfx-vol-label" style="color:#fff; float:right;">70%</b>
+        </label>
+        <input type="range" id="sfx-volume" min="0" max="100" value="70" 
+               style="width:100%; accent-color:#b98d3e; cursor:pointer;">
+      </div>
+    </div>
     <button class="modal-close" data-close="options">Cerrar</button>
   </div>
 </div>
@@ -481,9 +566,23 @@ document.getElementById('level-back').onclick = () => {
 document.querySelectorAll('.modal-close').forEach(b => {
   b.onclick = () => b.closest('.modal').classList.remove('visible');
 });
-exitBtn.onclick = () => {
-  location.reload(); // Volver al menú recargando
-};
+// 🎵 Sliders de volumen
+const musicVolSlider = document.getElementById('music-volume');
+const musicVolLabel = document.getElementById('music-vol-label');
+const sfxVolSlider = document.getElementById('sfx-volume');
+const sfxVolLabel = document.getElementById('sfx-vol-label');
+
+function applyMusicVolume(val) {
+  const v = val / 100;
+  menuMusic.volume = v;
+  gameMusic.volume = v;
+  musicVolLabel.textContent = val + '%';
+}
+musicVolSlider.addEventListener('input', (e) => applyMusicVolume(parseInt(e.target.value)));
+
+sfxVolSlider.addEventListener('input', (e) => {
+  sfxVolLabel.textContent = e.target.value + '%';
+});
 
 /* ============================================================
    🎵 MÚSICA DEL MENÚ (assets/music/menumusic.mp3)
@@ -492,7 +591,12 @@ const menuMusic = new Audio('assets/music/menumusic.mp3');
 menuMusic.loop = true;
 menuMusic.volume = 0.5;
 
-function tryPlayMenuMusic() { menuMusic.play().catch(() => {}); }
+let gameStarted = false;   // 👑 será true en cuanto arranque cualquier nivel
+
+function tryPlayMenuMusic() {
+  if (gameStarted) return;               // 🚫 ya no debe sonar durante la partida
+  menuMusic.play().catch(() => {});
+}
 function stopMenuMusic()    { menuMusic.pause(); menuMusic.currentTime = 0; }
 
 // Intento inmediato; si el navegador bloquea el autoplay,
@@ -500,6 +604,23 @@ function stopMenuMusic()    { menuMusic.pause(); menuMusic.currentTime = 0; }
 tryPlayMenuMusic();
 window.addEventListener('pointerdown', tryPlayMenuMusic, { once: true });
 window.addEventListener('keydown',     tryPlayMenuMusic, { once: true });
+
+/* ============================================================
+   🎵 MÚSICA DE LA PARTIDA (assets/music/soundtrack001.mp3)
+============================================================ */
+const gameMusic = new Audio('assets/music/soundtrack001.mp3');
+gameMusic.loop = true;
+gameMusic.volume = 0.5;
+applyMusicVolume(parseInt(musicVolSlider.value));
+
+function startGameMusic() {
+  gameMusic.currentTime = 0;
+  gameMusic.play().catch(() => {
+    // Si el navegador lo bloquea, arranca con el primer click dentro del nivel
+    window.addEventListener('pointerdown', () => gameMusic.play().catch(() => {}), { once: true });
+  });
+}
+function stopGameMusic() { gameMusic.pause(); gameMusic.currentTime = 0; }
 
 /* ============================================================
    CONFIGURACIÓN DE NIVELES
@@ -582,8 +703,6 @@ const LEVELS = {
 /* ============================================================
    FUNCIÓN DE CARGA DEL JUEGO
 ============================================================ */
-let gameStarted = false;
-
 async function startGame(levelNum) {
   const CFG = LEVELS[levelNum];
 
@@ -591,7 +710,9 @@ async function startGame(levelNum) {
   levelSelect.classList.remove('visible');
   loadingScreen.classList.remove('hidden');
   loadingTitle.textContent = `Cargando: ${CFG.name}...`;
-  stopMenuMusic(); // 🎵 la música del menú se detiene al entrar al mapa
+  gameStarted = true;   // 👑 desactiva la música del menú definitivamente
+  stopMenuMusic();      // 🎵 la música del menú se detiene al entrar al mapa
+  startGameMusic();     // 🎵 soundtrack001 suena desde el inicio del nivel
 
   const progressFill = document.querySelector('.progress-fill');
   const loadingText = document.querySelector('.loading-text');
@@ -1040,13 +1161,12 @@ async function startGame(levelNum) {
   const WALK_PATH   = 'assets/characters/rey/animations/walking/';
 
   // ⚔️ Nombres reales de los GIF de ataque (diagonales sin guion).
-  // Cuando tengas el de espaldas, llámalo "attack_north.gif" y funcionará solo.
   const ATTACK_FILE = {
     'south':      'attack_south.gif',
     'south-east': 'attack_southeast.gif',
     'east':       'attack_east.gif',
     'north-east': 'attack_northeast.gif',
-    'north':      'attack_north.gif',      // 👈 pendiente (espaldas)
+    'north':      'attack_north.gif',      // ✅ animación de espaldas disponible
     'north-west': 'attack_northwest.gif',
     'west':       'attack_west.gif',
     'south-west': 'attack_southwest.gif',
@@ -1309,38 +1429,38 @@ async function startGame(levelNum) {
   ============================================================ */
   const BUILDINGS_PATH = 'assets/structures/buildings/blue/';
   const BUILDINGS = [
-    { id: 'archeryrange', name: 'Arquería',         icon: '🏹', size: 9,  hp: 400, desc: 'Entrena arqueros de élite para defensa a distancia.',      file: 'building_archeryrange_blue.gltf' },
-    { id: 'barracks',     name: 'Cuarteles',        icon: '⚔️', size: 9,  hp: 450, desc: 'Forma soldados de infantería para el reino.',               file: 'building_barracks_blue.gltf' },
-    { id: 'blacksmith',   name: 'Herrería',         icon: '🔨', size: 7,  hp: 350, desc: 'Forja armas y armaduras para tus tropas.',                  file: 'building_blacksmith_blue.gltf' },
-    { id: 'castle',       name: 'Castillo',         icon: '🏰', size: 14, hp: 1200,desc: 'Fortaleza central del reino. Difícil de destruir.',         file: 'building_castle_blue.gltf' },
-    { id: 'church',       name: 'Iglesia',          icon: '⛪', size: 9,  hp: 500, desc: 'Templo sagrado que cura a los heridos cercanos.',           file: 'building_church_blue.gltf' },
-    { id: 'home_A',       name: 'Casa A',           icon: '🏠', size: 6,  hp: 200, desc: 'Vivienda humilde de los aldeanos del reino.',               file: 'building_home_A_blue.gltf' },
-    { id: 'home_B',       name: 'Casa B',           icon: '🏡', size: 6,  hp: 220, desc: 'Casa de campo confortable y acogedora.',                    file: 'building_home_B_blue.gltf' },
-    { id: 'lumbermill',   name: 'Aserradero',       icon: '🪵', size: 8,  hp: 380, desc: 'Produce madera aprovechando los bosques cercanos.',         file: 'building_lumbermill_blue.gltf' },
-    { id: 'market',       name: 'Mercado',          icon: '⛺', size: 10, hp: 300, desc: 'Centro de comercio e intercambio de bienes.',               file: 'building_market_blue.gltf' },
-    { id: 'mine',         name: 'Mina',             icon: '⛏️', size: 6,  hp: 420, desc: 'Extrae piedra y minerales de las entrañas de la tierra.',   file: 'building_mine_blue.gltf' },
-    { id: 'tavern',       name: 'Taberna',          icon: '🍺', size: 8,  hp: 280, desc: 'Recluta mercenarios y aventureros errantes.',               file: 'building_tavern_blue.gltf' },
-    { id: 'tower_A',      name: 'Torre A',          icon: '🗼', size: 5,  hp: 500, desc: 'Torre de vigilancia ligera, buena visión.',                 file: 'building_tower_A_blue.gltf' },
-    { id: 'tower_B',      name: 'Torre B',          icon: '🏯', size: 5,  hp: 600, desc: 'Torre defensiva fortificada con almenas.',                  file: 'building_tower_B_blue.gltf' },
-    { id: 'watermill',    name: 'Molino de agua',   icon: '💧', size: 7,  hp: 320, desc: 'Muele grano aprovechando la fuerza del río.',               file: 'building_watermill_blue.gltf' },
-    { id: 'well',         name: 'Pozo',             icon: '🪣', size: 3,  hp: 150, desc: 'Fuente de agua potable para los aldeanos.',                 file: 'building_well_blue.gltf' },
-    { id: 'windmill',     name: 'Molino de viento', icon: '🌬️', size: 7,  hp: 300, desc: 'Muele grano aprovechando la fuerza del viento.',            file: 'building_windmill_blue.gltf' }
+    { id: 'archeryrange', name: 'Arquería',         icon: '🏹', size: 9,  hp: 400, desc: 'Entrena arqueros de élite para defensa a distancia.',      file: 'building_archeryrange_blue.gltf', cost: { gold: 150, wood: 80, stone: 40 }, buildTime: 20 },
+    { id: 'barracks',     name: 'Cuarteles',        icon: '⚔️', size: 9,  hp: 450, desc: 'Forma soldados de infantería para el reino.',               file: 'building_barracks_blue.gltf', cost: { gold: 200, wood: 60, stone: 80 }, buildTime: 25 },
+    { id: 'blacksmith',   name: 'Herrería',         icon: '🔨', size: 7,  hp: 350, desc: 'Forja armas y armaduras para tus tropas.',                  file: 'building_blacksmith_blue.gltf', cost: { gold: 180, wood: 50, stone: 100 }, buildTime: 18 },
+    { id: 'castle',       name: 'Castillo',         icon: '🏰', size: 14, hp: 1200,desc: 'Fortaleza central del reino. Difícil de destruir.',         file: 'building_castle_blue.gltf', cost: { gold: 500, wood: 200, stone: 300 }, buildTime: 45 },
+    { id: 'church',       name: 'Iglesia',          icon: '⛪', size: 9,  hp: 500, desc: 'Templo sagrado que cura a los heridos cercanos.',           file: 'building_church_blue.gltf', cost: { gold: 250, wood: 100, stone: 120 }, buildTime: 22 },
+    { id: 'home_A',       name: 'Casa A',           icon: '🏠', size: 6,  hp: 200, desc: 'Vivienda humilde de los aldeanos del reino.',               file: 'building_home_A_blue.gltf', cost: { gold: 30, wood: 40, stone: 0 }, buildTime: 10 },
+    { id: 'home_B',       name: 'Casa B',           icon: '🏡', size: 6,  hp: 220, desc: 'Casa de campo confortable y acogedora.',                    file: 'building_home_B_blue.gltf', cost: { gold: 50, wood: 60, stone: 10 }, buildTime: 12 },
+    { id: 'lumbermill',   name: 'Aserradero',       icon: '🪵', size: 8,  hp: 380, desc: 'Produce madera aprovechando los bosques cercanos.',         file: 'building_lumbermill_blue.gltf', cost: { gold: 100, wood: 80, stone: 20 }, buildTime: 15 },
+    { id: 'market',       name: 'Mercado',          icon: '⛺', size: 10, hp: 300, desc: 'Centro de comercio e intercambio de bienes.',               file: 'building_market_blue.gltf', cost: { gold: 180, wood: 120, stone: 30 }, buildTime: 18 },
+    { id: 'mine',         name: 'Mina',             icon: '⛏️', size: 6,  hp: 420, desc: 'Extrae piedra y minerales de las entrañas de la tierra.',   file: 'building_mine_blue.gltf', cost: { gold: 120, wood: 50, stone: 80 }, buildTime: 16 },
+    { id: 'tavern',       name: 'Taberna',          icon: '🍺', size: 8,  hp: 280, desc: 'Recluta mercenarios y aventureros errantes.',               file: 'building_tavern_blue.gltf', cost: { gold: 160, wood: 90, stone: 20 }, buildTime: 17 },
+    { id: 'tower_A',      name: 'Torre A',          icon: '🗼', size: 5,  hp: 500, desc: 'Torre de vigilancia ligera, buena visión.',                 file: 'building_tower_A_blue.gltf', cost: { gold: 120, wood: 40, stone: 80 }, buildTime: 14 },
+    { id: 'tower_B',      name: 'Torre B',          icon: '🏯', size: 5,  hp: 600, desc: 'Torre defensiva fortificada con almenas.',                  file: 'building_tower_B_blue.gltf', cost: { gold: 150, wood: 50, stone: 100 }, buildTime: 16 },
+    { id: 'watermill',    name: 'Molino de agua',   icon: '💧', size: 7,  hp: 320, desc: 'Muele grano aprovechando la fuerza del río.',               file: 'building_watermill_blue.gltf', cost: { gold: 110, wood: 70, stone: 40 }, buildTime: 14 },
+    { id: 'well',         name: 'Pozo',             icon: '🪣', size: 3,  hp: 150, desc: 'Fuente de agua potable para los aldeanos.',                 file: 'building_well_blue.gltf', cost: { gold: 40, wood: 20, stone: 30 }, buildTime: 8 },
+    { id: 'windmill',     name: 'Molino de viento', icon: '🌬️', size: 7,  hp: 300, desc: 'Muele grano aprovechando la fuerza del viento.',            file: 'building_windmill_blue.gltf', cost: { gold: 130, wood: 90, stone: 30 }, buildTime: 15 }
   ];
 
   // Murallas y vallas "neutral" (formato .gltf; su .bin y textura se cargan solos)
   const WALLS_PATH = 'assets/structures/buildings/neutral/';
   const WALLS = [
-    { id: 'wall_straight',             name: 'Muralla recta',        icon: '🧱', size: 6, hp: 400, desc: 'Tramo recto de muralla defensiva.',                 file: 'wall_straight.gltf' },
-    { id: 'wall_straight_gate',        name: 'Muralla c/ puerta',    icon: '🚪', size: 6, hp: 450, desc: 'Muralla con portón de acceso al recinto.',          file: 'wall_straight_gate.gltf' },
-    { id: 'wall_corner_A_gate',        name: 'Esquina A c/ puerta',  icon: '🏰', size: 6, hp: 500, desc: 'Esquina fortificada con portón lateral.',           file: 'wall_corner_A_gate.gltf' },
-    { id: 'wall_corner_A_inside',      name: 'Esquina A int.',       icon: '📐', size: 6, hp: 400, desc: 'Esquina interior de muralla.',                      file: 'wall_corner_A_inside.gltf' },
-    { id: 'wall_corner_A_outside',     name: 'Esquina A ext.',       icon: '📐', size: 6, hp: 400, desc: 'Esquina exterior de muralla.',                      file: 'wall_corner_A_outside.gltf' },
-    { id: 'wall_corner_B_inside',      name: 'Esquina B int.',       icon: '📏', size: 6, hp: 420, desc: 'Esquina B interior reforzada.',                     file: 'wall_corner_B_inside.gltf' },
-    { id: 'wall_corner_B_outside',     name: 'Esquina B ext.',       icon: '📏', size: 6, hp: 420, desc: 'Esquina B exterior reforzada.',                     file: 'wall_corner_B_outside.gltf' },
-    { id: 'fence_stone_straight',      name: 'Valla de piedra',      icon: '🪨', size: 6, hp: 200, desc: 'Valla simple de piedra, fácil de derribar.',        file: 'fence_stone_straight.gltf' },
-    { id: 'fence_stone_straight_gate', name: 'Valla piedra c/ pta.', icon: '🪨', size: 6, hp: 220, desc: 'Valla de piedra con pequeño portón.',               file: 'fence_stone_straight_gate.gltf' },
-    { id: 'fence_wood_straight',       name: 'Valla de madera',      icon: '🪵', size: 6, hp: 120, desc: 'Valla liviana de madera, muy frágil.',              file: 'fence_wood_straight.gltf' },
-    { id: 'fence_wood_straight_gate',  name: 'Valla madera c/ pta.', icon: '🪵', size: 6, hp: 140, desc: 'Valla de madera con portón pequeño.',               file: 'fence_wood_straight_gate.gltf' }
+    { id: 'wall_straight',             name: 'Muralla recta',        icon: '🧱', size: 6, hp: 400, desc: 'Tramo recto de muralla defensiva.',                 file: 'wall_straight.gltf', cost: { gold: 20, wood: 10, stone: 40 }, buildTime: 8 },
+    { id: 'wall_straight_gate',        name: 'Muralla c/ puerta',    icon: '🚪', size: 6, hp: 450, desc: 'Muralla con portón de acceso al recinto.',          file: 'wall_straight_gate.gltf', cost: { gold: 30, wood: 20, stone: 50 }, buildTime: 10 },
+    { id: 'wall_corner_A_gate',        name: 'Esquina A c/ puerta',  icon: '🏰', size: 6, hp: 500, desc: 'Esquina fortificada con portón lateral.',           file: 'wall_corner_A_gate.gltf', cost: { gold: 35, wood: 20, stone: 55 }, buildTime: 10 },
+    { id: 'wall_corner_A_inside',      name: 'Esquina A int.',       icon: '📐', size: 6, hp: 400, desc: 'Esquina interior de muralla.',                      file: 'wall_corner_A_inside.gltf', cost: { gold: 20, wood: 10, stone: 40 }, buildTime: 8 },
+    { id: 'wall_corner_A_outside',     name: 'Esquina A ext.',       icon: '📐', size: 6, hp: 400, desc: 'Esquina exterior de muralla.',                      file: 'wall_corner_A_outside.gltf', cost: { gold: 20, wood: 10, stone: 40 }, buildTime: 8 },
+    { id: 'wall_corner_B_inside',      name: 'Esquina B int.',       icon: '📏', size: 6, hp: 420, desc: 'Esquina B interior reforzada.',                     file: 'wall_corner_B_inside.gltf', cost: { gold: 22, wood: 10, stone: 45 }, buildTime: 8 },
+    { id: 'wall_corner_B_outside',     name: 'Esquina B ext.',       icon: '📏', size: 6, hp: 420, desc: 'Esquina B exterior reforzada.',                     file: 'wall_corner_B_outside.gltf', cost: { gold: 22, wood: 10, stone: 45 }, buildTime: 8 },
+    { id: 'fence_stone_straight',      name: 'Valla de piedra',      icon: '🪨', size: 6, hp: 200, desc: 'Valla simple de piedra, fácil de derribar.',        file: 'fence_stone_straight.gltf', cost: { gold: 10, wood: 5, stone: 20 }, buildTime: 5 },
+    { id: 'fence_stone_straight_gate', name: 'Valla piedra c/ pta.', icon: '🪨', size: 6, hp: 220, desc: 'Valla de piedra con pequeño portón.',               file: 'fence_stone_straight_gate.gltf', cost: { gold: 12, wood: 8, stone: 25 }, buildTime: 6 },
+    { id: 'fence_wood_straight',       name: 'Valla de madera',      icon: '🪵', size: 6, hp: 120, desc: 'Valla liviana de madera, muy frágil.',              file: 'fence_wood_straight.gltf', cost: { gold: 5, wood: 15, stone: 0 }, buildTime: 4 },
+    { id: 'fence_wood_straight_gate',  name: 'Valla madera c/ pta.', icon: '🪵', size: 6, hp: 140, desc: 'Valla de madera con portón pequeño.',               file: 'fence_wood_straight_gate.gltf', cost: { gold: 6, wood: 20, stone: 0 }, buildTime: 5 }
   ];
 
   // Lista unificada: cada elemento sabe su carpeta y en qué rejilla del menú va
@@ -1553,13 +1673,22 @@ async function startGame(levelNum) {
     const ratio = s.hp / s.maxHp;
     s.healthBar.userData.fg.scale.x = Math.max(0.001, ratio);
     s.healthBar.userData.fg.position.x = -(1 - ratio) * 1.05;
+    
     let color;
-    if (ratio > 0.6) color = 0x39ff5a;
-    else if (ratio > 0.3) color = 0xffd76a;
-    else color = 0xff4040;
+    if (s.underConstruction) {
+      // 🔵 Barra azul mientras se construye
+      color = 0x4488ff;
+    } else if (ratio > 0.6) {
+      color = 0x39ff5a;
+    } else if (ratio > 0.3) {
+      color = 0xffd76a;
+    } else {
+      color = 0xff4040;
+    }
     s.healthBar.userData.fg.material.color.setHex(color);
-    // Oculta la barra cuando está al 100%
-    s.healthBar.visible = (ratio < 0.999);
+    
+    // Oculta la barra cuando está completa y no en construcción
+    s.healthBar.visible = (ratio < 0.999 || s.underConstruction);
   }
 
   function damageStructure(s, amount) {
@@ -1581,10 +1710,11 @@ async function startGame(levelNum) {
     updateInfoPanel();
   }
 
-  function deselectStructure() {
-    selectedStructure = null;
-    document.getElementById('structure-info').classList.remove('visible');
-  }
+function deselectStructure() {
+  selectedStructure = null;
+  document.getElementById('structure-info').classList.remove('visible');
+  hideSlaveInfo();
+}
 
   function updateInfoPanel() {
     if (!selectedStructure) {
@@ -1603,10 +1733,45 @@ async function startGame(levelNum) {
     document.getElementById('info-desc').textContent = s.def.desc;
     document.getElementById('structure-info').classList.add('visible');
   }
+  // Panel de info del esclavo seleccionado
+let selectedSlaveInfo = null;
+
+function showSlaveInfo(slave) {
+  selectedSlaveInfo = slave;
+  document.getElementById('slave-name').textContent = '👤 Esclavo';
+  updateSlaveInfoUI();
+  document.getElementById('slave-info').classList.add('visible');
+}
+
+function updateSlaveInfoUI() {
+  if (!selectedSlaveInfo) return;
+  const hp = selectedSlaveInfo.hp || 100;
+  const maxHp = selectedSlaveInfo.maxHp || 100;
+  document.getElementById('slave-hp-text').textContent = Math.ceil(hp) + ' / ' + maxHp;
+  const ratio = hp / maxHp;
+  const fill = document.getElementById('slave-hp-fill');
+  fill.style.width = (ratio * 100) + '%';
+  if (ratio > 0.6)      fill.style.background = 'linear-gradient(90deg, #39ff5a, #a0e050)';
+  else if (ratio > 0.3) fill.style.background = 'linear-gradient(90deg, #ffd76a, #ff9a3a)';
+  else                  fill.style.background = 'linear-gradient(90deg, #ff4040, #c01010)';
+}
+
+function hideSlaveInfo() {
+  selectedSlaveInfo = null;
+  document.getElementById('slave-info').classList.remove('visible');
+}
+
+// Botón construir del panel de esclavo
+document.getElementById('btn-slave-build').addEventListener('click', () => {
+  toggleBuildMenu();
+});
 
   // Colisión circular del rey contra las estructuras
   function collidesWithStructure(x, z, radius) {
     for (const s of structures) {
+      // Ignorar colisión con estructuras en construcción
+      if (s.underConstruction) continue;
+      
       const dx = x - s.mesh.position.x;
       const dz = z - s.mesh.position.z;
       const distSq = dx*dx + dz*dz;
@@ -1618,11 +1783,10 @@ async function startGame(levelNum) {
           const ddx = x - doorWorld.x;
           const ddz = z - doorWorld.z;
           const doorDistSq = ddx*ddx + ddz*ddz;
-          // Radio del "hueco": más amplio si tiene dos hojas
           const leafCount = s.doorLeaves ? s.doorLeaves.length : 1;
           const passageRadius = leafCount >= 2
-            ? Math.max(4.0, s.radius * 0.85)   // doble hoja: hueco más grande
-            : Math.max(2.5, s.radius * 0.55);  // hoja simple: hueco normal
+            ? Math.max(4.0, s.radius * 0.85)
+            : Math.max(2.5, s.radius * 0.55);
           if (doorDistSq < passageRadius * passageRadius) {
             return false;
           }
@@ -1638,10 +1802,26 @@ async function startGame(levelNum) {
     const btn = document.createElement('button');
     btn.className = 'build-item';
     btn.id = 'build-item-' + b.id;
-    btn.innerHTML = '<span class="icon">' + b.icon + '</span>' + b.name;
+    const costParts = [];
+    if (b.cost.gold) costParts.push(b.cost.gold + '🪙');
+    if (b.cost.wood) costParts.push(b.cost.wood + '🪵');
+    if (b.cost.stone) costParts.push(b.cost.stone + '🪨');
+    const costShort = b.cost.gold || b.cost.wood || b.cost.stone || 0;
+    btn.innerHTML = '<span class="icon">' + b.icon + '</span>' +
+                '<span class="cost-mini">' + costShort + '</span>';
+    btn.title = b.name + ' — ' + costParts.join(' ') + ' · ⏱' + b.buildTime + 's';
     btn.addEventListener('click', () => startPlacement(b.id));
     document.getElementById(b.grid).appendChild(btn);
   });
+
+  function updateBuildMenuButtons() {
+    ALL_STRUCTURES.forEach(b => {
+      const btn = document.getElementById('build-item-' + b.id);
+      if (!btn) return;
+      const canAfford = gold >= b.cost.gold && wood >= b.cost.wood && stone >= b.cost.stone;
+      btn.style.opacity = canAfford ? '1' : '0.4';
+    });
+  }
 
   function toggleBuildMenu() {
     if (build.placing) { cancelPlacement(); buildMenuEl.classList.add('visible'); return; }
@@ -1721,16 +1901,60 @@ async function startGame(levelNum) {
 
   function buildPlace() {
     if (!build.placing || !build.ok) return;
-    const model = build.models[build.placing];
     const def = ALL_STRUCTURES.find(b => b.id === build.placing);
+    
+    // Verificar recursos
+    if (gold < def.cost.gold || wood < def.cost.wood || stone < def.cost.stone) {
+      // Flash rojo en los recursos insuficientes
+      const flashEl = document.getElementById('res-gold').parentElement;
+      flashEl.style.color = '#ff4040';
+      setTimeout(() => { flashEl.style.color = ''; }, 300);
+      return;
+    }
+    
+    // Cobrar recursos
+    gold -= def.cost.gold;
+    wood -= def.cost.wood;
+    stone -= def.cost.stone;
+    updateResourcesUI();
+    
+    const model = build.models[build.placing];
     const bld = model.scene.clone(true);
     bld.scale.setScalar(build.ghostScale);
     bld.position.copy(build.ghost.position);
     bld.rotation.y = build.ghost.rotation.y;
-    bld.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+    
+    // Material de construcción (semi-transparente mientras se construye)
+    const constructionMat = new THREE.MeshBasicMaterial({ 
+      color: 0x88ccff, transparent: true, opacity: 0.5, depthWrite: false 
+    });
+    bld.traverse(o => { 
+      if (o.isMesh) { 
+        o.castShadow = true; 
+        o.receiveShadow = true; 
+        o.userData.originalMaterial = o.material;
+        o.material = constructionMat;
+      } 
+    });
     scene.add(bld);
-    addStructure(bld, def, 'player');   // 👑 lo que construye el jugador es suyo
-    // El modo colocación sigue activo para poner varias; click der / ESC para salir
+    
+    // Crear estructura en modo "en construcción" (HP empieza en 0)
+    const data = addStructure(bld, def, 'player');
+    data.hp = 0;
+    data.underConstruction = true;
+    data.buildProgress = 0;
+    updateHealthBar3D(data);
+    
+// Asignar constructores: los esclavos SELECCIONADOS si los hay, si no el más cercano
+const builders = selectedSlaves.length > 0 ? selectedSlaves : [findClosestSlave(build.ghost.position)];
+for (const builder of builders) {
+if (!builder) continue;
+builder.state = 'build';
+builder.buildTarget = data;
+builder.buildTimer = 0;
+}
+    
+    // El modo colocación sigue activo para poner varias
   }
 
   // ---- Cargar los 24 modelos (.gltf edificios + .glb murallas) ----
@@ -1759,7 +1983,7 @@ async function startGame(levelNum) {
       const gltf = await gltfLoader.loadAsync(RED_PATH + b.file.replace('_blue', '_red'));
       setupDoors(gltf.scene);
       redModels[b.id] = { scene: gltf.scene };
-    } catch (err) { console.warn('⚠ No se pudo cargar el modelo rojo de ' + b.id, err); }
+    }catch (err) { console.warn('⚠ No se pudo cargar el modelo rojo de ' + b.id, err); }
     await yieldToBrowser();
   }
 
@@ -1915,6 +2139,7 @@ async function startGame(levelNum) {
     resGoldEl.textContent  = Math.floor(gold);
     resWoodEl.textContent  = Math.floor(wood);
     resStoneEl.textContent = Math.floor(stone);
+    if (typeof updateBuildMenuButtons === 'function') updateBuildMenuButtons();
   }
 
   // 🏭 Producción pasiva de los edificios del jugador (por segundo):
@@ -1993,7 +2218,6 @@ async function startGame(levelNum) {
     shadow.rotation.x = -Math.PI / 2; shadow.position.y = 0.05;
     group.add(shadow);
 
-    // Anillo de selección (oculto por defecto)
     const ring = new THREE.Mesh(new THREE.RingGeometry(0.5, 0.65, 24), new THREE.MeshBasicMaterial({ color: 0x39ff5a, transparent: true, opacity: 0, side: THREE.DoubleSide }));
     ring.rotation.x = -Math.PI / 2; ring.position.y = 0.07;
     group.add(ring);
@@ -2001,20 +2225,32 @@ async function startGame(levelNum) {
     group.position.set(x, Math.max(getHeight(x, z), WATER_LEVEL + 0.5), z);
     scene.add(group);
 
-    const slave = {
-      mesh: group,
-      sprite: mesh,
-      ring: ring,
-      state: 'idle',
-      target: null,
-      attackCooldown: 0,
-      speed: SLAVE_SPEED,
-      walkAnim: 0,
-    };
-    slaves.push(slave);
-    return slave;
+const slave = {
+  mesh: group,
+  sprite: mesh,
+  ring: ring,
+  state: 'idle',
+  target: null,
+  buildTarget: null,
+  buildTimer: 0,
+  attackCooldown: 0,
+  speed: SLAVE_SPEED,
+  walkAnim: 0,
+  hp: 100,
+  maxHp: 100,
+  moveTarget: null,
+};
+  slaves.push(slave);
+  return slave;
   }
-
+  // 👥 Crear esclavos iniciales (3 esclavos cerca del castillo)
+  for (let i = 0; i < 3; i++) {
+  const angle = (i / 3) * Math.PI * 2 + Math.random() * 0.5;
+  const r = 6 + Math.random() * 3;
+  const sx = playerBase.x + Math.cos(angle) * r;
+  const sz = playerBase.z + Math.sin(angle) * r;
+  createSlave(sx, sz);   // nacen en 'idle': quietos hasta que les des una orden
+  }
   // ⚒️ Cola de fabricación: 1 esclavo en fábrica + el resto en espera
   const slaveQueue = [];
   let trainProgress = 0;
@@ -2035,7 +2271,21 @@ async function startGame(levelNum) {
     createSlave(castle.mesh.position.x + Math.cos(angle) * r,
                 castle.mesh.position.z + Math.sin(angle) * r);
   }
-
+  function findClosestSlave(pos) {
+    let closest = null;
+    let minDist = Infinity;
+    for (const s of slaves) {
+      if (s.state === 'build') continue; // Ya está construyendo
+      const dist = s.mesh.position.distanceTo(pos);
+      if (dist < minDist) {
+        minDist = dist;
+        closest = s;
+      }
+    }
+    // Si no hay esclavos libres, tomar cualquiera
+    if (!closest && slaves.length > 0) closest = slaves[0];
+    return closest;
+  }
   function updateTraining(dt) {
     if (slaveQueue.length > 0) {
       trainProgress += dt;
@@ -2105,9 +2355,19 @@ async function startGame(levelNum) {
   function updateSlaves(dt) {
     for (const s of slaves) {
       if (s.state === 'follow') {
-        const dist = s.mesh.position.distanceTo(king.position);
+        // Si hay un objetivo de movimiento explícito, ir allí primero
+        let targetPos = king.position;
+        if (s.moveTarget) {
+          const distToTarget = s.mesh.position.distanceTo(s.moveTarget);
+          if (distToTarget < 1.5) {
+            s.moveTarget = null; // Llegó al destino
+          } else {
+            targetPos = s.moveTarget;
+          }
+        }
+        const dist = s.mesh.position.distanceTo(targetPos);
         if (dist > SLAVE_FOLLOW_DIST) {
-          const dir = new THREE.Vector3().subVectors(king.position, s.mesh.position);
+          const dir = new THREE.Vector3().subVectors(targetPos, s.mesh.position);
           dir.y = 0;
           dir.normalize();
           const nx = s.mesh.position.x + dir.x * s.speed * dt;
@@ -2132,6 +2392,53 @@ async function startGame(levelNum) {
             }
           }
         }
+        } else if (s.state === 'build') {
+  // Si no hay objetivo o ya se terminó de construir, volver a seguir
+  if (!s.buildTarget || s.buildTarget.hp >= s.buildTarget.maxHp || !s.buildTarget.underConstruction) {
+    s.state = 'follow';
+    s.buildTarget = null;
+    continue;
+  }
+  const dist = s.mesh.position.distanceTo(s.buildTarget.mesh.position);
+  if (dist > 5) {
+    // Moverse hacia la estructura
+    const dir = new THREE.Vector3().subVectors(s.buildTarget.mesh.position, s.mesh.position);
+    dir.y = 0;
+    dir.normalize();
+    const nx = s.mesh.position.x + dir.x * s.speed * dt;
+    const nz = s.mesh.position.z + dir.z * s.speed * dt;
+    if (!collidesWithTree(nx, nz, 0.5) && !collidesWithStructure(nx, nz, 0.5)) {
+      s.mesh.position.x = nx;
+      s.mesh.position.z = nz;
+    }
+    s.mesh.rotation.y = Math.atan2(dir.x, dir.z);
+    s.walkAnim += dt * 8;
+  } else {
+    // Construyendo: animación de martilleo
+    s.walkAnim += dt * 6;
+    s.buildTimer += dt;
+    if (s.buildTimer >= 1.0) {
+      s.buildTimer = 0;
+      // Progreso: maxHp / buildTime por segundo
+      const progress = s.buildTarget.maxHp / s.buildTarget.def.buildTime;
+      s.buildTarget.hp = Math.min(s.buildTarget.maxHp, s.buildTarget.hp + progress);
+      updateHealthBar3D(s.buildTarget);
+      // Si se completó
+      if (s.buildTarget.hp >= s.buildTarget.maxHp) {
+        s.buildTarget.underConstruction = false;
+        // Restaurar materiales originales
+        s.buildTarget.mesh.traverse(o => {
+          if (o.isMesh && o.userData.originalMaterial) {
+            o.material = o.userData.originalMaterial;
+            o.castShadow = true;
+            o.receiveShadow = true;
+          }
+        });
+        s.state = 'follow';
+        s.buildTarget = null;
+      }
+    }
+  }
       } else if (s.state === 'attack') {
         if (s.target && s.target.hp > 0) {
           const d = s.mesh.position.distanceTo(s.target.mesh.position);
@@ -2188,7 +2495,6 @@ async function startGame(levelNum) {
   const keydownHandler = e => {
     keys[e.code] = true;
     if (e.code.startsWith('Arrow')) e.preventDefault();
-    if (e.code === 'KeyC')  toggleBuildMenu();
     if (e.code === 'Escape') {
       if (build.placing) cancelPlacement();
       else if (selectedStructure) deselectStructure();
@@ -2240,29 +2546,78 @@ async function startGame(levelNum) {
     npcMenuEl.classList.remove('visible');
   }
 
-  document.getElementById('hire-slaves').onclick = () => {
-    hireSlave();
-    hideContextMenus();
-  };
   document.getElementById('npc-follow').onclick = () => {
-    for (const s of selectedSlaves) s.state = 'follow';
+    for (const s of selectedSlaves) {
+      s.state = 'follow';
+      s.target = null;
+      s.buildTarget = null;
+    }
     hideContextMenus();
   };
   document.getElementById('npc-stop').onclick = () => {
-    for (const s of selectedSlaves) s.state = 'idle';
+    for (const s of selectedSlaves) {
+      s.state = 'idle';
+      s.target = null;
+      s.buildTarget = null;
+    }
+    hideContextMenus();
+  };
+  document.getElementById('npc-build').onclick = () => {
+    toggleBuildMenu();
     hideContextMenus();
   };
 
-  window.addEventListener('mousedown', (e) => {
+    window.addEventListener('mousedown', (e) => {
     if (e.target !== renderer.domElement) {
-      hideContextMenus();
-      return;
+    // ✅ Si el click es DENTRO de un menú contextual, NO ocultarlo aquí:
+    // si el menú desaparece entre el mousedown y el mouseup, el 'click'
+    // nunca llega al botón y las órdenes no se ejecutan.
+    if (!e.target.closest('#castle-menu') && !e.target.closest('#npc-menu')) {
+    hideContextMenus();
+    }
+    return;
     }
 
     if (e.button === 0) {
       hideContextMenus();
-      if (build.placing) { buildPlace(); return; }
-      if (buildMenuEl.classList.contains('visible')) { closeBuildMenu(); return; }
+    if (build.placing) { buildPlace(); return; }
+    // Cerrar menú si se clickea en el canvas (fuera del menú)
+    if (buildMenuEl.classList.contains('visible') && e.target === renderer.domElement) { 
+      closeBuildMenu(); 
+    }
+        // Si hay esclavos seleccionados y no está colocando, dar orden de moverse al punto
+  if (selectedSlaves.length > 0 && !build.placing) {
+    const p = terrainPoint();
+    if (p) {
+      // Verificar que no clickeó un esclavo o estructura
+      buildRay.setFromCamera(mouseNDC, camera);
+      const slaveMeshes = slaves.map(s => s.sprite);
+      const slaveHits = buildRay.intersectObjects(slaveMeshes, false);
+      const allMeshes = [];
+      structures.forEach(s => s.mesh.traverse(o => { if (o.isMesh) allMeshes.push(o); }));
+      const structHits = buildRay.intersectObjects(allMeshes, false);
+      
+      if (slaveHits.length === 0 && structHits.length === 0) {
+        // Mover esclavos al punto clickeado
+        for (const s of selectedSlaves) {
+          s.state = 'follow';
+          s.moveTarget = p.clone();
+          s.target = null;
+        }
+        // Visual: marcador temporal
+        const marker = new THREE.Mesh(
+          new THREE.RingGeometry(0.4, 0.6, 16),
+          new THREE.MeshBasicMaterial({ color: 0x39ff5a, transparent: true, opacity: 0.8, side: THREE.DoubleSide })
+        );
+        marker.rotation.x = -Math.PI / 2;
+        marker.position.copy(p);
+        marker.position.y = getHeight(p.x, p.z) + 0.1;
+        scene.add(marker);
+        setTimeout(() => scene.remove(marker), 1000);
+        return;
+      }
+    }
+  }
 
       // Empezar selección por arrastre
       isSelecting = true;
@@ -2282,12 +2637,30 @@ async function startGame(levelNum) {
       }
       window.__lastLeftClick = now;
 
+      // Detectar clic en esclavo (raycasting sobre sprites de esclavos)
+      buildRay.setFromCamera(mouseNDC, camera);
+      const slaveMeshes = slaves.map(s => s.sprite);
+      const slaveHits = buildRay.intersectObjects(slaveMeshes, false);
+      
+if (slaveHits.length > 0) {
+  const clickedSlave = slaves.find(s => s.sprite === slaveHits[0].object);
+  if (clickedSlave) {
+    selectedSlaves = [clickedSlave];
+    updateSlaveHighlights();
+    mouseAttackQueued = false;
+    // Desactivar otros paneles
+    document.getElementById('structure-info').classList.remove('visible');
+    // Mostrar panel de esclavo
+    showSlaveInfo(clickedSlave);
+    return;
+  }
+}
+
       mouseAttackQueued = true;
 
       const allMeshes = [];
       structures.forEach(s => s.mesh.traverse(o => { if (o.isMesh) allMeshes.push(o); }));
       if (allMeshes.length > 0) {
-        buildRay.setFromCamera(mouseNDC, camera);
         const hits = buildRay.intersectObjects(allMeshes, false);
         if (hits.length > 0) {
           const data = hits[0].object.userData.structureData;
@@ -2319,7 +2692,7 @@ async function startGame(levelNum) {
     }
   });
 
-  window.addEventListener('mouseup', (e) => {
+    window.addEventListener('mouseup', (e) => {
     if (e.button === 0) {
       if (isSelecting) {
         isSelecting = false;
@@ -2331,11 +2704,10 @@ async function startGame(levelNum) {
         const rectW = x2 - x1, rectH = y2 - y1;
 
         if (rectW > 5 || rectH > 5) {
-          // Es una selección por arrastre
           selectedSlaves = [];
           for (const s of slaves) {
             const pos = s.mesh.position.clone().project(camera);
-            if (pos.z > 1) continue; // detrás de la cámara
+            if (pos.z > 1) continue;
             const sx = (pos.x * 0.5 + 0.5) * innerWidth;
             const sy = (-pos.y * 0.5 + 0.5) * innerHeight;
             if (sx >= x1 && sx <= x2 && sy >= y1 && sy <= y2) {
@@ -2343,12 +2715,11 @@ async function startGame(levelNum) {
             }
           }
           updateSlaveHighlights();
-          mouseAttackQueued = false; // anular el ataque si fue una selección
-        } else {
-          // Click simple - ya manejado en mousedown
+          mouseAttackQueued = false;
         }
       }
     }
+
     if (e.button === 2) {
       mouseBlockHeld = false;
       const dx = e.clientX - rightClickStart.x;
@@ -2357,12 +2728,26 @@ async function startGame(levelNum) {
       const dist = Math.sqrt(dx*dx + dy*dy);
 
       if (dist < 5 && dt < 500) {
-        // Click corto (no drag) -> menú contextual
         buildRay.setFromCamera(mouseNDC, camera);
+
+        // Primero verificar si se clickeó un esclavo (para dar órdenes)
+        const slaveMeshes = slaves.map(s => s.sprite);
+        const slaveHits = buildRay.intersectObjects(slaveMeshes, false);
+        if (slaveHits.length > 0) {
+          const clickedSlave = slaves.find(s => s.sprite === slaveHits[0].object);
+          if (clickedSlave) {
+            selectedSlaves = [clickedSlave];
+            updateSlaveHighlights();
+            showNpcMenu(e.clientX, e.clientY);
+            isRotatingCamera = false;
+            return;
+          }
+        }
+
+        // Verificar estructuras
         const allMeshes = [];
         structures.forEach(s => s.mesh.traverse(o => { if (o.isMesh) allMeshes.push(o); }));
         const hits = buildRay.intersectObjects(allMeshes, false);
-
         if (hits.length > 0) {
           const data = hits[0].object.userData.structureData;
           if (data && data.def.id === 'castle' && data.team === 'player') {
@@ -2518,6 +2903,7 @@ async function startGame(levelNum) {
     updateResources(dt);
     updateTraining(dt);
     updateSlaves(dt);
+    if (selectedSlaveInfo) updateSlaveInfoUI();
     updateMinimap();
   }
 
@@ -2558,6 +2944,7 @@ document.querySelectorAll('.level-card').forEach(card => {
 <!-- Menú de órdenes para NPCs -->
 <div id="npc-menu">
   <h3>⚔ ÓRDENES</h3>
+  <button class="menu-option" id="npc-build">🏗️ Construir...</button>
   <button class="menu-option" id="npc-follow">🏃 Seguirme</button>
   <button class="menu-option" id="npc-stop">✋ Dejar de seguirme</button>
 </div>
