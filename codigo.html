@@ -391,7 +391,7 @@
     <span class="res" title="Piedra">🪨 <b id="res-stone">0</b></span>
   </div>
 <div id="hud-help">
-  <b>👑 W A S D</b> mover · Click izq <b>esclavo/soldado</b> = seleccionar · <b>Arrastra</b> = selección múltiple · <b>Click der</b> = órdenes / Mover aquí / Atacar
+  <b>👑 W A S D</b> mover · Click izq <b>aldeano/soldado</b> = seleccionar · <b>Arrastra</b> = selección múltiple · <b>Click der</b> = órdenes / Mover aquí / Atacar
 </div>
 </div>
 <button id="exit-btn">↩ Menú Principal</button>
@@ -404,7 +404,7 @@
   <div class="slave-info-left">
     <div class="slave-icon">👤</div>
     <div class="slave-details">
-      <div id="slave-name">Esclavo</div>
+      <div id="slave-name">Aldeano</div>
       <div id="slave-hp-text">100 / 100</div>
       <div class="slave-hp-bar"><div class="slave-hp-fill" id="slave-hp-fill"></div></div>
     </div>
@@ -422,11 +422,11 @@
   </div>
   <div id="info-desc"></div>
   <div id="castle-production">
-    <div class="prod-title">⚒ PRODUCCIÓN DE ESCLAVOS</div>
+    <div class="prod-title">⚒ PRODUCCIÓN DE ALDEANOS</div>
     <div class="train-bar"><div class="train-fill" id="train-fill"></div></div>
     <div id="train-status">Sin producción activa</div>
     <div id="train-queue"></div>
-    <button id="btn-train-slave">👥 Entrenar esclavo (10 🪙)</button>
+    <button id="btn-train-slave">👥 Entrenar aldeano (10 🪙)</button>
   </div>
   <div id="barracks-production">
     <div class="prod-title">⚔ PRODUCCIÓN DE SOLDADOS</div>
@@ -750,15 +750,15 @@ async function startGame(levelNum) {
   // 💡 Consejos rotativos durante la carga
   const loadingTipsEl = document.getElementById('loading-tips');
   const LOADING_TIPS = [
-    '<b>Consejo:</b> Haz click derecho con un esclavo seleccionado y usa <b>📍 Mover aquí</b> para enviarlo a un punto.',
-    '<b>Consejo:</b> Selecciona esclavos y haz click derecho sobre una <b>Mina de oro</b> para extraerla.',
+    '<b>Consejo:</b> Haz click derecho con un aldeano seleccionado y usa <b>📍 Mover aquí</b> para enviarlo a un punto.',
+    '<b>Consejo:</b> Selecciona aldeanos, haz click derecho sobre una <b>Mina de oro</b> y pulsa <b>⛏️ Minar</b> para extraerla.',
     '<b>Consejo:</b> Haz click izquierdo en tu <b>Cuartel</b> y pulsa <b>⚔️ Contratar soldado</b> para reclutar tropas (20 🪙).',
     '<b>Consejo:</b> Los <b>soldados</b> atacan automáticamente a los edificios enemigos cercanos y cumplen tus órdenes por click derecho.',
-    '<b>Consejo:</b> Click izquierdo sobre un esclavo lo selecciona y abre su panel; si clickeas el mapa se deselecciona.',
-    '<b>Consejo:</b> Arrastra el ratón sobre varios esclavos o soldados para seleccionarlos a la vez.',
-    '<b>Consejo:</b> La barra <b>azul</b> indica que un edificio aún se está construyendo; envía varios esclavos (click derecho) para acelerar las obras.',
+    '<b>Consejo:</b> Click izquierdo sobre un aldeano lo selecciona y abre su panel; si clickeas el mapa se deselecciona.',
+    '<b>Consejo:</b> Arrastra el ratón sobre varios aldeanos o soldados para seleccionarlos a la vez.',
+    '<b>Consejo:</b> La barra <b>azul</b> indica que un edificio aún se está construyendo; envía varios aldeanos (click derecho) para acelerar las obras.',
     '<b>Consejo:</b> Mantén pulsado el click derecho para rotar la cámara.',
-    '<b>Consejo:</b> Selecciona esclavos y haz click derecho sobre un <b>árbol</b> para talarlo y obtener madera (cada árbol da 50-100 🪵).',
+    '<b>Consejo:</b> Selecciona aldeanos, haz click derecho sobre un <b>árbol</b> y pulsa <b>🪓 Talar</b> para obtener madera (cada árbol da 50-100 🪵).',
     '<b>Consejo:</b> Las minas de oro del mapa tienen 2000 🪙 y se agotan al extraerlas.',
     '<b>Consejo:</b> El rey ataca con el click izquierdo sobre edificios enemigos.',
     '<b>Consejo:</b> Pulsa <b>ESC</b> para cancelar la colocación o cerrar menús.'
@@ -1078,13 +1078,13 @@ async function startGame(levelNum) {
   updateLoading(92, `Construyendo ${CFG.name}...`);
   await yieldToBrowser();
 
-  const trunkMat = new THREE.MeshStandardMaterial({ color: CFG.treeTrunkColor, roughness: 0.95 });
-  const leavesMat = new THREE.MeshStandardMaterial({ color: CFG.treeLeafColor, roughness: 0.9 });
-  const rockMat = new THREE.MeshStandardMaterial({ color: CFG.rockColor, roughness: 1.0 });
+  const trunkMat = new THREE.MeshStandardMaterial({ color: CFG.treeTrunkColor, roughness: 0.95, flatShading: true });
+  const leavesMat = new THREE.MeshStandardMaterial({ color: CFG.treeLeafColor, roughness: 0.9, flatShading: true });
+  const rockMat = new THREE.MeshStandardMaterial({ color: CFG.rockColor, roughness: 1.0, flatShading: true });
   // Variedades de follaje (compartidas por todos los árboles del nivel)
   const baseLeaf = new THREE.Color(CFG.treeLeafColor);
-  const leafDark  = new THREE.MeshStandardMaterial({ color: baseLeaf.clone().multiplyScalar(0.72), roughness: 0.9 });
-  const leafLight = new THREE.MeshStandardMaterial({ color: baseLeaf.clone().multiplyScalar(1.35), roughness: 0.85 });
+  const leafDark  = new THREE.MeshStandardMaterial({ color: baseLeaf.clone().multiplyScalar(0.72), roughness: 0.9, flatShading: true });
+  const leafLight = new THREE.MeshStandardMaterial({ color: baseLeaf.clone().multiplyScalar(1.35), roughness: 0.85, flatShading: true });
 
   // 🌲 Colisión circular del rey contra los troncos de los árboles
   const treeColliders = [];
@@ -1106,35 +1106,33 @@ async function startGame(levelNum) {
     const g = new THREE.Group();
     const s = 0.9 + Math.random() * 0.9;
 
-    // Tronco robusto (base ancha) + rama ocasional
-    const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.38, 2.4, 8), trunkMat);
+    // Tronco robusto (base ancha) + rama ocasional (SOLO el tronco proyecta sombra)
+    const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.38, 2.4, 6), trunkMat);
     trunk.position.y = 1.2; trunk.castShadow = true;
     g.add(trunk);
     if (Math.random() > 0.5) {
-      const branch = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.11, 1.3, 6), trunkMat);
+      const branch = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.11, 1.3, 5), trunkMat);
       branch.position.set(0.4, 1.9, 0.15);
       branch.rotation.z = -Math.PI / 5;
-      branch.castShadow = true;
       g.add(branch);
     }
 
-    // Copa tupida: anillo inferior ancho + nubes medias + cima clara
+    // 🪓 Copa LOW-POLY: un icosaedro central + 4 satélites + cima.
+    // ~130 triángulos por árbol (antes ~1.000 con esferas) y la copa NO
+    // proyecta sombra: con 400-900 árboles era lo que hundía los FPS.
     const leaves = new THREE.Group();
-    for (let i = 0; i < 6; i++) {
-      const a = (i / 6) * Math.PI * 2;
-      const ball = new THREE.Mesh(new THREE.SphereGeometry(0.78, 12, 9), leafDark);
-      ball.position.set(Math.cos(a) * 0.6, 2.0 + Math.sin(i * 2.7) * 0.12, Math.sin(a) * 0.6);
-      ball.castShadow = true;
-      leaves.add(ball);
+    const mid = new THREE.Mesh(new THREE.IcosahedronGeometry(0.95, 0), leavesMat);
+    mid.position.set(0, 2.55, 0);
+    leaves.add(mid);
+    for (let i = 0; i < 4; i++) {
+      const a = (i / 4) * Math.PI * 2 + 0.4;
+      const blob = new THREE.Mesh(new THREE.IcosahedronGeometry(0.55, 0), i % 2 ? leafDark : leafLight);
+      blob.position.set(Math.cos(a) * 0.62, 2.25 + Math.sin(i * 2.1) * 0.18, Math.sin(a) * 0.62);
+      leaves.add(blob);
     }
-    const mid = new THREE.Mesh(new THREE.SphereGeometry(0.95, 12, 9), leavesMat);
-    mid.position.set(0, 2.55, 0); mid.castShadow = true; leaves.add(mid);
-    const midA = new THREE.Mesh(new THREE.SphereGeometry(0.62, 12, 9), leavesMat);
-    midA.position.set(0.55, 2.3, 0.3); midA.castShadow = true; leaves.add(midA);
-    const midB = new THREE.Mesh(new THREE.SphereGeometry(0.58, 12, 9), leavesMat);
-    midB.position.set(-0.5, 2.35, -0.35); midB.castShadow = true; leaves.add(midB);
-    const top = new THREE.Mesh(new THREE.SphereGeometry(0.55, 12, 9), leafLight);
-    top.position.set(0, 3.25, 0); top.castShadow = true; leaves.add(top);
+    const top = new THREE.Mesh(new THREE.IcosahedronGeometry(0.45, 0), leafLight);
+    top.position.set(0, 3.15, 0);
+    leaves.add(top);
     g.add(leaves);
 
     g.scale.setScalar(s);
@@ -1156,12 +1154,12 @@ async function startGame(levelNum) {
     const g = new THREE.Group();
     const s = 0.7 + Math.random() * 0.5;
     const cactusMat = new THREE.MeshStandardMaterial({ color: 0x3a6a2a, roughness: 0.9 });
-    const body = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.35, 2.5, 8), cactusMat);
+    const body = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.35, 2.5, 6), cactusMat);
     body.position.y = 1.25; body.castShadow = true;
     g.add(body);
     if (Math.random() > 0.4) {
-      const arm = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.18, 1.0, 6), cactusMat);
-      arm.position.set(0.35, 1.6, 0); arm.rotation.z = -Math.PI / 4; arm.castShadow = true;
+      const arm = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.18, 1.0, 5), cactusMat);
+      arm.position.set(0.35, 1.6, 0); arm.rotation.z = -Math.PI / 4;
       g.add(arm);
     }
     g.scale.setScalar(s);
@@ -1595,6 +1593,7 @@ async function startGame(levelNum) {
   ============================================================ */
   const structures = [];                 // { mesh, def, hp, maxHp, healthBar, radius }
   let selectedStructure = null;
+  let selectedTree = null;               // 🌳 árbol seleccionado (panel de madera restante)
   const KING_ATTACK_RANGE = 5.5;         // alcance del espadazo del rey
   const KING_ATTACK_DAMAGE = 35;         // daño por golpe
   const KING_RADIUS = 1.0;               // radio de colisión del rey
@@ -1826,16 +1825,48 @@ async function startGame(levelNum) {
 
   function selectStructure(s) {
     selectedStructure = s;
+    hideTreeInfo();
     updateInfoPanel();
   }
 
 function deselectStructure() {
   selectedStructure = null;
+  hideTreeInfo();
   document.getElementById('structure-info').classList.remove('visible');
   hideSlaveInfo();
 }
 
+  function hideTreeInfo() {
+    selectedTree = null;
+  }
+
   function updateInfoPanel() {
+    // 🌳 Modo árbol: muestra la madera restante (y se apaga si lo talan)
+    if (selectedTree) {
+      if (selectedTree.wood <= 0) {
+        hideTreeInfo();
+        document.getElementById('structure-info').classList.remove('visible');
+        return;
+      }
+      const t = selectedTree;
+      const nameEl = document.getElementById('info-name');
+      const hpEl = document.getElementById('info-hp');
+      const fill = document.getElementById('info-hp-fill');
+      const descEl = document.getElementById('info-desc');
+      document.querySelector('#structure-info .info-header').style.display = '';
+      nameEl.style.display = '';
+      hpEl.style.display = '';
+      descEl.style.display = '';
+      nameEl.textContent = '🌳 Árbol';
+      hpEl.textContent = Math.ceil(t.wood) + ' / ' + t.maxWood + ' 🪵';
+      fill.style.width = (t.wood / t.maxWood * 100) + '%';
+      fill.style.background = 'linear-gradient(90deg, #7ec850, #b0e880)';
+      descEl.textContent = t.wood > 0
+        ? 'Click derecho sobre el árbol con aldeanos seleccionados y pulsa 🪓 Talar.'
+        : 'Árbol talado.';
+      document.getElementById('structure-info').classList.add('visible');
+      return;
+    }
     if (!selectedStructure) {
       document.getElementById('structure-info').classList.remove('visible');
       return;
@@ -1854,7 +1885,7 @@ function deselectStructure() {
       fill.style.background = 'linear-gradient(90deg, #ffd76a, #ffb42a)';
       descEl.textContent = s.gold <= 0
         ? 'Esta mina de oro está agotada.'
-        : 'Selecciona esclavos y haz click derecho en la mina para extraer su oro.';
+        : 'Selecciona aldeanos y haz click derecho en la mina para extraer su oro.';
       document.getElementById('structure-info').classList.add('visible');
       return;
     }
@@ -1889,7 +1920,7 @@ let selectedSlaveInfo = null;
 function showSlaveInfo(slave) {
   selectedSlaveInfo = slave;
   const isSoldier = slave.type === 'soldier';
-  document.getElementById('slave-name').textContent = isSoldier ? '⚔️ Soldado' : '👤 Esclavo';
+  document.getElementById('slave-name').textContent = isSoldier ? '⚔️ Soldado' : '👤 Aldeano';
   document.getElementById('btn-slave-build').style.display = isSoldier ? 'none' : 'flex';
   updateSlaveInfoUI();
   document.getElementById('slave-info').classList.add('visible');
@@ -2192,7 +2223,7 @@ builder.mineTarget = null;
   /* ============================================================
      ⛏️ MINAS DE ORO (recursos repartidos por el mapa)
   ============================================================ */
-  const GOLD_MINE_DEF = { id: 'goldmine', name: 'Mina de oro', icon: '⛏️', size: 5, hp: 2000, maxHp: 2000, desc: 'Rica veta de oro. Ordena a tus esclavos extraerla con click derecho.' };
+  const GOLD_MINE_DEF = { id: 'goldmine', name: 'Mina de oro', icon: '⛏️', size: 5, hp: 2000, maxHp: 2000, desc: 'Rica veta de oro. Ordena a tus aldeanos extraerla con click derecho.' };
   const GOLD_MINE_AMOUNT = 2000;
   const GOLD_MINE_COUNT = 6;
 
@@ -2235,7 +2266,9 @@ builder.mineTarget = null;
   }
 
   function placeGoldMine(x, z) {
-    const g = makeGoldMineMesh();
+    // ⛏️ Las minas de oro usan el modelo físico de la mina (aspecto neutral, no de equipo)
+    const mineModel = build.models['mine'];
+    const g = (mineModel && mineModel.scene) ? mineModel.scene.clone(true) : makeGoldMineMesh();
     g.position.set(0, 0, 0); g.rotation.set(0, 0, 0); g.scale.set(1, 1, 1);
     g.updateMatrixWorld(true);
     let box = new THREE.Box3().setFromObject(g);
@@ -2470,15 +2503,15 @@ builder.mineTarget = null;
     updateResourcesUI();
   }
 
-  // Pixel art del aldeano: cabeza de pelo afro, pañuelo rojo y túnica medieval
+  // Pixel art del aldeano: cabeza de pelo afro, pañuelo azul (equipo) y túnica medieval
   // 🎨 Paleta del aldeano (compartida por el sprite y los fotogramas de trabajo)
   const slavePalette = {
     outline: '#120a04', hair: '#1a1008', hairL: '#33200f',
-    band: '#c0392b', bandL: '#e74c3c', skin: '#5a3620',
+    band: '#2f5f88', bandL: '#3f7fae', skin: '#5a3620',
     skinS: '#3f2412', skinL: '#6e452a', eye: '#0f0a06',
-    eyeW: '#ffffff', mouth: '#2b1508', tunic: '#7a5a30',
-    tunicS: '#5a4020', tunicL: '#8a6a3a', belt: '#3a2410',
-    buckle: '#d9a733', pants: '#4a3820', pantsS: '#332612',
+    eyeW: '#ffffff', mouth: '#2b1508', tunic: '#3a6ea8',
+    tunicS: '#274f7a', tunicL: '#4a8fc9', belt: '#3a2410',
+    buckle: '#d9a733', pants: '#2e4a66', pantsS: '#1f3550',
     boot: '#2a1a10', bootS: '#1c1108',
   };
 
@@ -2875,7 +2908,7 @@ const slave = {
     if (slaveQueue.length > 0) {
       trainFillEl.style.width = (trainProgress / SLAVE_TRAIN_TIME * 100) + '%';
       trainStatusEl.textContent =
-        '⚒ Fabricando esclavo... ' + Math.max(0, SLAVE_TRAIN_TIME - trainProgress).toFixed(1) + ' s' +
+        '⚒ Fabricando aldeano... ' + Math.max(0, SLAVE_TRAIN_TIME - trainProgress).toFixed(1) + ' s' +
         (slaveQueue.length > 1 ? ' · En cola: ' + (slaveQueue.length - 1) : '');
     } else {
       trainFillEl.style.width = '0%';
@@ -2889,15 +2922,25 @@ const slave = {
 
   // 🧭 Movimiento con rodeo de obstáculos: cada eje se prueba por separado.
   // Si un eje queda bloqueado, el otro avanza y la unidad rodea el obstáculo.
+  // Si AMBOS ejes quedan bloqueados, la unidad se desliza en perpendicular
+  // para bordear la estructura y continuar su camino.
   function moveUnit(s, dir, speed, dt, radius) {
     const ox = s.mesh.position.x, oz = s.mesh.position.z;
-    const nx = ox + dir.x * speed * dt;
-    const nz = oz + dir.z * speed * dt;
-    if (!collidesWithTree(nx, oz, radius) && !collidesWithStructure(nx, oz, radius)) {
-      s.mesh.position.x = nx;
-    }
-    if (!collidesWithTree(ox, nz, radius) && !collidesWithStructure(ox, nz, radius)) {
-      s.mesh.position.z = nz;
+    const step = speed * dt;
+    const nx = ox + dir.x * step;
+    const nz = oz + dir.z * step;
+    const canX = !collidesWithTree(nx, oz, radius) && !collidesWithStructure(nx, oz, radius);
+    const canZ = !collidesWithTree(ox, nz, radius) && !collidesWithStructure(ox, nz, radius);
+    if (canX) s.mesh.position.x = nx;
+    if (canZ) s.mesh.position.z = nz;
+    // 🧭 Atascado frontal: probar ambos sentidos perpendiculares y avanzar por el libre
+    if (!canX && !canZ) {
+      const p1x = ox - dir.z * step, p1z = oz + dir.x * step;
+      const p2x = ox + dir.z * step, p2z = oz - dir.x * step;
+      const ok1 = !collidesWithTree(p1x, p1z, radius) && !collidesWithStructure(p1x, p1z, radius);
+      const ok2 = !collidesWithTree(p2x, p2z, radius) && !collidesWithStructure(p2x, p2z, radius);
+      if (ok1) { s.mesh.position.x = p1x; s.mesh.position.z = p1z; }
+      else if (ok2) { s.mesh.position.x = p2x; s.mesh.position.z = p2z; }
     }
   }
 
@@ -3152,40 +3195,44 @@ const slave = {
   const SOLDIER_HEIGHT = 4.8;
 
   // Pixel art del soldado: yelmo metálico, túnica azul, espada alzada y escudo de madera
-  function createSoldierSprite() {
-    const c = document.createElement('canvas');
-    c.width = 32; c.height = 48;
-    const x = c.getContext('2d');
+  // 🎨 Paleta del soldado: caballero de TEZ BLANCA con equipo azul
+  const soldierPalette = {
+    outline: '#120a04',
+    helm:    '#aebfc9',
+    helmS:   '#7e8d99',
+    helmL:   '#d9e6ee',
+    plume:   '#c0392b',
+    skin:    '#f0dcc8',   // tez blanca
+    skinS:   '#d8bfa8',
+    skinL:   '#ffe8d8',
+    eye:     '#0f0a06',
+    eyeW:    '#ffffff',
+    mouth:   '#2b1508',
+    tunic:   '#2f5f88',
+    tunicS:  '#20405c',
+    tunicL:  '#3f7fae',
+    belt:    '#3a2410',
+    buckle:  '#d9a733',
+    chain:   '#8a9aa8',  // cota de malla
+    chainS:  '#6a7a88',
+    cross:   '#f0f0f0',  // cruz de la sobrevesta
+    pants:   '#4a3820',
+    pantsS:  '#332612',
+    boot:    '#2a1a10',
+    bootS:   '#1c1108',
+    blade:   '#dfe9f0',
+    bladeL:  '#ffffff',
+    guard:   '#d9a733',
+    wood:    '#8a5a28',
+    woodL:   '#a06a30',
+    woodS:   '#643c18',
+  };
 
-    const outline = '#120a04';
-    const helm    = '#aebfc9';
-    const helmS   = '#7e8d99';
-    const helmL   = '#d9e6ee';
-    const plume   = '#c0392b';
-    const skin    = '#5a3620';
-    const skinS   = '#3f2412';
-    const skinL   = '#6e452a';
-    const eye     = '#0f0a06';
-    const eyeW    = '#ffffff';
-    const mouth   = '#2b1508';
-    const tunic   = '#2f5f88';
-    const tunicS  = '#20405c';
-    const tunicL  = '#3f7fae';
-    const belt    = '#3a2410';
-    const buckle  = '#d9a733';
-    const chain   = '#8a9aa8';  // cota de malla
-    const chainS  = '#6a7a88';
-    const cross   = '#f0f0f0';  // cruz de la sobrevesta
-    const pants   = '#4a3820';
-    const pantsS  = '#332612';
-    const boot    = '#2a1a10';
-    const bootS   = '#1c1108';
-    const blade   = '#dfe9f0';
-    const bladeL  = '#ffffff';
-    const guard   = '#d9a733';
-    const wood    = '#8a5a28';
-    const woodL   = '#a06a30';
-    const woodS   = '#643c18';
+  // 🎨 Cuerpo del soldado SIN el brazo derecho (se pinta según la acción)
+  function paintSoldierBody(x) {
+    const { outline, helm, helmS, helmL, plume, skin, skinS, skinL, eye, eyeW, mouth,
+            tunic, tunicS, tunicL, belt, buckle, chain, chainS, cross,
+            pants, pantsS, boot, bootS, wood, woodL, woodS } = soldierPalette;
 
     // ---- Yelmo cónico con nasal y pluma roja ----
     x.fillStyle = outline;
@@ -3205,7 +3252,7 @@ const slave = {
     x.fillStyle = plume;
     x.fillRect(15, 0, 2, 2);
 
-    // ---- Cara ----
+    // ---- Cara (tez blanca) ----
     x.fillStyle = outline;
     x.fillRect(11, 5, 10, 10);
     x.fillStyle = skin;
@@ -3240,32 +3287,6 @@ const slave = {
     x.fillRect(14, 4, 2, 5);
     x.fillStyle = helm;
     x.fillRect(15, 4, 1, 4);
-
-    // ---- Espada alzada (mano derecha) ----
-    x.fillStyle = outline;
-    x.fillRect(23, 3, 4, 10);
-    x.fillRect(23, 13, 5, 2);
-    x.fillRect(23, 15, 4, 3);
-    x.fillStyle = blade;
-    x.fillRect(24, 4, 2, 8);
-    x.fillStyle = bladeL;
-    x.fillRect(24, 4, 1, 7);
-    x.fillStyle = guard;
-    x.fillRect(23, 13, 5, 2);
-    x.fillStyle = belt;
-    x.fillRect(24, 15, 2, 3);
-    // Brazo derecho con manga de cota de malla
-    x.fillStyle = outline;
-    x.fillRect(22, 16, 4, 6);
-    x.fillStyle = chain;
-    x.fillRect(23, 16, 3, 4);
-    x.fillStyle = chainS;
-    x.fillRect(23, 20, 3, 1);
-    // Mano que empuña la espada
-    x.fillStyle = skin;
-    x.fillRect(23, 18, 2, 2);
-    x.fillStyle = skinS;
-    x.fillRect(23, 18, 2, 1);
 
     // ---- Escudo cometa (mano izquierda) ----
     x.fillStyle = outline;
@@ -3338,6 +3359,73 @@ const slave = {
     x.fillStyle = bootS;
     x.fillRect(10, 43, 5, 1);
     x.fillRect(18, 43, 5, 1);
+  }
+
+  // ⚔️ Brazo derecho empuñando la espada en una pose concreta
+  // (hand = ancla del brazo, head = punta de la hoja)
+  function paintSoldierArm(x, hand, head) {
+    const P = soldierPalette;
+    // Espada (hoja + guarda + mango)
+    x.fillStyle = P.outline;
+    x.fillRect(head[0] - 1, head[1], 4, 11);
+    x.fillRect(head[0] - 1, head[1] + 10, 4, 2);
+    x.fillRect(head[0], head[1] + 12, 2, 3);
+    x.fillStyle = P.blade;
+    x.fillRect(head[0], head[1] + 1, 2, 9);
+    x.fillStyle = P.bladeL;
+    x.fillRect(head[0], head[1] + 1, 1, 8);
+    x.fillStyle = P.guard;
+    x.fillRect(head[0], head[1] + 10, 4, 2);
+    x.fillStyle = P.belt;
+    x.fillRect(head[0], head[1] + 12, 2, 3);
+    // Brazo derecho con manga de cota de malla
+    x.fillStyle = P.outline;
+    x.fillRect(hand[0], hand[1], 4, 7);
+    x.fillStyle = P.chain;
+    x.fillRect(hand[0] + 1, hand[1], 3, 4);
+    x.fillStyle = P.chainS;
+    x.fillRect(hand[0] + 1, hand[1] + 4, 3, 1);
+    // Mano que empuña la espada
+    x.fillStyle = P.skin;
+    x.fillRect(hand[0] + 1, hand[1] + 5, 2, 2);
+    x.fillStyle = P.skinS;
+    x.fillRect(hand[0] + 1, hand[1] + 5, 2, 1);
+  }
+
+  // Pixel art del soldado: caballero de tez blanca, yelmo metálico, túnica azul, espada alzada y escudo de madera
+  function createSoldierSprite() {
+    const c = document.createElement('canvas');
+    c.width = 32; c.height = 48;
+    const x = c.getContext('2d');
+
+    paintSoldierBody(x);
+
+    const P = soldierPalette;
+    // ---- Espada alzada (mano derecha) ----
+    x.fillStyle = P.outline;
+    x.fillRect(23, 3, 4, 10);
+    x.fillRect(23, 13, 5, 2);
+    x.fillRect(23, 15, 4, 3);
+    x.fillStyle = P.blade;
+    x.fillRect(24, 4, 2, 8);
+    x.fillStyle = P.bladeL;
+    x.fillRect(24, 4, 1, 7);
+    x.fillStyle = P.guard;
+    x.fillRect(23, 13, 5, 2);
+    x.fillStyle = P.belt;
+    x.fillRect(24, 15, 2, 3);
+    // Brazo derecho con manga de cota de malla
+    x.fillStyle = P.outline;
+    x.fillRect(22, 16, 4, 6);
+    x.fillStyle = P.chain;
+    x.fillRect(23, 16, 3, 4);
+    x.fillStyle = P.chainS;
+    x.fillRect(23, 20, 3, 1);
+    // Mano que empuña la espada
+    x.fillStyle = P.skin;
+    x.fillRect(23, 18, 2, 2);
+    x.fillStyle = P.skinS;
+    x.fillRect(23, 18, 2, 1);
 
     const tex = prepTexture(new THREE.CanvasTexture(c));
     return tex;
@@ -3345,6 +3433,33 @@ const slave = {
 
   const soldierTex = createSoldierSprite();
   const soldierMat = new THREE.MeshBasicMaterial({ map: soldierTex, transparent: true, alphaTest: 0.1, side: THREE.DoubleSide });
+
+  // ⚔️ Fases del espadazo (hand = ancla del brazo, head = punta de la hoja)
+  const SWORD_SWING = [
+    { hand: [21, 10], head: [23, 2] },   // alzada
+    { hand: [21, 13], head: [23, 5] },   // preparando
+    { hand: [21, 17], head: [23, 9] },   // golpe descendente
+    { hand: [22, 21], head: [22, 14] },  // golpe asestado
+    { hand: [21, 14], head: [23, 6] },   // recuperación
+  ];
+
+  // ⚔️ Atlas horizontal del ciclo de espadazo (un fotograma por columna)
+  function makeSoldierAttackAtlas() {
+    const c = document.createElement('canvas');
+    c.width = 32 * SWORD_SWING.length; c.height = 48;
+    const x = c.getContext('2d');
+    SWORD_SWING.forEach((f, i) => {
+      x.save();
+      x.translate(i * 32, 0);
+      paintSoldierBody(x);
+      paintSoldierArm(x, f.hand, f.head);
+      x.restore();
+    });
+    const tex = prepTexture(new THREE.CanvasTexture(c));
+    return { tex, count: SWORD_SWING.length };
+  }
+  const soldierAttackAtlas = makeSoldierAttackAtlas();
+  const SOLDIER_ATTACK_ANIM_SPEED = 6;
 
   function createSoldier(x, z) {
     const group = new THREE.Group();
@@ -3375,10 +3490,13 @@ const slave = {
       attackCooldown: 0,
       speed: SOLDIER_SPEED,
       walkAnim: 0,
+      attackAnim: 0,
+      attackTex: soldierAttackAtlas.tex.clone(),
       hp: SOLDIER_HP,
       maxHp: SOLDIER_HP,
       moveTarget: null,
     };
+    soldier.attackTex.repeat.set(1 / soldierAttackAtlas.count, 1);
     soldiers.push(soldier);
     return soldier;
   }
@@ -3485,6 +3603,7 @@ const slave = {
 
   function updateSoldiers(dt) {
     for (const s of soldiers) {
+      let striking = false;
       if (s.state === 'attack') {
         // 🎯 Orden de ataque (del jugador o por IA): foco en el objetivo
         if (s.target && s.target.hp > 0) {
@@ -3498,6 +3617,14 @@ const slave = {
             s.mesh.rotation.y = Math.atan2(dir.x, dir.z);
             s.walkAnim += dt * 8;
           } else {
+            // ⚔️ Animación de espadazo mientras asesta el golpe
+            striking = true;
+            s.attackAnim += dt * SOLDIER_ATTACK_ANIM_SPEED;
+            if (s.sprite.material.map !== s.attackTex) {
+              s.sprite.material.map = s.attackTex;
+              s.sprite.material.needsUpdate = true;
+            }
+            s.attackTex.offset.set((Math.floor(s.attackAnim) % soldierAttackAtlas.count) / soldierAttackAtlas.count, 0);
             s.attackCooldown -= dt;
             if (s.attackCooldown <= 0) {
               damageStructure(s.target, SOLDIER_DAMAGE);
@@ -3558,6 +3685,11 @@ const slave = {
       } else {
         s.sprite.position.y = SOLDIER_HEIGHT / 2 - 0.05;
       }
+      // Restaurar la textura normal cuando no está asestando
+      if (!striking && s.sprite.material.map !== soldierTex) {
+        s.sprite.material.map = soldierTex;
+        s.sprite.material.needsUpdate = true;
+      }
     }
   }
   /* --- LISTO --- */
@@ -3579,6 +3711,10 @@ const slave = {
     if (e.code === 'Escape') {
       if (build.placing) cancelPlacement();
       else if (selectedStructure) deselectStructure();
+      else if (selectedTree) {
+        hideTreeInfo();
+        document.getElementById('structure-info').classList.remove('visible');
+      }
       else closeBuildMenu();
     }
     if (e.code === 'KeyR' && build.placing && build.ghost) build.ghost.rotation.y += Math.PI / 4;
@@ -3610,6 +3746,8 @@ const slave = {
   const npcMenuEl = document.getElementById('npc-menu');
   let npcMovePoint = null;   // 📍 punto del terreno para la orden "Mover aquí"
   let npcAttackTarget = null; // 🎯 estructura enemiga para la orden "Atacar"
+  let npcMineTarget = null;   // ⛏️ mina de oro para la orden "Minar"
+  let npcChopTarget = null;   // 🪓 árbol para la orden "Talar"
 
   function selectedUnits() {
     return selectedSlaves.concat(selectedSoldiers);
@@ -3624,6 +3762,18 @@ const slave = {
       btnAttack.style.display = npcAttackTarget ? 'block' : 'none';
       btnAttack.disabled = !npcAttackTarget;
     }
+    const btnMine = document.getElementById('npc-mine');
+    if (btnMine) {
+      // ⛏️ La orden "Minar" solo aparece al hacer click derecho sobre una mina de oro
+      btnMine.style.display = npcMineTarget ? 'block' : 'none';
+      btnMine.disabled = !npcMineTarget;
+    }
+    const btnChop = document.getElementById('npc-chop');
+    if (btnChop) {
+      // 🪓 La orden "Talar" solo aparece al hacer click derecho sobre un árbol
+      btnChop.style.display = npcChopTarget ? 'block' : 'none';
+      btnChop.disabled = !npcChopTarget;
+    }
   }
   function hideContextMenus() {
     npcMenuEl.classList.remove('visible');
@@ -3635,6 +3785,7 @@ const slave = {
       s.target = null;
       s.buildTarget = null;
       s.mineTarget = null;
+      s.chopTarget = null;
       s.moveTarget = point ? point.clone() : null;
     }
   }
@@ -3644,6 +3795,7 @@ const slave = {
       s.target = null;
       s.buildTarget = null;
       s.mineTarget = null;
+      s.chopTarget = null;
       s.moveTarget = null;
     }
   }
@@ -3653,6 +3805,7 @@ const slave = {
       s.target = null;
       s.buildTarget = null;
       s.mineTarget = null;
+      s.chopTarget = null;
       s.moveTarget = null;
     }
   }
@@ -3662,6 +3815,7 @@ const slave = {
       s.target = target;
       s.moveTarget = null;
       s.mineTarget = null;
+      s.chopTarget = null;
       s.buildTarget = null;
     }
   }
@@ -3693,6 +3847,44 @@ const slave = {
   document.getElementById('npc-attack').onclick = () => {
     if (npcAttackTarget && npcAttackTarget.hp > 0) {
       issueAttackOrder(selectedUnits(), npcAttackTarget);
+    }
+    hideContextMenus();
+  };
+  document.getElementById('npc-mine').onclick = () => {
+    // ⛏️ Orden "Minar": esclavos seleccionados (o el más cercano) a la mina
+    if (npcMineTarget && npcMineTarget.gold > 0) {
+      const miners = selectedSlaves.length > 0
+        ? selectedSlaves
+        : [findClosestSlave(npcMineTarget.mesh.position)];
+      for (const s of miners) {
+        if (!s) continue;
+        s.state = 'mine';
+        s.mineTarget = npcMineTarget;
+        s.mineTimer = 0;
+        s.chopTarget = null;
+        s.moveTarget = null;
+        s.target = null;
+        s.buildTarget = null;
+      }
+    }
+    hideContextMenus();
+  };
+  document.getElementById('npc-chop').onclick = () => {
+    // 🪓 Orden "Talar": esclavos seleccionados (o el más cercano) al árbol
+    if (npcChopTarget && npcChopTarget.wood > 0) {
+      const choppers = selectedSlaves.length > 0
+        ? selectedSlaves
+        : [findClosestSlave(new THREE.Vector3(npcChopTarget.x, 0, npcChopTarget.z))];
+      for (const s of choppers) {
+        if (!s) continue;
+        s.state = 'chop';
+        s.chopTarget = npcChopTarget;
+        s.chopTimer = 0;
+        s.mineTarget = null;
+        s.moveTarget = null;
+        s.target = null;
+        s.buildTarget = null;
+      }
     }
     hideContextMenus();
   };
@@ -3739,6 +3931,7 @@ const slave = {
           updateSoldierHighlights();
           mouseAttackQueued = false;
           // Desactivar otros paneles
+          hideTreeInfo();
           document.getElementById('structure-info').classList.remove('visible');
           // Mostrar panel de unidad
           showSlaveInfo(clickedUnit);
@@ -3766,6 +3959,25 @@ const slave = {
             }
             return;
           }
+        }
+      }
+
+      // 🌳 Clic izquierdo en un árbol: muestra su madera restante
+      const treeHits = buildRay.intersectObjects(treeMeshes, false);
+      if (treeHits.length > 0) {
+        const treeData = treeHits[0].object.userData.treeData;
+        if (treeData && treeData.wood > 0) {
+          selectedSlaves = [];
+          selectedSoldiers = [];
+          updateSlaveHighlights();
+          updateSoldierHighlights();
+          hideSlaveInfo();
+          deselectStructure();
+          selectedTree = treeData;
+          updateInfoPanel();
+          mouseAttackQueued = false;
+          isSelecting = false;
+          return;
         }
       }
 
@@ -3844,6 +4056,7 @@ const slave = {
           updateSlaveHighlights();
           updateSoldierHighlights();
           mouseAttackQueued = false;
+          hideTreeInfo();
         }
       }
     }
@@ -3856,7 +4069,10 @@ const slave = {
       const dist = Math.sqrt(dx*dx + dy*dy);
 
       if (dist < 5 && dt < 500) {
-        npcAttackTarget = null;   // la orden "Atacar" se habilita SOLO si clickeas un edificio enemigo
+        npcAttackTarget = null;   // las órdenes se habilitan SOLO si clickeas su objetivo
+        npcMineTarget = null;
+        npcChopTarget = null;
+        npcMovePoint = null;
         buildRay.setFromCamera(mouseNDC, camera);
 
         // Primero verificar si se clickeó un esclavo o soldado (para dar órdenes)
@@ -3892,17 +4108,14 @@ const slave = {
         if (hits.length > 0) {
           const data = hits[0].object.userData.structureData;
           if (data && data.def.id === 'goldmine') {
-            // ⛏️ Click derecho en una mina de oro: los esclavos seleccionados van a extraer
-            if (selectedSlaves.length > 0) {
-              for (const s of selectedSlaves) {
-                s.state = 'mine';
-                s.mineTarget = data;
-                s.mineTimer = 0;
-                s.moveTarget = null;
-                s.target = null;
-                s.buildTarget = null;
-              }
+            // ⛏️ Click derecho en una mina de oro: orden "Minar" (o su info si no hay unidades)
+            if (selectedUnits().length > 0) {
+              npcMineTarget = data;
+              npcChopTarget = null;
+              showNpcMenu(e.clientX, e.clientY);
             } else {
+              npcMineTarget = null;
+              npcChopTarget = null;
               selectStructure(data);
             }
             isRotatingCamera = false;
@@ -3941,31 +4154,21 @@ const slave = {
             return;
           }
         }
-        // 🌳 Click derecho en un árbol: los esclavos seleccionados van a talar
+        // 🌳 Click derecho en un árbol: orden "Talar" (o su info si no hay unidades)
         const treeHits = buildRay.intersectObjects(treeMeshes, false);
         if (treeHits.length > 0) {
           const treeData = treeHits[0].object.userData.treeData;
           if (treeData && treeData.wood > 0) {
-            if (selectedSlaves.length > 0) {
-              for (const s of selectedSlaves) {
-                s.state = 'chop';
-                s.chopTarget = treeData;
-                s.chopTimer = 0;
-                s.mineTarget = null;
-                s.moveTarget = null;
-                s.target = null;
-                s.buildTarget = null;
-              }
+            if (selectedUnits().length > 0) {
+              npcChopTarget = treeData;
+              npcMineTarget = null;
+              showNpcMenu(e.clientX, e.clientY);
             } else {
-              const chopper = findClosestSlave(new THREE.Vector3(treeData.x, 0, treeData.z));
-              if (chopper) {
-                chopper.state = 'chop';
-                chopper.chopTarget = treeData;
-                chopper.chopTimer = 0;
-                chopper.mineTarget = null;
-                chopper.target = null;
-                chopper.buildTarget = null;
-              }
+              npcChopTarget = null;
+              npcMineTarget = null;
+              deselectStructure();
+              selectedTree = treeData;
+              updateInfoPanel();
             }
             isRotatingCamera = false;
             return;
@@ -4134,8 +4337,8 @@ const slave = {
     updateSoldierTraining(dt);
     updateSoldiers(dt);
     separateUnits();
-    // 📊 Actualizar el panel en tiempo real (construcción / extracción de oro)
-    if (selectedStructure) updateInfoPanel();
+    // 📊 Actualizar el panel en tiempo real (construcción / extracción / talado)
+    if (selectedStructure || selectedTree) updateInfoPanel();
     if (selectedSlaveInfo) updateSlaveInfoUI();
     updateMinimap();
   }
@@ -4171,6 +4374,8 @@ document.querySelectorAll('.level-card').forEach(card => {
   <h3>⚔ ÓRDENES</h3>
   <button class="menu-option" id="npc-move">📍 Mover aquí</button>
   <button class="menu-option" id="npc-attack">⚔️ Atacar</button>
+  <button class="menu-option" id="npc-mine">⛏️ Minar</button>
+  <button class="menu-option" id="npc-chop">🪓 Talar</button>
   <button class="menu-option" id="npc-follow">🏃 Seguirme</button>
   <button class="menu-option" id="npc-stop">✋ Dejar de seguirme</button>
 </div>
