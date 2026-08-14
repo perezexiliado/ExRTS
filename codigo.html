@@ -38,11 +38,20 @@
     transition: opacity 0.5s;
   }
   #loading-screen.hidden { opacity: 0; pointer-events: none; }
-  .loading-content { text-align: center; color: #ffd76a; }
+  .loading-content {
+    display: flex; flex-direction: column; align-items: center;
+    text-align: center; color: #ffd76a;
+  }
   .loading-content h2 { margin: 0 0 20px 0; font-size: 24px; letter-spacing: 2px; }
   .progress-bar { width: 300px; height: 20px; background: #333; border-radius: 10px; overflow: hidden; border: 2px solid #b98d3e; }
   .progress-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #b98d3e, #ffd76a); transition: width 0.3s ease-out; }
   .loading-text { font-size: 14px; color: #ccc; margin-top: 15px; }
+  .loading-tip {
+    margin-top: 18px; max-width: 420px;
+    color: #c9b98a; font-size: 13px; font-style: italic;
+    line-height: 1.6; min-height: 46px;
+  }
+  .loading-tip b { color: #ffd76a; font-style: normal; }
 
   /* --- MENÚ PRINCIPAL --- */
   #main-menu {
@@ -270,12 +279,12 @@
     color: #b8a878; font-size: 12px; font-style: italic; line-height: 1.4;
   }
 
-  /* --- PANEL DE PRODUCCIÓN DEL CASTILLO --- */
-  #castle-production {
+  /* --- PANEL DE PRODUCCIÓN (CASTILLO / CUARTEL) --- */
+  #castle-production, #barracks-production {
     display: none;
     margin-top: 10px; border-top: 1px solid #6a5228; padding-top: 8px;
   }
-  #castle-production .prod-title {
+  #castle-production .prod-title, #barracks-production .prod-title {
     color: #ffd76a; font-size: 12px; letter-spacing: 2px; margin-bottom: 6px;
   }
   .train-bar {
@@ -286,7 +295,7 @@
     height: 100%; width: 0%;
     background: linear-gradient(90deg, #b98d3e, #ffd76a);
   }
-  #train-status { font-size: 12px; color: #ccc; margin-bottom: 6px; }
+  #train-status, #train-status-soldier { font-size: 12px; color: #ccc; margin-bottom: 6px; }
   #train-queue { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 8px; min-height: 24px; align-items: center; }
   .queue-slot {
     width: 24px; height: 24px;
@@ -303,6 +312,14 @@
   }
   #btn-train-slave:hover { border-color: #ffd76a; color: #fff; }
   #btn-train-slave:disabled { opacity: .4; cursor: not-allowed; }
+  #btn-train-soldier {
+    width: 100%; padding: 8px;
+    background: linear-gradient(180deg, rgba(60,42,20,.9), rgba(30,20,10,.9));
+    color: #ffd76a; border: 2px solid #b98d3e; border-radius: 6px;
+    cursor: pointer; font-family: "Trebuchet MS", Arial, sans-serif; font-size: 13px;
+  }
+  #btn-train-soldier:hover { border-color: #ffd76a; color: #fff; }
+  #btn-train-soldier:disabled { opacity: .4; cursor: not-allowed; }
 
   /* --- MINIMAPA --- */
   #minimap-wrap {
@@ -325,16 +342,16 @@
   image-rendering: pixelated;
 }
 
-/* --- MENÚ CONTEXTUAL DEL CASTILLO --- */
-#castle-menu, #npc-menu {
+/* --- MENÚ CONTEXTUAL DE ÓRDENES --- */
+#npc-menu {
   position: fixed; z-index: 100; display: none;
   background: rgba(20, 14, 6, 0.92);
   border: 2px solid #b98d3e; border-radius: 8px;
   padding: 8px 0; min-width: 200px;
   box-shadow: 0 4px 14px rgba(0,0,0,.6);
 }
-#castle-menu.visible, #npc-menu.visible { display: block; }
-#castle-menu h3, #npc-menu h3 {
+#npc-menu.visible { display: block; }
+#npc-menu h3 {
   margin: 0 12px 6px; color: #ffd76a; font-size: 13px;
   letter-spacing: 2px; text-align: center; user-select: none;
 }
@@ -374,7 +391,7 @@
     <span class="res" title="Piedra">🪨 <b id="res-stone">0</b></span>
   </div>
 <div id="hud-help">
-  <b>👑 W A S D</b> mover · Click <b>esclavo</b> = información · <b>Click izq</b> atacar · <b>Click der</b> rotar cámara
+  <b>👑 W A S D</b> mover · Click izq <b>esclavo/soldado</b> = seleccionar · <b>Arrastra</b> = selección múltiple · <b>Click der</b> = órdenes / Mover aquí / Atacar
 </div>
 </div>
 <button id="exit-btn">↩ Menú Principal</button>
@@ -411,6 +428,13 @@
     <div id="train-queue"></div>
     <button id="btn-train-slave">👥 Entrenar esclavo (10 🪙)</button>
   </div>
+  <div id="barracks-production">
+    <div class="prod-title">⚔ PRODUCCIÓN DE SOLDADOS</div>
+    <div class="train-bar"><div class="train-fill" id="train-fill-soldier"></div></div>
+    <div id="train-status-soldier">Sin producción activa</div>
+    <div id="train-queue-soldier"></div>
+    <button id="btn-train-soldier">⚔️ Contratar soldado (20 🪙)</button>
+  </div>
 </div>
 
 <!-- Menú de construcción -->
@@ -430,6 +454,7 @@
       <div class="progress-fill"></div>
     </div>
     <p class="loading-text">Preparando texturas...</p>
+    <div id="loading-tips" class="loading-tip"></div>
   </div>
 </div>
 
@@ -636,7 +661,7 @@ const LEVELS = {
     waterLevel: 0.5,
     skyTop: 0x2d68c4, skyBottom: 0xe6f0f3, skyHorizon: 0xf7dcb0,
     fogColor: 0xc8d8de,
-    treeCount: 110, treeLeafColor: 0x3a6a28, treeTrunkColor: 0x5a3a20,
+    treeCount: 400, treeLeafColor: 0x3a6a28, treeTrunkColor: 0x5a3a20,
     rockCount: 45, rockColor: 0x7a7569,
     grassCount: 18000, grassBase: [0.10, 0.22, 0.06], grassTip: [0.24, 0.45, 0.13],
     flowerCount: 600, flowerColors: [[0.55, 0.25, 0.65], [0.95, 0.55, 0.75]],
@@ -654,7 +679,7 @@ const LEVELS = {
     waterLevel: 0.3,
     skyTop: 0x1a3a5a, skyBottom: 0x4a6a4a, skyHorizon: 0x8aa87a,
     fogColor: 0x7a8a7a,
-    treeCount: 250, treeLeafColor: 0x1a4a18, treeTrunkColor: 0x3a2a18,
+    treeCount: 900, treeLeafColor: 0x1a4a18, treeTrunkColor: 0x3a2a18,
     rockCount: 30, rockColor: 0x5a5a4a,
     grassCount: 22000, grassBase: [0.06, 0.18, 0.05], grassTip: [0.18, 0.35, 0.10],
     flowerCount: 250, flowerColors: [[0.4, 0.2, 0.5], [0.8, 0.4, 0.6]],
@@ -672,7 +697,7 @@ const LEVELS = {
     waterLevel: -1.0,
     skyTop: 0xe8a050, skyBottom: 0xf8e0a0, skyHorizon: 0xffd890,
     fogColor: 0xe8d0a0,
-    treeCount: 25, treeLeafColor: 0x5a7a2a, treeTrunkColor: 0x6a5a3a,
+    treeCount: 90, treeLeafColor: 0x5a7a2a, treeTrunkColor: 0x6a5a3a,
     rockCount: 80, rockColor: 0xb88a5a,
     grassCount: 3000, grassBase: [0.4, 0.35, 0.2], grassTip: [0.55, 0.48, 0.28],
     flowerCount: 100, flowerColors: [[0.9, 0.4, 0.5], [0.9, 0.7, 0.2]],
@@ -690,7 +715,7 @@ const LEVELS = {
     waterLevel: 0.8,
     skyTop: 0x4a6a9a, skyBottom: 0xc8d8e8, skyHorizon: 0xd8e0e8,
     fogColor: 0xc8d0d8,
-    treeCount: 90, treeLeafColor: 0x1a3a2a, treeTrunkColor: 0x4a3a28,
+    treeCount: 350, treeLeafColor: 0x1a3a2a, treeTrunkColor: 0x4a3a28,
     rockCount: 60, rockColor: 0x8a8a8a,
     grassCount: 12000, grassBase: [0.12, 0.22, 0.1], grassTip: [0.25, 0.4, 0.2],
     flowerCount: 200, flowerColors: [[0.5, 0.3, 0.6], [0.85, 0.5, 0.7]],
@@ -712,7 +737,6 @@ async function startGame(levelNum) {
   loadingTitle.textContent = `Cargando: ${CFG.name}...`;
   gameStarted = true;   // 👑 desactiva la música del menú definitivamente
   stopMenuMusic();      // 🎵 la música del menú se detiene al entrar al mapa
-  startGameMusic();     // 🎵 soundtrack001 suena desde el inicio del nivel
 
   const progressFill = document.querySelector('.progress-fill');
   const loadingText = document.querySelector('.loading-text');
@@ -722,6 +746,32 @@ async function startGame(levelNum) {
     if(text) loadingText.textContent = text;
   }
   function yieldToBrowser() { return new Promise(resolve => setTimeout(resolve, 15)); }
+
+  // 💡 Consejos rotativos durante la carga
+  const loadingTipsEl = document.getElementById('loading-tips');
+  const LOADING_TIPS = [
+    '<b>Consejo:</b> Haz click derecho con un esclavo seleccionado y usa <b>📍 Mover aquí</b> para enviarlo a un punto.',
+    '<b>Consejo:</b> Selecciona esclavos y haz click derecho sobre una <b>Mina de oro</b> para extraerla.',
+    '<b>Consejo:</b> Haz click izquierdo en tu <b>Cuartel</b> y pulsa <b>⚔️ Contratar soldado</b> para reclutar tropas (20 🪙).',
+    '<b>Consejo:</b> Los <b>soldados</b> atacan automáticamente a los edificios enemigos cercanos y cumplen tus órdenes por click derecho.',
+    '<b>Consejo:</b> Click izquierdo sobre un esclavo lo selecciona y abre su panel; si clickeas el mapa se deselecciona.',
+    '<b>Consejo:</b> Arrastra el ratón sobre varios esclavos o soldados para seleccionarlos a la vez.',
+    '<b>Consejo:</b> La barra <b>azul</b> indica que un edificio aún se está construyendo; envía varios esclavos (click derecho) para acelerar las obras.',
+    '<b>Consejo:</b> Mantén pulsado el click derecho para rotar la cámara.',
+    '<b>Consejo:</b> Selecciona esclavos y haz click derecho sobre un <b>árbol</b> para talarlo y obtener madera (cada árbol da 50-100 🪵).',
+    '<b>Consejo:</b> Las minas de oro del mapa tienen 2000 🪙 y se agotan al extraerlas.',
+    '<b>Consejo:</b> El rey ataca con el click izquierdo sobre edificios enemigos.',
+    '<b>Consejo:</b> Pulsa <b>ESC</b> para cancelar la colocación o cerrar menús.'
+  ];
+  let tipIndex = Math.floor(Math.random() * LOADING_TIPS.length);
+  let tipTimer = null;
+  function showLoadingTip() {
+    if (!loadingTipsEl) return;
+    loadingTipsEl.innerHTML = LOADING_TIPS[tipIndex % LOADING_TIPS.length];
+    tipIndex++;
+  }
+  showLoadingTip();
+  tipTimer = setInterval(showLoadingTip, 3000);
 
   updateLoading(5, "Inicializando motor 3D...");
   await yieldToBrowser();
@@ -1031,6 +1081,10 @@ async function startGame(levelNum) {
   const trunkMat = new THREE.MeshStandardMaterial({ color: CFG.treeTrunkColor, roughness: 0.95 });
   const leavesMat = new THREE.MeshStandardMaterial({ color: CFG.treeLeafColor, roughness: 0.9 });
   const rockMat = new THREE.MeshStandardMaterial({ color: CFG.rockColor, roughness: 1.0 });
+  // Variedades de follaje (compartidas por todos los árboles del nivel)
+  const baseLeaf = new THREE.Color(CFG.treeLeafColor);
+  const leafDark  = new THREE.MeshStandardMaterial({ color: baseLeaf.clone().multiplyScalar(0.72), roughness: 0.9 });
+  const leafLight = new THREE.MeshStandardMaterial({ color: baseLeaf.clone().multiplyScalar(1.35), roughness: 0.85 });
 
   // 🌲 Colisión circular del rey contra los troncos de los árboles
   const treeColliders = [];
@@ -1044,25 +1098,58 @@ async function startGame(levelNum) {
     return false;
   }
 
+  // 🌳 Árboles talables: cada uno tiene madera aleatoria (50-100)
+  const trees = [];
+  const treeMeshes = [];   // meshes de todos los árboles (raycasting del click derecho)
+
   function makeTree(x, z) {
     const g = new THREE.Group();
     const s = 0.9 + Math.random() * 0.9;
-    const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.32, 2.0, 8), trunkMat);
-    trunk.position.y = 1.0; trunk.castShadow = true;
+
+    // Tronco robusto (base ancha) + rama ocasional
+    const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.38, 2.4, 8), trunkMat);
+    trunk.position.y = 1.2; trunk.castShadow = true;
+    g.add(trunk);
+    if (Math.random() > 0.5) {
+      const branch = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.11, 1.3, 6), trunkMat);
+      branch.position.set(0.4, 1.9, 0.15);
+      branch.rotation.z = -Math.PI / 5;
+      branch.castShadow = true;
+      g.add(branch);
+    }
+
+    // Copa tupida: anillo inferior ancho + nubes medias + cima clara
     const leaves = new THREE.Group();
-    for (let i = 0; i < 4; i++) {
-      const ball = new THREE.Mesh(new THREE.SphereGeometry(0.9 + Math.random()*0.4, 10, 10), leavesMat);
-      ball.position.set((Math.random()-0.5)*0.8, 2.2 + Math.random()*0.8, (Math.random()-0.5)*0.8);
+    for (let i = 0; i < 6; i++) {
+      const a = (i / 6) * Math.PI * 2;
+      const ball = new THREE.Mesh(new THREE.SphereGeometry(0.78, 12, 9), leafDark);
+      ball.position.set(Math.cos(a) * 0.6, 2.0 + Math.sin(i * 2.7) * 0.12, Math.sin(a) * 0.6);
       ball.castShadow = true;
       leaves.add(ball);
     }
-    g.add(trunk, leaves);
+    const mid = new THREE.Mesh(new THREE.SphereGeometry(0.95, 12, 9), leavesMat);
+    mid.position.set(0, 2.55, 0); mid.castShadow = true; leaves.add(mid);
+    const midA = new THREE.Mesh(new THREE.SphereGeometry(0.62, 12, 9), leavesMat);
+    midA.position.set(0.55, 2.3, 0.3); midA.castShadow = true; leaves.add(midA);
+    const midB = new THREE.Mesh(new THREE.SphereGeometry(0.58, 12, 9), leavesMat);
+    midB.position.set(-0.5, 2.35, -0.35); midB.castShadow = true; leaves.add(midB);
+    const top = new THREE.Mesh(new THREE.SphereGeometry(0.55, 12, 9), leafLight);
+    top.position.set(0, 3.25, 0); top.castShadow = true; leaves.add(top);
+    g.add(leaves);
+
     g.scale.setScalar(s);
     g.position.set(x, getHeight(x, z), z);
     g.rotation.y = Math.random() * Math.PI;
     scene.add(g);
-    // 🌲 Colisión del tronco, proporcional al tamaño del árbol
-    treeColliders.push({ x, z, r: 0.4 * s });
+    // 🌳 Madera aleatoria (50-100) + colisión proporcional al tamaño
+    const wood = 50 + Math.floor(Math.random() * 51);
+    const data = { group: g, x, z, wood, maxWood: wood };
+    trees.push(data);
+    treeColliders.push({ x, z, r: 0.42 * s, tree: data });
+    g.traverse(o => {
+      if (o.isMesh) { o.userData.treeData = data; treeMeshes.push(o); }
+    });
+    return data;
   }
 
   function makeCactus(x, z) {
@@ -1080,6 +1167,13 @@ async function startGame(levelNum) {
     g.scale.setScalar(s);
     g.position.set(x, getHeight(x, z), z);
     scene.add(g);
+    const wood = 50 + Math.floor(Math.random() * 51);
+    const data = { group: g, x, z, wood, maxWood: wood };
+    trees.push(data);
+    treeColliders.push({ x, z, r: 0.42 * s, tree: data });
+    g.traverse(o => {
+      if (o.isMesh) { o.userData.treeData = data; treeMeshes.push(o); }
+    });
   }
 
   // Árbol según nivel (el desierto conserva sus cactus)
@@ -1109,6 +1203,21 @@ async function startGame(levelNum) {
     rock.position.set(x, h + s * 0.15, z);
     rock.castShadow = true;
     scene.add(rock);
+  }
+
+  // 🪓 Elimina un árbol talado del mapa (escena + colisión + raycast)
+  function removeTree(data) {
+    scene.remove(data.group);
+    const ci = treeColliders.findIndex(c => c.tree === data);
+    if (ci >= 0) treeColliders.splice(ci, 1);
+    const ti = trees.indexOf(data);
+    if (ti >= 0) trees.splice(ti, 1);
+    data.group.traverse(o => {
+      if (o.isMesh) {
+        const mi = treeMeshes.indexOf(o);
+        if (mi >= 0) treeMeshes.splice(mi, 1);
+      }
+    });
   }
 
   // Casas (solo niveles 1 y 2)
@@ -1670,6 +1779,15 @@ async function startGame(levelNum) {
   }
 
   function updateHealthBar3D(s) {
+    // ⛏️ Las minas de oro muestran su reserva restante en dorado
+    if (s.isGoldMine) {
+      const ratio = s.gold / s.maxGold;
+      s.healthBar.userData.fg.scale.x = Math.max(0.001, ratio);
+      s.healthBar.userData.fg.position.x = -(1 - ratio) * 1.05;
+      s.healthBar.userData.fg.material.color.setHex(0xffd76a);
+      s.healthBar.visible = s.gold > 0;
+      return;
+    }
     const ratio = s.hp / s.maxHp;
     s.healthBar.userData.fg.scale.x = Math.max(0.001, ratio);
     s.healthBar.userData.fg.position.x = -(1 - ratio) * 1.05;
@@ -1692,6 +1810,7 @@ async function startGame(levelNum) {
   }
 
   function damageStructure(s, amount) {
+    if (s.indestructible) return;   // ⛏️ las minas de oro no se pueden destruir
     s.hp = Math.max(0, s.hp - amount);
     updateHealthBar3D(s);
     if (s.hp <= 0) destroyStructure(s);
@@ -1722,15 +1841,46 @@ function deselectStructure() {
       return;
     }
     const s = selectedStructure;
-    document.getElementById('info-name').textContent = s.def.icon + ' ' + s.def.name;
-    document.getElementById('info-hp').textContent = Math.ceil(s.hp) + ' / ' + s.maxHp;
-    const ratio = s.hp / s.maxHp;
+    const nameEl = document.getElementById('info-name');
+    const hpEl = document.getElementById('info-hp');
     const fill = document.getElementById('info-hp-fill');
+    const descEl = document.getElementById('info-desc');
+    // ⛏️ Panel especial para las minas de oro
+    if (s.isGoldMine) {
+      nameEl.textContent = '⛏️ ' + s.def.name;
+      const ratio = s.gold / s.maxGold;
+      hpEl.textContent = Math.ceil(s.gold) + ' / ' + s.maxGold + ' 🪙';
+      fill.style.width = (ratio * 100) + '%';
+      fill.style.background = 'linear-gradient(90deg, #ffd76a, #ffb42a)';
+      descEl.textContent = s.gold <= 0
+        ? 'Esta mina de oro está agotada.'
+        : 'Selecciona esclavos y haz click derecho en la mina para extraer su oro.';
+      document.getElementById('structure-info').classList.add('visible');
+      return;
+    }
+    // 🏗️ Estructura en construcción: solo se muestra la barra de progreso
+    if (s.underConstruction) {
+      document.querySelector('#structure-info .info-header').style.display = 'none';
+      nameEl.style.display = 'none';
+      hpEl.style.display = 'none';
+      descEl.style.display = 'none';
+      fill.style.width = ((s.hp / s.maxHp) * 100) + '%';
+      fill.style.background = 'linear-gradient(90deg, #4488ff, #66aaff)';
+      document.getElementById('structure-info').classList.add('visible');
+      return;
+    }
+    document.querySelector('#structure-info .info-header').style.display = '';
+    nameEl.style.display = '';
+    hpEl.style.display = '';
+    descEl.style.display = '';
+    nameEl.textContent = s.def.icon + ' ' + s.def.name;
+    hpEl.textContent = Math.ceil(s.hp) + ' / ' + s.maxHp;
+    const ratio = s.hp / s.maxHp;
     fill.style.width = (ratio * 100) + '%';
     if (ratio > 0.6)      fill.style.background = 'linear-gradient(90deg, #39ff5a, #a0e050)';
     else if (ratio > 0.3) fill.style.background = 'linear-gradient(90deg, #ffd76a, #ff9a3a)';
     else                  fill.style.background = 'linear-gradient(90deg, #ff4040, #c01010)';
-    document.getElementById('info-desc').textContent = s.def.desc;
+    descEl.textContent = s.def.desc;
     document.getElementById('structure-info').classList.add('visible');
   }
   // Panel de info del esclavo seleccionado
@@ -1738,7 +1888,9 @@ let selectedSlaveInfo = null;
 
 function showSlaveInfo(slave) {
   selectedSlaveInfo = slave;
-  document.getElementById('slave-name').textContent = '👤 Esclavo';
+  const isSoldier = slave.type === 'soldier';
+  document.getElementById('slave-name').textContent = isSoldier ? '⚔️ Soldado' : '👤 Esclavo';
+  document.getElementById('btn-slave-build').style.display = isSoldier ? 'none' : 'flex';
   updateSlaveInfoUI();
   document.getElementById('slave-info').classList.add('visible');
 }
@@ -1952,6 +2104,7 @@ if (!builder) continue;
 builder.state = 'build';
 builder.buildTarget = data;
 builder.buildTimer = 0;
+builder.mineTarget = null;
 }
     
     // El modo colocación sigue activo para poner varias
@@ -2037,6 +2190,139 @@ builder.buildTimer = 0;
   }
 
   /* ============================================================
+     ⛏️ MINAS DE ORO (recursos repartidos por el mapa)
+  ============================================================ */
+  const GOLD_MINE_DEF = { id: 'goldmine', name: 'Mina de oro', icon: '⛏️', size: 5, hp: 2000, maxHp: 2000, desc: 'Rica veta de oro. Ordena a tus esclavos extraerla con click derecho.' };
+  const GOLD_MINE_AMOUNT = 2000;
+  const GOLD_MINE_COUNT = 6;
+
+  function makeGoldMineMesh() {
+    const g = new THREE.Group();
+    const goldMat  = new THREE.MeshStandardMaterial({ color: 0xffcc44, metalness: 0.85, roughness: 0.3 });
+    const rockMatM = new THREE.MeshStandardMaterial({ color: 0x6a6258, roughness: 1.0 });
+    const woodMatM = new THREE.MeshStandardMaterial({ color: 0x6a4a2a, roughness: 0.95 });
+
+    const mound = new THREE.Mesh(new THREE.SphereGeometry(1.7, 14, 10), rockMatM);
+    mound.scale.y = 0.55; mound.position.y = 0.65; mound.castShadow = mound.receiveShadow = true;
+    g.add(mound);
+
+    // Boca de la cueva (oscura)
+    const cave = new THREE.Mesh(new THREE.CircleGeometry(0.75, 18), new THREE.MeshBasicMaterial({ color: 0x14100a }));
+    cave.position.set(0.5, 0.62, 1.1); cave.rotation.y = 0.7; cave.rotation.x = -0.25;
+    g.add(cave);
+
+    // Marco de madera de la entrada
+    const beamL = new THREE.Mesh(new THREE.BoxGeometry(0.16, 1.1, 0.16), woodMatM);
+    beamL.position.set(0.05, 0.72, 1.55); beamL.castShadow = true; g.add(beamL);
+    const beamR = new THREE.Mesh(new THREE.BoxGeometry(0.16, 1.1, 0.16), woodMatM);
+    beamR.position.set(0.95, 0.72, 1.55); beamR.castShadow = true; g.add(beamR);
+    const beamT = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.16, 0.16), woodMatM);
+    beamT.position.set(0.5, 1.3, 1.55); beamT.castShadow = true; g.add(beamT);
+
+    // Pepitas de oro brillando sobre el montículo
+    for (let i = 0; i < 7; i++) {
+      const a = Math.random() * Math.PI * 2;
+      const r = 0.4 + Math.random() * 1.1;
+      const nug = new THREE.Mesh(new THREE.DodecahedronGeometry(0.14 + Math.random() * 0.12, 0), goldMat);
+      nug.position.set(Math.cos(a) * r, 0.85 + Math.random() * 0.4, Math.sin(a) * r);
+      nug.castShadow = true;
+      g.add(nug);
+    }
+    // Saco de oro junto a la entrada
+    const bag = new THREE.Mesh(new THREE.SphereGeometry(0.4, 10, 8), goldMat);
+    bag.position.set(-1.1, 0.55, 0.6); bag.castShadow = true; g.add(bag);
+    return g;
+  }
+
+  function placeGoldMine(x, z) {
+    const g = makeGoldMineMesh();
+    g.position.set(0, 0, 0); g.rotation.set(0, 0, 0); g.scale.set(1, 1, 1);
+    g.updateMatrixWorld(true);
+    let box = new THREE.Box3().setFromObject(g);
+    const dim = box.getSize(new THREE.Vector3());
+    g.scale.setScalar(GOLD_MINE_DEF.size / Math.max(dim.x, dim.z));
+    g.updateMatrixWorld(true);
+    box = new THREE.Box3().setFromObject(g);
+    const c = box.getCenter(new THREE.Vector3());
+    const h = getHeight(x, z);
+    g.position.set(x - c.x, h - box.min.y, z - c.z);
+    g.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+    scene.add(g);
+    const data = addStructure(g, GOLD_MINE_DEF, 'neutral');
+    data.isGoldMine = true;
+    data.gold = GOLD_MINE_AMOUNT;
+    data.maxGold = GOLD_MINE_AMOUNT;
+    data.indestructible = true;
+    updateHealthBar3D(data);
+    return data;
+  }
+
+  // Reparte las minas lejos de las bases y del centro
+  const goldMines = [];
+  let gmAttempts = 0;
+  while (goldMines.length < GOLD_MINE_COUNT && gmAttempts < 6000) {
+    gmAttempts++;
+    const x = (Math.random() - 0.5) * (WORLD_SIZE - 40);
+    const z = (Math.random() - 0.5) * (WORLD_SIZE - 40);
+    const h = getHeight(x, z);
+    if (h < WATER_LEVEL + 1.5 || h > 10) continue;
+    if (Math.hypot(x, z) < 50) continue;
+    if (Math.hypot(x - playerBase.x, z - playerBase.z) < 55) continue;
+    if (Math.hypot(x - enemyBase.x, z - enemyBase.z) < 55) continue;
+    let ok = true;
+    for (const m of goldMines) {
+      if (Math.hypot(x - m.mesh.position.x, z - m.mesh.position.z) < 55) { ok = false; break; }
+    }
+    if (!ok) continue;
+    goldMines.push(placeGoldMine(x, z));
+  }
+
+  // 💫 Texto flotante de recurso extraído
+  const goldFloats = [];
+  function makeResourceFloatSprite(amount, emoji, color) {
+    const c = document.createElement('canvas');
+    c.width = 160; c.height = 64;
+    const ctx = c.getContext('2d');
+    ctx.font = 'bold 42px "Trebuchet MS", Arial';
+    ctx.textAlign = 'center';
+    ctx.fillStyle = 'rgba(0,0,0,0.65)';
+    ctx.fillText('+' + amount + ' ' + emoji, 80, 46);
+    ctx.fillStyle = color;
+    ctx.fillText('+' + amount + ' ' + emoji, 80, 44);
+    const tex = new THREE.CanvasTexture(c);
+    const mat = new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false });
+    const spr = new THREE.Sprite(mat);
+    spr.scale.set(7, 2.8, 1);
+    spr.renderOrder = 998;
+    return spr;
+  }
+  function spawnGoldFloat(pos, amount) {
+    const spr = makeResourceFloatSprite(amount, '🪙', '#ffd76a');
+    spr.position.copy(pos);
+    spr.position.y += 7;
+    scene.add(spr);
+    goldFloats.push({ spr, life: 0, maxLife: 1.3 });
+  }
+  function spawnWoodFloat(pos, amount) {
+    const spr = makeResourceFloatSprite(amount, '🪵', '#e8b44a');
+    spr.position.copy(pos);
+    spr.position.y += 7;
+    scene.add(spr);
+    goldFloats.push({ spr, life: 0, maxLife: 1.3 });
+  }
+
+  // ⛏️ Constantes de extracción para los esclavos
+  const SLAVE_MINE_RANGE = 4.5;
+  const SLAVE_MINE_INTERVAL = 1.0;
+  const SLAVE_MINE_AMOUNT = 8;
+  const SLAVE_MINE_ANIM_SPEED = 6;
+  const SLAVE_BUILD_ANIM_SPEED = 5;
+  const SLAVE_CHOP_RANGE = 4.5;
+  const SLAVE_CHOP_INTERVAL = 1.0;
+  const SLAVE_CHOP_AMOUNT = 6;
+  const SLAVE_CHOP_ANIM_SPEED = 6;
+
+  /* ============================================================
      MINIMAPA (canvas 2D top-down)
   ============================================================ */
   const minimapCanvas = document.getElementById('minimap');
@@ -2079,12 +2365,27 @@ builder.buildTimer = 0;
   function updateMinimap() {
     minimapCtx.putImageData(minimapBase, 0, 0);
 
-    // Estructuras (puntos dorados)
-    minimapCtx.fillStyle = '#d9a733';
+    // Árboles (puntos verdes; se apagan al talarlos)
+    minimapCtx.fillStyle = '#3f8a2f';
+    for (let i = 0; i < trees.length; i++) {
+      const t = trees[i];
+      if (t.wood <= 0) continue;
+      const mx = (t.x / WORLD_SIZE + 0.5) * MINIMAP_RES;
+      const my = (t.z / WORLD_SIZE + 0.5) * MINIMAP_RES;
+      minimapCtx.fillRect(mx - 0.8, my - 0.8, 1.6, 1.6);
+    }
+
+    // Estructuras (puntos dorados; las minas de oro son más grandes y brillantes)
     for (let i = 0; i < structures.length; i++) {
       const s = structures[i];
       const mx = (s.mesh.position.x / WORLD_SIZE + 0.5) * MINIMAP_RES;
       const my = (s.mesh.position.z / WORLD_SIZE + 0.5) * MINIMAP_RES;
+      if (s.isGoldMine) {
+        minimapCtx.fillStyle = '#ffd74a';
+        minimapCtx.fillRect(mx - 2.2, my - 2.2, 4.4, 4.4);
+        continue;
+      }
+      minimapCtx.fillStyle = '#d9a733';
       minimapCtx.fillRect(mx - 1.5, my - 1.5, 3, 3);
     }
 
@@ -2092,6 +2393,14 @@ builder.buildTimer = 0;
     minimapCtx.fillStyle = '#7ab8ff';
     for (let i = 0; i < slaves.length; i++) {
       const s = slaves[i];
+      const mx = (s.mesh.position.x / WORLD_SIZE + 0.5) * MINIMAP_RES;
+      const my = (s.mesh.position.z / WORLD_SIZE + 0.5) * MINIMAP_RES;
+      minimapCtx.fillRect(mx - 1.2, my - 1.2, 2.4, 2.4);
+    }
+    // Soldados (puntos naranjas)
+    minimapCtx.fillStyle = '#ff9a3a';
+    for (let i = 0; i < soldiers.length; i++) {
+      const s = soldiers[i];
       const mx = (s.mesh.position.x / WORLD_SIZE + 0.5) * MINIMAP_RES;
       const my = (s.mesh.position.z / WORLD_SIZE + 0.5) * MINIMAP_RES;
       minimapCtx.fillRect(mx - 1.2, my - 1.2, 2.4, 2.4);
@@ -2161,46 +2470,264 @@ builder.buildTimer = 0;
     updateResourcesUI();
   }
 
-  // Pixel art del esclavo: afrodescendiente con taparrabos blanco
+  // Pixel art del aldeano: cabeza de pelo afro, pañuelo rojo y túnica medieval
+  // 🎨 Paleta del aldeano (compartida por el sprite y los fotogramas de trabajo)
+  const slavePalette = {
+    outline: '#120a04', hair: '#1a1008', hairL: '#33200f',
+    band: '#c0392b', bandL: '#e74c3c', skin: '#5a3620',
+    skinS: '#3f2412', skinL: '#6e452a', eye: '#0f0a06',
+    eyeW: '#ffffff', mouth: '#2b1508', tunic: '#7a5a30',
+    tunicS: '#5a4020', tunicL: '#8a6a3a', belt: '#3a2410',
+    buckle: '#d9a733', pants: '#4a3820', pantsS: '#332612',
+    boot: '#2a1a10', bootS: '#1c1108',
+  };
+
+  // 🎨 Dibuja el cuerpo del aldeano SIN el brazo derecho (se pinta según la acción)
+  function paintSlaveBody(x) {
+    const { outline, hair, hairL, band, bandL, skin, skinS, skinL, eye, eyeW, mouth,
+            tunic, tunicS, tunicL, belt, buckle, pants, pantsS, boot, bootS } = slavePalette;
+
+    // ---- Cabello (afro abundante) ----
+    x.fillStyle = outline;
+    x.fillRect(9, 0, 14, 3);
+    x.fillRect(8, 2, 16, 4);
+    x.fillRect(9, 5, 14, 2);
+    x.fillStyle = hair;
+    x.fillRect(10, 1, 12, 2);
+    x.fillRect(9, 2, 14, 4);
+    x.fillRect(10, 5, 12, 2);
+    x.fillStyle = hairL;
+    x.fillRect(11, 1, 5, 1);
+    x.fillRect(12, 2, 4, 1);
+    x.fillRect(10, 3, 3, 1);
+
+    // ---- Cara ----
+    x.fillStyle = outline;
+    x.fillRect(11, 5, 10, 10);
+    x.fillStyle = skin;
+    x.fillRect(12, 6, 8, 8);
+    x.fillStyle = skinS;
+    x.fillRect(12, 6, 8, 1);
+    // Orejas
+    x.fillStyle = skin;
+    x.fillRect(10, 8, 2, 3);
+    x.fillRect(20, 8, 2, 3);
+    x.fillStyle = skinS;
+    x.fillRect(10, 10, 2, 1);
+    x.fillRect(20, 10, 2, 1);
+    // Ojos
+    x.fillStyle = eyeW;
+    x.fillRect(13, 8, 2, 2);
+    x.fillRect(17, 8, 2, 2);
+    x.fillStyle = eye;
+    x.fillRect(14, 8, 1, 2);
+    x.fillRect(18, 8, 1, 2);
+    // Nariz
+    x.fillStyle = skinS;
+    x.fillRect(15, 9, 2, 2);
+    // Boca
+    x.fillStyle = mouth;
+    x.fillRect(14, 12, 4, 1);
+    // Barbilla iluminada
+    x.fillStyle = skinL;
+    x.fillRect(13, 13, 6, 1);
+
+    // ---- Pañuelo rojo en la frente ----
+    x.fillStyle = band;
+    x.fillRect(11, 6, 10, 1);
+    x.fillStyle = bandL;
+    x.fillRect(11, 6, 10, 1);
+    x.fillRect(11, 6, 3, 1);
+
+    // ---- Torso / Túnica ----
+    x.fillStyle = outline;
+    x.fillRect(9, 15, 14, 16);
+    x.fillStyle = tunic;
+    x.fillRect(10, 16, 12, 14);
+    // Cuello
+    x.fillStyle = skinS;
+    x.fillRect(14, 15, 4, 2);
+    x.fillStyle = skin;
+    x.fillRect(14, 15, 4, 1);
+    // Solapas y sombras de la túnica
+    x.fillStyle = tunicS;
+    x.fillRect(10, 18, 12, 2);
+    x.fillStyle = tunicL;
+    x.fillRect(11, 17, 10, 1);
+    x.fillStyle = tunicS;
+    x.fillRect(15, 20, 2, 8);
+    x.fillStyle = belt;
+    x.fillRect(15, 22, 2, 2);
+    x.fillRect(15, 25, 2, 2);
+    // Cinturón con hebilla
+    x.fillStyle = belt;
+    x.fillRect(10, 28, 12, 2);
+    x.fillStyle = buckle;
+    x.fillRect(14, 28, 4, 2);
+
+    // ---- Brazo izquierdo (el derecho se pinta según la acción) ----
+    x.fillStyle = outline;
+    x.fillRect(6, 16, 4, 13);
+    x.fillStyle = tunic;
+    x.fillRect(7, 16, 3, 4);
+    x.fillStyle = tunicS;
+    x.fillRect(7, 19, 3, 1);
+    x.fillStyle = skin;
+    x.fillRect(7, 20, 2, 8);
+    // Mano
+    x.fillStyle = skin;
+    x.fillRect(7, 28, 2, 2);
+    x.fillStyle = skinS;
+    x.fillRect(7, 28, 2, 1);
+
+    // ---- Piernas / Pantalón ----
+    x.fillStyle = outline;
+    x.fillRect(10, 30, 5, 12);
+    x.fillRect(17, 30, 5, 12);
+    x.fillStyle = pants;
+    x.fillRect(11, 31, 3, 10);
+    x.fillRect(18, 31, 3, 10);
+    x.fillStyle = pantsS;
+    x.fillRect(11, 31, 1, 10);
+    x.fillRect(18, 31, 1, 10);
+    x.fillRect(11, 38, 3, 3);
+    x.fillRect(18, 38, 3, 3);
+
+    // ---- Botas ----
+    x.fillStyle = outline;
+    x.fillRect(9, 41, 6, 5);
+    x.fillRect(17, 41, 6, 5);
+    x.fillStyle = boot;
+    x.fillRect(10, 42, 5, 3);
+    x.fillRect(18, 42, 5, 3);
+    x.fillStyle = bootS;
+    x.fillRect(10, 44, 5, 1);
+    x.fillRect(18, 44, 5, 1);
+  }
+
+  // 🎨 Sprite de reposo: cuerpo + brazo derecho pegado al costado
   function createSlaveSprite() {
     const c = document.createElement('canvas');
-    c.width = 24; c.height = 32;
+    c.width = 32; c.height = 48;
     const x = c.getContext('2d');
-    // Pelo (negro abundante)
-    x.fillStyle = '#1a1008';
-    x.fillRect(7, 0, 10, 5);
-    // Cara
-    x.fillStyle = '#4a2a18';
-    x.fillRect(8, 3, 8, 7);
-    // Ojos
-    x.fillStyle = '#ffffff';
-    x.fillRect(9, 5, 2, 2); x.fillRect(13, 5, 2, 2);
-    x.fillStyle = '#1a1008';
-    x.fillRect(10, 5, 1, 2); x.fillRect(14, 5, 1, 2);
-    // Boca
-    x.fillStyle = '#2a1a10';
-    x.fillRect(10, 8, 4, 1);
-    // Torso
-    x.fillStyle = '#3a2010';
-    x.fillRect(7, 10, 10, 10);
-    // Brazos
-    x.fillStyle = '#3a2010';
-    x.fillRect(4, 11, 3, 8); x.fillRect(17, 11, 3, 8);
-    // Taparrabos blanco
-    x.fillStyle = '#f5f0e8';
-    x.fillRect(7, 19, 10, 4);
-    x.fillStyle = '#d8d0c0';
-    x.fillRect(7, 22, 10, 1);
-    // Piernas
-    x.fillStyle = '#3a2010';
-    x.fillRect(8, 23, 3, 7); x.fillRect(13, 23, 3, 7);
-    // Pies
-    x.fillStyle = '#1a1008';
-    x.fillRect(7, 29, 4, 2); x.fillRect(13, 29, 4, 2);
-
-    const tex = prepTexture(new THREE.CanvasTexture(c));
-    return tex;
+    paintSlaveBody(x);
+    const P = slavePalette;
+    // Brazo derecho en reposo
+    x.fillStyle = P.outline;
+    x.fillRect(22, 16, 4, 13);
+    x.fillStyle = P.tunic;
+    x.fillRect(23, 16, 3, 4);
+    x.fillStyle = P.tunicS;
+    x.fillRect(23, 19, 3, 1);
+    x.fillStyle = P.skin;
+    x.fillRect(23, 20, 2, 8);
+    x.fillStyle = P.skin;
+    x.fillRect(23, 28, 2, 2);
+    x.fillStyle = P.skinS;
+    x.fillRect(23, 28, 2, 1);
+    return prepTexture(new THREE.CanvasTexture(c));
   }
+
+  // ⛏️ Fases del golpe con pico (brazo derecho alzado + cabeza de acero)
+  const PICK_SWING = [
+    { hand: [21, 11], head: [23, 2] },
+    { hand: [21, 15], head: [23, 8] },
+    { hand: [22, 20], head: [22, 15] },
+    { hand: [22, 24], head: [23, 26] },
+    { hand: [21, 16], head: [23, 10] },
+  ];
+  // 🔨 Fases del golpe con martillo de madera
+  const HAMMER_SWING = [
+    { hand: [21, 12], head: [24, 4] },
+    { hand: [21, 16], head: [24, 10] },
+    { hand: [22, 22], head: [22, 24] },
+    { hand: [21, 17], head: [24, 12] },
+  ];
+  // 🪓 Fases del golpe de hacha (talar árboles)
+  const AXE_SWING = [
+    { hand: [21, 12], head: [24, 4] },
+    { hand: [21, 16], head: [24, 10] },
+    { hand: [22, 22], head: [22, 24] },
+    { hand: [21, 17], head: [24, 12] },
+  ];
+
+  // Dibuja un fotograma de trabajo: brazo derecho sujetando la herramienta
+  function paintWorkFrame(x, hand, head, tool) {
+    paintSlaveBody(x);
+    const P = slavePalette;
+    // Brazo derecho alzado
+    x.fillStyle = P.outline;
+    x.fillRect(hand[0], hand[1], 4, 13);
+    x.fillStyle = P.tunic;
+    x.fillRect(hand[0] + 1, hand[1], 3, 4);
+    x.fillStyle = P.tunicS;
+    x.fillRect(hand[0] + 1, hand[1] + 3, 3, 1);
+    x.fillStyle = P.skin;
+    x.fillRect(hand[0] + 1, hand[1] + 4, 2, 8);
+    // Cabeza de la herramienta (detrás del mango)
+    if (tool === 'pick') {
+      x.fillStyle = '#7e8d99';
+      x.fillRect(head[0] - 1, head[1], 7, 2);
+      x.fillStyle = '#aebfc9';
+      x.fillRect(head[0], head[1], 5, 1);
+      x.fillStyle = '#d9e6ee';
+      x.fillRect(head[0] + 1, head[1], 2, 1);
+      x.fillStyle = '#7e8d99';
+      x.fillRect(head[0] - 3, head[1] + 1, 2, 1);
+      x.fillRect(head[0] + 7, head[1] + 1, 2, 1);
+      x.fillStyle = '#d9e6ee';
+      x.fillRect(head[0] - 2, head[1], 1, 1);
+      x.fillRect(head[0] + 7, head[1], 1, 1);
+    } else if (tool === 'axe') {
+      x.fillStyle = '#7e8d99';
+      x.fillRect(head[0] - 2, head[1] - 2, 6, 4);
+      x.fillStyle = '#aebfc9';
+      x.fillRect(head[0] - 1, head[1] - 2, 4, 2);
+      x.fillStyle = '#d9e6ee';
+      x.fillRect(head[0], head[1] - 2, 2, 1);
+      x.fillStyle = '#7e8d99';
+      x.fillRect(head[0] - 3, head[1] + 2, 2, 1);
+      x.fillRect(head[0] + 3, head[1] + 2, 2, 1);
+    } else {
+      x.fillStyle = '#8a5a28';
+      x.fillRect(head[0] - 3, head[1], 8, 3);
+      x.fillStyle = '#a06a30';
+      x.fillRect(head[0] - 2, head[1], 6, 1);
+      x.fillStyle = P.outline;
+      x.fillRect(head[0] - 4, head[1] - 1, 10, 1);
+      x.fillRect(head[0] - 3, head[1] + 3, 8, 1);
+    }
+    // Mango de madera (del borde de la cabeza hasta la mano)
+    x.fillStyle = P.outline;
+    x.fillRect(head[0] - 1, head[1] + 2, 3, hand[1] + 13 - (head[1] + 2));
+    x.fillStyle = '#7a5a30';
+    x.fillRect(head[0], head[1] + 2, 2, hand[1] + 13 - (head[1] + 2));
+    // Mano agarrando el mango
+    x.fillStyle = P.skin;
+    x.fillRect(hand[0] + 1, hand[1] + 12, 2, 2);
+    x.fillStyle = P.skinS;
+    x.fillRect(hand[0] + 1, hand[1] + 12, 2, 1);
+  }
+
+  // Construye el atlas horizontal de un ciclo de trabajo (un fotograma por columna)
+  function makeWorkAtlas(tool) {
+    const frames = tool === 'pick' ? PICK_SWING : tool === 'hammer' ? HAMMER_SWING : AXE_SWING;
+    const c = document.createElement('canvas');
+    c.width = 32 * frames.length; c.height = 48;
+    const x = c.getContext('2d');
+    frames.forEach((f, i) => {
+      x.save();
+      x.translate(i * 32, 0);
+      paintWorkFrame(x, f.hand, f.head, tool);
+      x.restore();
+    });
+    const tex = prepTexture(new THREE.CanvasTexture(c));
+    return { tex, count: frames.length };
+  }
+
+  const slaveMineAtlas = makeWorkAtlas('pick');
+  const slaveBuildAtlas = makeWorkAtlas('hammer');
+  const slaveChopAtlas = makeWorkAtlas('axe');
 
   const slaveTex = createSlaveSprite();
   const slaveMat = new THREE.MeshBasicMaterial({ map: slaveTex, transparent: true, alphaTest: 0.1, side: THREE.DoubleSide });
@@ -2209,7 +2736,7 @@ builder.buildTimer = 0;
   function createSlave(x, z) {
     const group = new THREE.Group();
     const mesh = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), slaveMat.clone());
-    const aspect = 24 / 32;
+    const aspect = 32 / 48;
     mesh.scale.set(SLAVE_HEIGHT * aspect, SLAVE_HEIGHT, 1);
     mesh.position.y = SLAVE_HEIGHT / 2 - 0.05;
     group.add(mesh);
@@ -2233,13 +2760,26 @@ const slave = {
   target: null,
   buildTarget: null,
   buildTimer: 0,
+  mineTarget: null,
+  mineTimer: 0,
   attackCooldown: 0,
   speed: SLAVE_SPEED,
   walkAnim: 0,
+  mineAnim: 0,
+  buildAnim: 0,
+  chopAnim: 0,
+  mineTex: slaveMineAtlas.tex.clone(),
+  buildTex: slaveBuildAtlas.tex.clone(),
+  chopTex: slaveChopAtlas.tex.clone(),
   hp: 100,
   maxHp: 100,
   moveTarget: null,
+  chopTarget: null,
+  chopTimer: 0,
 };
+  slave.mineTex.repeat.set(1 / slaveMineAtlas.count, 1);
+  slave.buildTex.repeat.set(1 / slaveBuildAtlas.count, 1);
+  slave.chopTex.repeat.set(1 / slaveChopAtlas.count, 1);
   slaves.push(slave);
   return slave;
   }
@@ -2275,7 +2815,7 @@ const slave = {
     let closest = null;
     let minDist = Infinity;
     for (const s of slaves) {
-      if (s.state === 'build') continue; // Ya está construyendo
+      if (s.state === 'build' || s.state === 'chop') continue; // Ya está ocupado
       const dist = s.mesh.position.distanceTo(pos);
       if (dist < minDist) {
         minDist = dist;
@@ -2327,7 +2867,8 @@ const slave = {
 
   function updateProductionUI() {
     const isPlayerCastle = selectedStructure &&
-      selectedStructure.def.id === 'castle' && selectedStructure.team === 'player';
+      selectedStructure.def.id === 'castle' && selectedStructure.team === 'player' &&
+      !selectedStructure.underConstruction;
     prodEl.style.display = isPlayerCastle ? 'block' : 'none';
     if (!isPlayerCastle) return;
 
@@ -2345,6 +2886,43 @@ const slave = {
 
   updateResourcesUI();
   refreshQueueUI();
+
+  // 🧭 Movimiento con rodeo de obstáculos: cada eje se prueba por separado.
+  // Si un eje queda bloqueado, el otro avanza y la unidad rodea el obstáculo.
+  function moveUnit(s, dir, speed, dt, radius) {
+    const ox = s.mesh.position.x, oz = s.mesh.position.z;
+    const nx = ox + dir.x * speed * dt;
+    const nz = oz + dir.z * speed * dt;
+    if (!collidesWithTree(nx, oz, radius) && !collidesWithStructure(nx, oz, radius)) {
+      s.mesh.position.x = nx;
+    }
+    if (!collidesWithTree(ox, nz, radius) && !collidesWithStructure(ox, nz, radius)) {
+      s.mesh.position.z = nz;
+    }
+  }
+
+  // 👥 Separación entre unidades: evita que se amontonen unas sobre otras
+  function separateUnits() {
+    const all = slaves.concat(soldiers);
+    const MIN_DIST = 1.1;
+    for (let i = 0; i < all.length; i++) {
+      for (let j = i + 1; j < all.length; j++) {
+        const a = all[i], b = all[j];
+        const dx = b.mesh.position.x - a.mesh.position.x;
+        const dz = b.mesh.position.z - a.mesh.position.z;
+        const d2 = dx * dx + dz * dz;
+        if (d2 > 0.0001 && d2 < MIN_DIST * MIN_DIST) {
+          const d = Math.sqrt(d2);
+          const push = (MIN_DIST - d) * 0.5;
+          const ux = dx / d, uz = dz / d;
+          a.mesh.position.x -= ux * push;
+          a.mesh.position.z -= uz * push;
+          b.mesh.position.x += ux * push;
+          b.mesh.position.z += uz * push;
+        }
+      }
+    }
+  }
 
   function updateSlaveHighlights() {
     for (const s of slaves) {
@@ -2370,12 +2948,7 @@ const slave = {
           const dir = new THREE.Vector3().subVectors(targetPos, s.mesh.position);
           dir.y = 0;
           dir.normalize();
-          const nx = s.mesh.position.x + dir.x * s.speed * dt;
-          const nz = s.mesh.position.z + dir.z * s.speed * dt;
-          if (!collidesWithTree(nx, nz, 0.5) && !collidesWithStructure(nx, nz, 0.5)) {
-            s.mesh.position.x = nx;
-            s.mesh.position.z = nz;
-          }
+          moveUnit(s, dir, s.speed, dt, 0.5);
           s.mesh.rotation.y = Math.atan2(dir.x, dir.z);
           s.walkAnim += dt * 8;
         } else {
@@ -2392,6 +2965,85 @@ const slave = {
             }
           }
         }
+        } else if (s.state === 'mine') {
+  // ⛏️ Extraer oro de una mina; si se agota, vuelve a seguir
+  if (!s.mineTarget || s.mineTarget.gold <= 0) {
+    s.state = 'follow';
+    s.mineTarget = null;
+    continue;
+  }
+  const m = s.mineTarget;
+  const dist = s.mesh.position.distanceTo(m.mesh.position);
+  if (dist > SLAVE_MINE_RANGE) {
+    const dir = new THREE.Vector3().subVectors(m.mesh.position, s.mesh.position);
+    dir.y = 0;
+    dir.normalize();
+    moveUnit(s, dir, s.speed, dt, 0.5);
+    s.mesh.rotation.y = Math.atan2(dir.x, dir.z);
+    s.walkAnim += dt * 8;
+  } else {
+    s.mineAnim += dt * SLAVE_MINE_ANIM_SPEED;
+    if (s.sprite.material.map !== s.mineTex) {
+      s.sprite.material.map = s.mineTex;
+      s.sprite.material.needsUpdate = true;
+    }
+    s.mineTex.offset.set((Math.floor(s.mineAnim) % slaveMineAtlas.count) / slaveMineAtlas.count, 0);
+    s.mineTimer += dt;
+    s.walkAnim += dt * 6;
+    if (s.mineTimer >= SLAVE_MINE_INTERVAL) {
+      s.mineTimer = 0;
+      const amount = Math.min(SLAVE_MINE_AMOUNT, m.gold);
+      m.gold = Math.max(0, m.gold - amount);
+      gold += amount;
+      updateResourcesUI();
+      updateHealthBar3D(m);
+      if (selectedStructure === m) updateInfoPanel();
+      spawnGoldFloat(m.mesh.position, amount);
+      if (m.gold <= 0) {
+        s.state = 'follow';
+        s.mineTarget = null;
+      }
+    }
+  }
+        } else if (s.state === 'chop') {
+  // 🪓 Talar un árbol; si se agota, vuelve a seguir
+  if (!s.chopTarget || s.chopTarget.wood <= 0) {
+    s.state = 'follow';
+    s.chopTarget = null;
+    continue;
+  }
+  const t = s.chopTarget;
+  const dist = s.mesh.position.distanceTo(t.group.position);
+  if (dist > SLAVE_CHOP_RANGE) {
+    const dir = new THREE.Vector3().subVectors(t.group.position, s.mesh.position);
+    dir.y = 0;
+    dir.normalize();
+    moveUnit(s, dir, s.speed, dt, 0.5);
+    s.mesh.rotation.y = Math.atan2(dir.x, dir.z);
+    s.walkAnim += dt * 8;
+  } else {
+    s.chopAnim += dt * SLAVE_CHOP_ANIM_SPEED;
+    if (s.sprite.material.map !== s.chopTex) {
+      s.sprite.material.map = s.chopTex;
+      s.sprite.material.needsUpdate = true;
+    }
+    s.chopTex.offset.set((Math.floor(s.chopAnim) % slaveChopAtlas.count) / slaveChopAtlas.count, 0);
+    s.chopTimer += dt;
+    s.walkAnim += dt * 6;
+    if (s.chopTimer >= SLAVE_CHOP_INTERVAL) {
+      s.chopTimer = 0;
+      const amount = Math.min(SLAVE_CHOP_AMOUNT, t.wood);
+      t.wood = Math.max(0, t.wood - amount);
+      wood += amount;
+      updateResourcesUI();
+      spawnWoodFloat(t.group.position, amount);
+      if (t.wood <= 0) {
+        removeTree(t);
+        s.state = 'follow';
+        s.chopTarget = null;
+      }
+    }
+  }
         } else if (s.state === 'build') {
   // Si no hay objetivo o ya se terminó de construir, volver a seguir
   if (!s.buildTarget || s.buildTarget.hp >= s.buildTarget.maxHp || !s.buildTarget.underConstruction) {
@@ -2405,16 +3057,17 @@ const slave = {
     const dir = new THREE.Vector3().subVectors(s.buildTarget.mesh.position, s.mesh.position);
     dir.y = 0;
     dir.normalize();
-    const nx = s.mesh.position.x + dir.x * s.speed * dt;
-    const nz = s.mesh.position.z + dir.z * s.speed * dt;
-    if (!collidesWithTree(nx, nz, 0.5) && !collidesWithStructure(nx, nz, 0.5)) {
-      s.mesh.position.x = nx;
-      s.mesh.position.z = nz;
-    }
+    moveUnit(s, dir, s.speed, dt, 0.5);
     s.mesh.rotation.y = Math.atan2(dir.x, dir.z);
     s.walkAnim += dt * 8;
   } else {
     // Construyendo: animación de martilleo
+    s.buildAnim += dt * SLAVE_BUILD_ANIM_SPEED;
+    if (s.sprite.material.map !== s.buildTex) {
+      s.sprite.material.map = s.buildTex;
+      s.sprite.material.needsUpdate = true;
+    }
+    s.buildTex.offset.set((Math.floor(s.buildAnim) % slaveBuildAtlas.count) / slaveBuildAtlas.count, 0);
     s.walkAnim += dt * 6;
     s.buildTimer += dt;
     if (s.buildTimer >= 1.0) {
@@ -2434,6 +3087,7 @@ const slave = {
             o.receiveShadow = true;
           }
         });
+        if (selectedStructure === s.buildTarget) updateInfoPanel();
         s.state = 'follow';
         s.buildTarget = null;
       }
@@ -2442,16 +3096,12 @@ const slave = {
       } else if (s.state === 'attack') {
         if (s.target && s.target.hp > 0) {
           const d = s.mesh.position.distanceTo(s.target.mesh.position);
-          if (d > SLAVE_ATTACK_RANGE) {
+          const reach = Math.max(0, d - s.target.radius);
+          if (reach > SLAVE_ATTACK_RANGE) {
             const dir = new THREE.Vector3().subVectors(s.target.mesh.position, s.mesh.position);
             dir.y = 0;
             dir.normalize();
-            const nx = s.mesh.position.x + dir.x * s.speed * dt;
-            const nz = s.mesh.position.z + dir.z * s.speed * dt;
-            if (!collidesWithTree(nx, nz, 0.5)) {
-              s.mesh.position.x = nx;
-              s.mesh.position.z = nz;
-            }
+            moveUnit(s, dir, s.speed, dt, 0.5);
             s.mesh.rotation.y = Math.atan2(dir.x, dir.z);
             s.walkAnim += dt * 8;
           } else {
@@ -2479,12 +3129,443 @@ const slave = {
       } else {
         s.sprite.position.y = SLAVE_HEIGHT / 2 - 0.05;
       }
+      // Restaurar la textura normal al dejar de minar/construir/talar
+      if (s.state !== 'mine' && s.state !== 'build' && s.state !== 'chop' && s.sprite.material.map !== slaveTex) {
+        s.sprite.material.map = slaveTex;
+        s.sprite.material.needsUpdate = true;
+      }
+    }
+  }
+  /* ============================================================
+     SISTEMA DE SOLDADOS (NPCs de combate)
+  ============================================================ */
+  const soldiers = [];
+  let selectedSoldiers = [];
+  const SOLDIER_COST = 20;          // 💰 cada soldado cuesta 20 de oro
+  const SOLDIER_TRAIN_TIME = 10;    // ⏱️ tarda 10 segundos en entrenarse
+  const SOLDIER_SPEED = 9;
+  const SOLDIER_FOLLOW_DIST = 5;
+  const SOLDIER_ATTACK_RANGE = 4;
+  const SOLDIER_DETECT_RANGE = 20;
+  const SOLDIER_DAMAGE = 30;
+  const SOLDIER_HP = 120;
+  const SOLDIER_HEIGHT = 4.8;
+
+  // Pixel art del soldado: yelmo metálico, túnica azul, espada alzada y escudo de madera
+  function createSoldierSprite() {
+    const c = document.createElement('canvas');
+    c.width = 32; c.height = 48;
+    const x = c.getContext('2d');
+
+    const outline = '#120a04';
+    const helm    = '#aebfc9';
+    const helmS   = '#7e8d99';
+    const helmL   = '#d9e6ee';
+    const plume   = '#c0392b';
+    const skin    = '#5a3620';
+    const skinS   = '#3f2412';
+    const skinL   = '#6e452a';
+    const eye     = '#0f0a06';
+    const eyeW    = '#ffffff';
+    const mouth   = '#2b1508';
+    const tunic   = '#2f5f88';
+    const tunicS  = '#20405c';
+    const tunicL  = '#3f7fae';
+    const belt    = '#3a2410';
+    const buckle  = '#d9a733';
+    const chain   = '#8a9aa8';  // cota de malla
+    const chainS  = '#6a7a88';
+    const cross   = '#f0f0f0';  // cruz de la sobrevesta
+    const pants   = '#4a3820';
+    const pantsS  = '#332612';
+    const boot    = '#2a1a10';
+    const bootS   = '#1c1108';
+    const blade   = '#dfe9f0';
+    const bladeL  = '#ffffff';
+    const guard   = '#d9a733';
+    const wood    = '#8a5a28';
+    const woodL   = '#a06a30';
+    const woodS   = '#643c18';
+
+    // ---- Yelmo cónico con nasal y pluma roja ----
+    x.fillStyle = outline;
+    x.fillRect(11, 0, 10, 3);
+    x.fillRect(10, 2, 12, 4);
+    x.fillStyle = helm;
+    x.fillRect(12, 1, 8, 3);
+    x.fillRect(11, 2, 10, 3);
+    x.fillStyle = helmL;
+    x.fillRect(12, 1, 5, 1);
+    x.fillRect(11, 2, 3, 1);
+    x.fillStyle = helmS;
+    x.fillRect(18, 2, 2, 2);
+    // Pluma del yelmo
+    x.fillStyle = outline;
+    x.fillRect(14, 0, 4, 1);
+    x.fillStyle = plume;
+    x.fillRect(15, 0, 2, 2);
+
+    // ---- Cara ----
+    x.fillStyle = outline;
+    x.fillRect(11, 5, 10, 10);
+    x.fillStyle = skin;
+    x.fillRect(12, 6, 8, 8);
+    x.fillStyle = skinS;
+    x.fillRect(12, 6, 8, 1);
+    // Orejas con cota de malla
+    x.fillStyle = chain;
+    x.fillRect(10, 7, 2, 3);
+    x.fillRect(20, 7, 2, 3);
+    x.fillStyle = chainS;
+    x.fillRect(10, 9, 2, 1);
+    x.fillRect(20, 9, 2, 1);
+    // Ojos
+    x.fillStyle = eyeW;
+    x.fillRect(13, 8, 2, 2);
+    x.fillRect(17, 8, 2, 2);
+    x.fillStyle = eye;
+    x.fillRect(14, 8, 1, 2);
+    x.fillRect(18, 8, 1, 2);
+    // Nariz
+    x.fillStyle = skinS;
+    x.fillRect(15, 9, 2, 2);
+    // Boca
+    x.fillStyle = mouth;
+    x.fillRect(14, 12, 4, 1);
+    // Barbilla iluminada
+    x.fillStyle = skinL;
+    x.fillRect(13, 13, 6, 1);
+    // Nasal del yelmo sobre la cara
+    x.fillStyle = outline;
+    x.fillRect(14, 4, 2, 5);
+    x.fillStyle = helm;
+    x.fillRect(15, 4, 1, 4);
+
+    // ---- Espada alzada (mano derecha) ----
+    x.fillStyle = outline;
+    x.fillRect(23, 3, 4, 10);
+    x.fillRect(23, 13, 5, 2);
+    x.fillRect(23, 15, 4, 3);
+    x.fillStyle = blade;
+    x.fillRect(24, 4, 2, 8);
+    x.fillStyle = bladeL;
+    x.fillRect(24, 4, 1, 7);
+    x.fillStyle = guard;
+    x.fillRect(23, 13, 5, 2);
+    x.fillStyle = belt;
+    x.fillRect(24, 15, 2, 3);
+    // Brazo derecho con manga de cota de malla
+    x.fillStyle = outline;
+    x.fillRect(22, 16, 4, 6);
+    x.fillStyle = chain;
+    x.fillRect(23, 16, 3, 4);
+    x.fillStyle = chainS;
+    x.fillRect(23, 20, 3, 1);
+    // Mano que empuña la espada
+    x.fillStyle = skin;
+    x.fillRect(23, 18, 2, 2);
+    x.fillStyle = skinS;
+    x.fillRect(23, 18, 2, 1);
+
+    // ---- Escudo cometa (mano izquierda) ----
+    x.fillStyle = outline;
+    x.fillRect(2, 16, 6, 13);
+    x.fillRect(3, 28, 4, 4);
+    x.fillRect(4, 31, 2, 2);
+    x.fillStyle = wood;
+    x.fillRect(3, 17, 4, 11);
+    x.fillStyle = woodL;
+    x.fillRect(3, 17, 4, 2);
+    x.fillStyle = woodS;
+    x.fillRect(3, 26, 4, 2);
+    // Cruz dorada del escudo
+    x.fillStyle = buckle;
+    x.fillRect(4, 20, 2, 5);
+    x.fillRect(3, 21, 4, 1);
+    // Brazo izquierdo detrás del escudo (cota de malla)
+    x.fillStyle = outline;
+    x.fillRect(6, 16, 4, 12);
+    x.fillStyle = chain;
+    x.fillRect(7, 16, 3, 4);
+    x.fillStyle = chainS;
+    x.fillRect(7, 20, 3, 1);
+
+    // ---- Sobrevesta azul con cruz blanca ----
+    x.fillStyle = outline;
+    x.fillRect(9, 15, 14, 15);
+    x.fillStyle = tunic;
+    x.fillRect(10, 16, 12, 13);
+    // Cuello de cota de malla
+    x.fillStyle = chain;
+    x.fillRect(13, 14, 6, 1);
+    x.fillStyle = chainS;
+    x.fillRect(13, 15, 6, 1);
+    // Cruz blanca de la sobrevesta
+    x.fillStyle = cross;
+    x.fillRect(15, 17, 2, 6);
+    x.fillRect(13, 19, 6, 1);
+    // Luz y sombra de la sobrevesta
+    x.fillStyle = tunicL;
+    x.fillRect(11, 16, 10, 1);
+    x.fillStyle = tunicS;
+    x.fillRect(10, 28, 12, 1);
+    // Cinturón con hebilla
+    x.fillStyle = belt;
+    x.fillRect(10, 27, 12, 2);
+    x.fillStyle = buckle;
+    x.fillRect(14, 27, 4, 2);
+
+    // ---- Piernas / Pantalón ----
+    x.fillStyle = outline;
+    x.fillRect(10, 29, 5, 12);
+    x.fillRect(17, 29, 5, 12);
+    x.fillStyle = pants;
+    x.fillRect(11, 30, 3, 10);
+    x.fillRect(18, 30, 3, 10);
+    x.fillStyle = pantsS;
+    x.fillRect(11, 30, 1, 10);
+    x.fillRect(18, 30, 1, 10);
+    x.fillRect(11, 37, 3, 3);
+    x.fillRect(18, 37, 3, 3);
+
+    // ---- Botas ----
+    x.fillStyle = outline;
+    x.fillRect(9, 40, 6, 5);
+    x.fillRect(17, 40, 6, 5);
+    x.fillStyle = boot;
+    x.fillRect(10, 41, 5, 3);
+    x.fillRect(18, 41, 5, 3);
+    x.fillStyle = bootS;
+    x.fillRect(10, 43, 5, 1);
+    x.fillRect(18, 43, 5, 1);
+
+    const tex = prepTexture(new THREE.CanvasTexture(c));
+    return tex;
+  }
+
+  const soldierTex = createSoldierSprite();
+  const soldierMat = new THREE.MeshBasicMaterial({ map: soldierTex, transparent: true, alphaTest: 0.1, side: THREE.DoubleSide });
+
+  function createSoldier(x, z) {
+    const group = new THREE.Group();
+    const mesh = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), soldierMat.clone());
+    const aspect = 32 / 48;
+    mesh.scale.set(SOLDIER_HEIGHT * aspect, SOLDIER_HEIGHT, 1);
+    mesh.position.y = SOLDIER_HEIGHT / 2 - 0.05;
+    group.add(mesh);
+
+    const shadow = new THREE.Mesh(new THREE.CircleGeometry(0.4, 16), new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.3 }));
+    shadow.rotation.x = -Math.PI / 2; shadow.position.y = 0.05;
+    group.add(shadow);
+
+    const ring = new THREE.Mesh(new THREE.RingGeometry(0.5, 0.65, 24), new THREE.MeshBasicMaterial({ color: 0xffb84d, transparent: true, opacity: 0, side: THREE.DoubleSide }));
+    ring.rotation.x = -Math.PI / 2; ring.position.y = 0.07;
+    group.add(ring);
+
+    group.position.set(x, Math.max(getHeight(x, z), WATER_LEVEL + 0.5), z);
+    scene.add(group);
+
+    const soldier = {
+      type: 'soldier',
+      mesh: group,
+      sprite: mesh,
+      ring: ring,
+      state: 'idle',
+      target: null,
+      attackCooldown: 0,
+      speed: SOLDIER_SPEED,
+      walkAnim: 0,
+      hp: SOLDIER_HP,
+      maxHp: SOLDIER_HP,
+      moveTarget: null,
+    };
+    soldiers.push(soldier);
+    return soldier;
+  }
+
+  // ⚔️ Cola de entrenamiento: 1 soldado en entrenamiento + el resto en espera
+  const soldierQueue = [];
+  let soldierTrainProgress = 0;
+
+  function hireSoldier() {
+    if (gold < SOLDIER_COST) return;
+    gold -= SOLDIER_COST;                 // se paga al encargar
+    soldierQueue.push(true);              // entra en la cola
+    updateResourcesUI();
+    refreshSoldierQueueUI();
+  }
+
+  function spawnSoldierAtBarracks() {
+    const bar = structures.find(s => s.def.id === 'barracks' && s.team === 'player');
+    if (!bar) return;
+    const angle = Math.random() * Math.PI * 2;
+    const r = 7 + Math.random() * 4;
+    createSoldier(bar.mesh.position.x + Math.cos(angle) * r,
+                  bar.mesh.position.z + Math.sin(angle) * r);
+  }
+
+  function updateSoldierTraining(dt) {
+    if (soldierQueue.length > 0) {
+      soldierTrainProgress += dt;
+      if (soldierTrainProgress >= SOLDIER_TRAIN_TIME) {
+        soldierTrainProgress = 0;
+        soldierQueue.shift();
+        spawnSoldierAtBarracks();
+        refreshSoldierQueueUI();
+      }
+    } else {
+      soldierTrainProgress = 0;
+    }
+    updateSoldierProductionUI();
+  }
+
+  // ---- Interfaz del panel de entrenamiento de soldados ----
+  const soldierProdEl        = document.getElementById('barracks-production');
+  const soldierTrainFillEl   = document.getElementById('train-fill-soldier');
+  const soldierTrainStatusEl = document.getElementById('train-status-soldier');
+  const soldierTrainQueueEl  = document.getElementById('train-queue-soldier');
+  const btnTrainSoldierEl    = document.getElementById('btn-train-soldier');
+
+  btnTrainSoldierEl.addEventListener('click', () => hireSoldier());
+
+  function refreshSoldierQueueUI() {
+    soldierTrainQueueEl.innerHTML = '';
+    if (soldierQueue.length === 0) {
+      soldierTrainQueueEl.innerHTML = '<span style="font-size:11px;color:#888;">Cola vacía</span>';
+      return;
+    }
+    soldierQueue.forEach((q, i) => {
+      const slot = document.createElement('div');
+      slot.className = 'queue-slot' + (i === 0 ? ' active' : '');
+      slot.textContent = '⚔️';
+      slot.title = (i === 0) ? 'En entrenamiento' : 'En cola de espera';
+      soldierTrainQueueEl.appendChild(slot);
+    });
+  }
+
+  function updateSoldierProductionUI() {
+    const isPlayerBarracks = selectedStructure &&
+      selectedStructure.def.id === 'barracks' && selectedStructure.team === 'player' &&
+      !selectedStructure.underConstruction;
+    soldierProdEl.style.display = isPlayerBarracks ? 'block' : 'none';
+    if (!isPlayerBarracks) return;
+
+    if (soldierQueue.length > 0) {
+      soldierTrainFillEl.style.width = (soldierTrainProgress / SOLDIER_TRAIN_TIME * 100) + '%';
+      soldierTrainStatusEl.textContent =
+        '⚔ Entrenando soldado... ' + Math.max(0, SOLDIER_TRAIN_TIME - soldierTrainProgress).toFixed(1) + ' s' +
+        (soldierQueue.length > 1 ? ' · En cola: ' + (soldierQueue.length - 1) : '');
+    } else {
+      soldierTrainFillEl.style.width = '0%';
+      soldierTrainStatusEl.textContent = 'Sin producción activa';
+    }
+    btnTrainSoldierEl.disabled = gold < SOLDIER_COST;
+  }
+
+  refreshSoldierQueueUI();
+
+  function updateSoldierHighlights() {
+    for (const s of soldiers) {
+      s.ring.material.opacity = selectedSoldiers.includes(s) ? 0.75 : 0;
+    }
+  }
+
+  // 🔍 Encuentra la estructura enemiga viva más cercana dentro de un radio
+  function findNearestEnemy(pos, range) {
+    let best = null;
+    let bestD = range;
+    for (const st of structures) {
+      if (st.team === 'enemy' && st.hp > 0) {
+        const d = pos.distanceTo(st.mesh.position);
+        if (d < bestD) { bestD = d; best = st; }
+      }
+    }
+    return best;
+  }
+
+  function updateSoldiers(dt) {
+    for (const s of soldiers) {
+      if (s.state === 'attack') {
+        // 🎯 Orden de ataque (del jugador o por IA): foco en el objetivo
+        if (s.target && s.target.hp > 0) {
+          const d = s.mesh.position.distanceTo(s.target.mesh.position);
+          const reach = Math.max(0, d - s.target.radius);
+          if (reach > SOLDIER_ATTACK_RANGE) {
+            const dir = new THREE.Vector3().subVectors(s.target.mesh.position, s.mesh.position);
+            dir.y = 0;
+            dir.normalize();
+            moveUnit(s, dir, s.speed, dt, 0.5);
+            s.mesh.rotation.y = Math.atan2(dir.x, dir.z);
+            s.walkAnim += dt * 8;
+          } else {
+            s.attackCooldown -= dt;
+            if (s.attackCooldown <= 0) {
+              damageStructure(s.target, SOLDIER_DAMAGE);
+              s.attackCooldown = 1.0;
+            }
+            s.walkAnim = 0;
+          }
+        } else {
+          // Objetivo destruido → vuelve a seguir al rey
+          s.state = 'follow';
+          s.target = null;
+        }
+      } else if (s.state === 'follow') {
+        // 1) Moverse al destino explícito si existe, si no seguir al rey
+        let targetPos = king.position;
+        if (s.moveTarget) {
+          const distToTarget = s.mesh.position.distanceTo(s.moveTarget);
+          if (distToTarget < 1.5) {
+            s.moveTarget = null;
+          } else {
+            targetPos = s.moveTarget;
+          }
+        }
+        const dist = s.mesh.position.distanceTo(targetPos);
+        if (dist > SOLDIER_FOLLOW_DIST) {
+          const dir = new THREE.Vector3().subVectors(targetPos, s.mesh.position);
+          dir.y = 0;
+          dir.normalize();
+          moveUnit(s, dir, s.speed, dt, 0.5);
+          s.mesh.rotation.y = Math.atan2(dir.x, dir.z);
+          s.walkAnim += dt * 8;
+        } else {
+          s.walkAnim = 0;
+        }
+        // 2) Auto-ataque: estructuras enemigas cercanas
+        const enemy = findNearestEnemy(s.mesh.position, SOLDIER_DETECT_RANGE);
+        if (enemy) {
+          s.state = 'attack';
+          s.target = enemy;
+          s.moveTarget = null;
+        }
+      } else {
+        // idle: también reacciona a enemigos cercanos
+        s.walkAnim = 0;
+        const enemy = findNearestEnemy(s.mesh.position, SOLDIER_DETECT_RANGE);
+        if (enemy) {
+          s.state = 'attack';
+          s.target = enemy;
+        }
+      }
+      s.mesh.position.y = Math.max(getHeight(s.mesh.position.x, s.mesh.position.z), WATER_LEVEL + 0.5);
+      // Billboard
+      const yaw = Math.atan2(camera.position.x - s.mesh.position.x, camera.position.z - s.mesh.position.z);
+      s.sprite.rotation.y = yaw - s.mesh.rotation.y;
+      // Animación de caminar (sube y baja)
+      if (s.state !== 'idle' && s.walkAnim > 0) {
+        s.sprite.position.y = SOLDIER_HEIGHT / 2 - 0.05 + Math.abs(Math.sin(s.walkAnim)) * 0.15;
+      } else {
+        s.sprite.position.y = SOLDIER_HEIGHT / 2 - 0.05;
+      }
     }
   }
   /* --- LISTO --- */
   updateLoading(100, `¡Bienvenido a ${CFG.name}!`);
 
   setTimeout(() => {
+    startGameMusic();               // 🎵 soundtrack001 arranca cuando el nivel ya está cargado
+    if (typeof tipTimer !== 'undefined') clearInterval(tipTimer);
     loadingScreen.classList.add('hidden');
     hud.style.display = 'block';
     exitBtn.style.display = 'block';
@@ -2526,44 +3607,93 @@ const slave = {
   let selectedSlaves = [];
 
   // Menús contextuales
-  const castleMenuEl = document.getElementById('castle-menu');
   const npcMenuEl = document.getElementById('npc-menu');
+  let npcMovePoint = null;   // 📍 punto del terreno para la orden "Mover aquí"
+  let npcAttackTarget = null; // 🎯 estructura enemiga para la orden "Atacar"
 
-  function showCastleMenu(x, y) {
-    castleMenuEl.style.left = x + 'px';
-    castleMenuEl.style.top = y + 'px';
-    castleMenuEl.classList.add('visible');
-    npcMenuEl.classList.remove('visible');
+  function selectedUnits() {
+    return selectedSlaves.concat(selectedSoldiers);
   }
   function showNpcMenu(x, y) {
     npcMenuEl.style.left = x + 'px';
     npcMenuEl.style.top = y + 'px';
     npcMenuEl.classList.add('visible');
-    castleMenuEl.classList.remove('visible');
+    const btnAttack = document.getElementById('npc-attack');
+    if (btnAttack) {
+      // ⚔️ La orden "Atacar" solo aparece al hacer click derecho sobre un edificio enemigo
+      btnAttack.style.display = npcAttackTarget ? 'block' : 'none';
+      btnAttack.disabled = !npcAttackTarget;
+    }
   }
   function hideContextMenus() {
-    castleMenuEl.classList.remove('visible');
     npcMenuEl.classList.remove('visible');
   }
 
-  document.getElementById('npc-follow').onclick = () => {
-    for (const s of selectedSlaves) {
+  function issueMoveOrder(units, point) {
+    for (const s of units) {
       s.state = 'follow';
       s.target = null;
       s.buildTarget = null;
+      s.mineTarget = null;
+      s.moveTarget = point ? point.clone() : null;
     }
-    hideContextMenus();
-  };
-  document.getElementById('npc-stop').onclick = () => {
-    for (const s of selectedSlaves) {
+  }
+  function issueFollowOrder(units) {
+    for (const s of units) {
+      s.state = 'follow';
+      s.target = null;
+      s.buildTarget = null;
+      s.mineTarget = null;
+      s.moveTarget = null;
+    }
+  }
+  function issueStopOrder(units) {
+    for (const s of units) {
       s.state = 'idle';
       s.target = null;
       s.buildTarget = null;
+      s.mineTarget = null;
+      s.moveTarget = null;
+    }
+  }
+  function issueAttackOrder(units, target) {
+    for (const s of units) {
+      s.state = 'attack';
+      s.target = target;
+      s.moveTarget = null;
+      s.mineTarget = null;
+      s.buildTarget = null;
+    }
+  }
+
+  document.getElementById('npc-follow').onclick = () => {
+    issueFollowOrder(selectedUnits());
+    hideContextMenus();
+  };
+  document.getElementById('npc-stop').onclick = () => {
+    issueStopOrder(selectedUnits());
+    hideContextMenus();
+  };
+  document.getElementById('npc-move').onclick = () => {
+    if (npcMovePoint && selectedUnits().length > 0) {
+      issueMoveOrder(selectedUnits(), npcMovePoint);
+      // Visual: marcador temporal en el destino
+      const marker = new THREE.Mesh(
+        new THREE.RingGeometry(0.4, 0.6, 16),
+        new THREE.MeshBasicMaterial({ color: 0x39ff5a, transparent: true, opacity: 0.8, side: THREE.DoubleSide })
+      );
+      marker.rotation.x = -Math.PI / 2;
+      marker.position.copy(npcMovePoint);
+      marker.position.y = getHeight(npcMovePoint.x, npcMovePoint.z) + 0.1;
+      scene.add(marker);
+      setTimeout(() => scene.remove(marker), 1000);
     }
     hideContextMenus();
   };
-  document.getElementById('npc-build').onclick = () => {
-    toggleBuildMenu();
+  document.getElementById('npc-attack').onclick = () => {
+    if (npcAttackTarget && npcAttackTarget.hp > 0) {
+      issueAttackOrder(selectedUnits(), npcAttackTarget);
+    }
     hideContextMenus();
   };
 
@@ -2572,7 +3702,7 @@ const slave = {
     // ✅ Si el click es DENTRO de un menú contextual, NO ocultarlo aquí:
     // si el menú desaparece entre el mousedown y el mouseup, el 'click'
     // nunca llega al botón y las órdenes no se ejecutan.
-    if (!e.target.closest('#castle-menu') && !e.target.closest('#npc-menu')) {
+    if (!e.target.closest('#npc-menu')) {
     hideContextMenus();
     }
     return;
@@ -2580,81 +3710,41 @@ const slave = {
 
     if (e.button === 0) {
       hideContextMenus();
-    if (build.placing) { buildPlace(); return; }
-    // Cerrar menú si se clickea en el canvas (fuera del menú)
-    if (buildMenuEl.classList.contains('visible') && e.target === renderer.domElement) { 
-      closeBuildMenu(); 
-    }
-        // Si hay esclavos seleccionados y no está colocando, dar orden de moverse al punto
-  if (selectedSlaves.length > 0 && !build.placing) {
-    const p = terrainPoint();
-    if (p) {
-      // Verificar que no clickeó un esclavo o estructura
+      if (build.placing) { buildPlace(); return; }
+      // Cerrar menú si se clickea en el canvas (fuera del menú)
+      if (buildMenuEl.classList.contains('visible') && e.target === renderer.domElement) {
+        closeBuildMenu();
+      }
+
+      // Detectar clic en esclavo o soldado (raycasting sobre sprites)
       buildRay.setFromCamera(mouseNDC, camera);
       const slaveMeshes = slaves.map(s => s.sprite);
+      const soldierMeshes = soldiers.map(s => s.sprite);
       const slaveHits = buildRay.intersectObjects(slaveMeshes, false);
-      const allMeshes = [];
-      structures.forEach(s => s.mesh.traverse(o => { if (o.isMesh) allMeshes.push(o); }));
-      const structHits = buildRay.intersectObjects(allMeshes, false);
-      
-      if (slaveHits.length === 0 && structHits.length === 0) {
-        // Mover esclavos al punto clickeado
-        for (const s of selectedSlaves) {
-          s.state = 'follow';
-          s.moveTarget = p.clone();
-          s.target = null;
+      const soldierHits = buildRay.intersectObjects(soldierMeshes, false);
+
+      if (slaveHits.length > 0 || soldierHits.length > 0) {
+        const clickedUnit = (slaveHits.length > 0)
+          ? slaves.find(s => s.sprite === slaveHits[0].object)
+          : soldiers.find(s => s.sprite === soldierHits[0].object);
+        if (clickedUnit) {
+          if (clickedUnit.type === 'soldier') {
+            selectedSlaves = [];
+            selectedSoldiers = [clickedUnit];
+          } else {
+            selectedSlaves = [clickedUnit];
+            selectedSoldiers = [];
+          }
+          updateSlaveHighlights();
+          updateSoldierHighlights();
+          mouseAttackQueued = false;
+          // Desactivar otros paneles
+          document.getElementById('structure-info').classList.remove('visible');
+          // Mostrar panel de unidad
+          showSlaveInfo(clickedUnit);
+          return;
         }
-        // Visual: marcador temporal
-        const marker = new THREE.Mesh(
-          new THREE.RingGeometry(0.4, 0.6, 16),
-          new THREE.MeshBasicMaterial({ color: 0x39ff5a, transparent: true, opacity: 0.8, side: THREE.DoubleSide })
-        );
-        marker.rotation.x = -Math.PI / 2;
-        marker.position.copy(p);
-        marker.position.y = getHeight(p.x, p.z) + 0.1;
-        scene.add(marker);
-        setTimeout(() => scene.remove(marker), 1000);
-        return;
       }
-    }
-  }
-
-      // Empezar selección por arrastre
-      isSelecting = true;
-      selectStartX = e.clientX;
-      selectStartY = e.clientY;
-      selectRect.style.left = e.clientX + 'px';
-      selectRect.style.top = e.clientY + 'px';
-      selectRect.style.width = '0px';
-      selectRect.style.height = '0px';
-      selectRect.style.display = 'block';
-
-      const now = performance.now();
-      if (now - (window.__lastLeftClick || 0) < 400) {
-        isSelecting = false;
-        selectRect.style.display = 'none';
-        return;
-      }
-      window.__lastLeftClick = now;
-
-      // Detectar clic en esclavo (raycasting sobre sprites de esclavos)
-      buildRay.setFromCamera(mouseNDC, camera);
-      const slaveMeshes = slaves.map(s => s.sprite);
-      const slaveHits = buildRay.intersectObjects(slaveMeshes, false);
-      
-if (slaveHits.length > 0) {
-  const clickedSlave = slaves.find(s => s.sprite === slaveHits[0].object);
-  if (clickedSlave) {
-    selectedSlaves = [clickedSlave];
-    updateSlaveHighlights();
-    mouseAttackQueued = false;
-    // Desactivar otros paneles
-    document.getElementById('structure-info').classList.remove('visible');
-    // Mostrar panel de esclavo
-    showSlaveInfo(clickedSlave);
-    return;
-  }
-}
 
       mouseAttackQueued = true;
 
@@ -2678,7 +3768,34 @@ if (slaveHits.length > 0) {
           }
         }
       }
+
+      // Clic en terreno vacío: deseleccionar unidades
+      if (selectedSlaves.length > 0 || selectedSoldiers.length > 0) {
+        selectedSlaves = [];
+        selectedSoldiers = [];
+        updateSlaveHighlights();
+        updateSoldierHighlights();
+        hideSlaveInfo();
+      }
       deselectStructure();
+
+      // Empezar selección por arrastre (mantener click izquierdo para elegir varios)
+      isSelecting = true;
+      selectStartX = e.clientX;
+      selectStartY = e.clientY;
+      selectRect.style.left = e.clientX + 'px';
+      selectRect.style.top = e.clientY + 'px';
+      selectRect.style.width = '0px';
+      selectRect.style.height = '0px';
+      selectRect.style.display = 'block';
+
+      const now = performance.now();
+      if (now - (window.__lastLeftClick || 0) < 400) {
+        isSelecting = false;
+        selectRect.style.display = 'none';
+        return;
+      }
+      window.__lastLeftClick = now;
     }
     if (e.button === 2) {
       hideContextMenus();
@@ -2705,6 +3822,7 @@ if (slaveHits.length > 0) {
 
         if (rectW > 5 || rectH > 5) {
           selectedSlaves = [];
+          selectedSoldiers = [];
           for (const s of slaves) {
             const pos = s.mesh.position.clone().project(camera);
             if (pos.z > 1) continue;
@@ -2714,7 +3832,17 @@ if (slaveHits.length > 0) {
               selectedSlaves.push(s);
             }
           }
+          for (const s of soldiers) {
+            const pos = s.mesh.position.clone().project(camera);
+            if (pos.z > 1) continue;
+            const sx = (pos.x * 0.5 + 0.5) * innerWidth;
+            const sy = (-pos.y * 0.5 + 0.5) * innerHeight;
+            if (sx >= x1 && sx <= x2 && sy >= y1 && sy <= y2) {
+              selectedSoldiers.push(s);
+            }
+          }
           updateSlaveHighlights();
+          updateSoldierHighlights();
           mouseAttackQueued = false;
         }
       }
@@ -2728,16 +3856,29 @@ if (slaveHits.length > 0) {
       const dist = Math.sqrt(dx*dx + dy*dy);
 
       if (dist < 5 && dt < 500) {
+        npcAttackTarget = null;   // la orden "Atacar" se habilita SOLO si clickeas un edificio enemigo
         buildRay.setFromCamera(mouseNDC, camera);
 
-        // Primero verificar si se clickeó un esclavo (para dar órdenes)
+        // Primero verificar si se clickeó un esclavo o soldado (para dar órdenes)
         const slaveMeshes = slaves.map(s => s.sprite);
+        const soldierMeshes = soldiers.map(s => s.sprite);
         const slaveHits = buildRay.intersectObjects(slaveMeshes, false);
-        if (slaveHits.length > 0) {
-          const clickedSlave = slaves.find(s => s.sprite === slaveHits[0].object);
-          if (clickedSlave) {
-            selectedSlaves = [clickedSlave];
+        const soldierHits = buildRay.intersectObjects(soldierMeshes, false);
+        if (slaveHits.length > 0 || soldierHits.length > 0) {
+          const clickedUnit = (slaveHits.length > 0)
+            ? slaves.find(s => s.sprite === slaveHits[0].object)
+            : soldiers.find(s => s.sprite === soldierHits[0].object);
+          if (clickedUnit) {
+            if (clickedUnit.type === 'soldier') {
+              selectedSlaves = [];
+              selectedSoldiers = [clickedUnit];
+            } else {
+              selectedSlaves = [clickedUnit];
+              selectedSoldiers = [];
+            }
             updateSlaveHighlights();
+            updateSoldierHighlights();
+            npcMovePoint = terrainPoint();
             showNpcMenu(e.clientX, e.clientY);
             isRotatingCamera = false;
             return;
@@ -2750,13 +3891,88 @@ if (slaveHits.length > 0) {
         const hits = buildRay.intersectObjects(allMeshes, false);
         if (hits.length > 0) {
           const data = hits[0].object.userData.structureData;
-          if (data && data.def.id === 'castle' && data.team === 'player') {
-            showCastleMenu(e.clientX, e.clientY);
+          if (data && data.def.id === 'goldmine') {
+            // ⛏️ Click derecho en una mina de oro: los esclavos seleccionados van a extraer
+            if (selectedSlaves.length > 0) {
+              for (const s of selectedSlaves) {
+                s.state = 'mine';
+                s.mineTarget = data;
+                s.mineTimer = 0;
+                s.moveTarget = null;
+                s.target = null;
+                s.buildTarget = null;
+              }
+            } else {
+              selectStructure(data);
+            }
+            isRotatingCamera = false;
+            return;
+          }
+          if (data && data.team === 'enemy' && data.hp > 0) {
+            // 🎯 Click derecho en una estructura enemiga: atacar (prioridad sobre la IA)
+            npcAttackTarget = data;
+            issueAttackOrder(selectedUnits(), data);
+            isRotatingCamera = false;
+            return;
+          }
+          if (data && data.team === 'player' && data.underConstruction) {
+            // 🏗️ Click derecho en una estructura en construcción: los esclavos seleccionados van a construir
+            if (selectedSlaves.length > 0) {
+              for (const s of selectedSlaves) {
+                s.state = 'build';
+                s.buildTarget = data;
+                s.buildTimer = 0;
+                s.mineTarget = null;
+                s.moveTarget = null;
+                s.target = null;
+              }
+            } else {
+              const builder = findClosestSlave(data.mesh.position);
+              if (builder) {
+                builder.state = 'build';
+                builder.buildTarget = data;
+                builder.buildTimer = 0;
+                builder.mineTarget = null;
+                builder.target = null;
+              }
+              selectStructure(data);
+            }
             isRotatingCamera = false;
             return;
           }
         }
-        if (selectedSlaves.length > 0) {
+        // 🌳 Click derecho en un árbol: los esclavos seleccionados van a talar
+        const treeHits = buildRay.intersectObjects(treeMeshes, false);
+        if (treeHits.length > 0) {
+          const treeData = treeHits[0].object.userData.treeData;
+          if (treeData && treeData.wood > 0) {
+            if (selectedSlaves.length > 0) {
+              for (const s of selectedSlaves) {
+                s.state = 'chop';
+                s.chopTarget = treeData;
+                s.chopTimer = 0;
+                s.mineTarget = null;
+                s.moveTarget = null;
+                s.target = null;
+                s.buildTarget = null;
+              }
+            } else {
+              const chopper = findClosestSlave(new THREE.Vector3(treeData.x, 0, treeData.z));
+              if (chopper) {
+                chopper.state = 'chop';
+                chopper.chopTarget = treeData;
+                chopper.chopTimer = 0;
+                chopper.mineTarget = null;
+                chopper.target = null;
+                chopper.buildTarget = null;
+              }
+            }
+            isRotatingCamera = false;
+            return;
+          }
+        }
+        if (selectedUnits().length > 0) {
+          npcMovePoint = terrainPoint();
           showNpcMenu(e.clientX, e.clientY);
           isRotatingCamera = false;
           return;
@@ -2899,10 +4115,27 @@ if (slaveHits.length > 0) {
       }
     }
 
+    // 💫 Animar los textos flotantes de oro extraído
+    for (let i = goldFloats.length - 1; i >= 0; i--) {
+      const f = goldFloats[i];
+      f.life += dt;
+      f.spr.position.y += dt * 2.5;
+      f.spr.material.opacity = Math.max(0, 1 - f.life / f.maxLife);
+      if (f.life >= f.maxLife) {
+        scene.remove(f.spr);
+        goldFloats.splice(i, 1);
+      }
+    }
+
     // Minimapa cada frame (muy barato: 200x200)
     updateResources(dt);
     updateTraining(dt);
     updateSlaves(dt);
+    updateSoldierTraining(dt);
+    updateSoldiers(dt);
+    separateUnits();
+    // 📊 Actualizar el panel en tiempo real (construcción / extracción de oro)
+    if (selectedStructure) updateInfoPanel();
     if (selectedSlaveInfo) updateSlaveInfoUI();
     updateMinimap();
   }
@@ -2933,18 +4166,11 @@ document.querySelectorAll('.level-card').forEach(card => {
   };
 });
 </script>
-<!-- Menú contextual del castillo -->
-<div id="castle-menu">
-  <h3>🏰 CASTILLO</h3>
-  <button class="menu-option" id="hire-slaves">👥 Contratar esclavo <span class="cost">10 🪙</span></button>
-  <button class="menu-option" disabled>🔧 Mejorar murallas</button>
-  <button class="menu-option" disabled>🏹 Entrenar arqueros</button>
-</div>
-
 <!-- Menú de órdenes para NPCs -->
 <div id="npc-menu">
   <h3>⚔ ÓRDENES</h3>
-  <button class="menu-option" id="npc-build">🏗️ Construir...</button>
+  <button class="menu-option" id="npc-move">📍 Mover aquí</button>
+  <button class="menu-option" id="npc-attack">⚔️ Atacar</button>
   <button class="menu-option" id="npc-follow">🏃 Seguirme</button>
   <button class="menu-option" id="npc-stop">✋ Dejar de seguirme</button>
 </div>

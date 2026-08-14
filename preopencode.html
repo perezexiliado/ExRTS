@@ -6,15 +6,22 @@
 <style>
   html, body { margin: 0; padding: 0; overflow: hidden; height: 100%; background: #000; font-family: "Trebuchet MS", Arial, sans-serif; }
   #hud {
-    position: absolute; top: 12px; left: 12px; z-index: 10;
+    position: absolute; top: 12px; right: 12px; z-index: 10;
     color: #fff;
     background: rgba(20, 14, 6, 0.65); border: 2px solid #b98d3e; border-radius: 8px;
     padding: 10px 14px; font-size: 14px; line-height: 1.6; user-select: none;
-    display: none;
+    display: none; text-align: right;
   }
   #hud b { color: #ffd76a; }
+  #hud .res-row { display: flex; gap: 16px; justify-content: flex-end; }
+  #hud .res { white-space: nowrap; font-size: 15px; }
+  #hud .res b { font-family: "Courier New", monospace; }
+  #hud-help {
+    font-size: 11px; color: #c9b98a;
+    border-top: 1px solid #6a5228; margin-top: 6px; padding-top: 5px;
+  }
   #exit-btn {
-    position: absolute; top: 12px; right: 12px; z-index: 10;
+    position: absolute; top: 12px; left: 12px; z-index: 10;
     display: none;
     background: rgba(20, 14, 6, 0.75); color: #ffd76a; border: 2px solid #b98d3e;
     padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 14px;
@@ -126,45 +133,104 @@
   }
   .modal-close:hover { background: rgba(185, 141, 62, 0.2); }
 
-  /* --- MENÚ DE CONSTRUCCIÓN --- */
-  #build-menu {
-    position: fixed; left: 50%; bottom: 16px; transform: translateX(-50%);
-    z-index: 30; display: none;
-    background: rgba(20, 14, 6, 0.88);
-    border: 2px solid #b98d3e; border-radius: 10px;
-    padding: 10px 12px;
-    box-shadow: 0 6px 24px rgba(0,0,0,.5);
-  }
-  #build-menu.visible { display: block; }
-  #build-menu h3 {
-    margin: 0 0 8px; color: #ffd76a; font-size: 13px;
-    letter-spacing: 2px; text-align: center; user-select: none;
-  }
-  .build-grid { display: grid; grid-template-columns: repeat(8, 96px); gap: 6px; }
-  .build-section {
-    color: #b98d3e; font-size: 11px; letter-spacing: 2px;
-    margin: 6px 0 4px; text-align: center; user-select: none;
-  }
-  .build-item {
-    background: linear-gradient(180deg, rgba(60,42,20,.9), rgba(30,20,10,.9));
-    border: 2px solid #6a5228; border-radius: 6px;
-    color: #e8d5a0; padding: 6px 2px; font-size: 10.5px; line-height: 1.2;
-    cursor: pointer; text-align: center; user-select: none;
-    font-family: "Trebuchet MS", Arial, sans-serif;
-    transition: all .15s;
-  }
-  .build-item:hover { border-color: #ffd76a; color: #fff; transform: translateY(-2px); }
-  .build-item:disabled { opacity: .35; cursor: not-allowed; transform: none; }
-  .build-item .icon { font-size: 20px; display: block; margin-bottom: 3px; }
-  #build-hint {
-    position: fixed; top: 12px; left: 50%; transform: translateX(-50%);
-    z-index: 30; display: none;
-    background: rgba(20,14,6,.85); border: 2px solid #b98d3e; border-radius: 8px;
-    color: #ffd76a; padding: 8px 18px; font-size: 13px; user-select: none;
-  }
-  #build-hint.visible { display: block; }
-  #build-hint b { color: #fff; }
+/* --- MENÚ DE CONSTRUCCIÓN (minimalista) --- */
+#build-menu {
+  position: fixed; right: 16px; top: 50%; transform: translateY(-50%);
+  z-index: 30; display: none;
+  background: rgba(14, 10, 6, 0.92);
+  border: 1px solid rgba(185, 141, 62, 0.4); border-radius: 8px;
+  padding: 8px;
+  box-shadow: 0 4px 20px rgba(0,0,0,.7);
+  max-height: 85vh; overflow-y: auto;
+  width: 72px;
+  scrollbar-width: thin; scrollbar-color: #b98d3e transparent;
+}
+#build-menu.visible { display: block; }
+#build-menu h3 {
+  margin: 2px 0 6px; color: #ffd76a; font-size: 10px;
+  letter-spacing: 2px; text-align: center; user-select: none;
+}
+.build-grid { display: flex; flex-direction: column; gap: 4px; }
+.build-section {
+  color: #6a5228; font-size: 8px; letter-spacing: 2px;
+  margin: 6px 0 2px; text-align: center; user-select: none;
+  border-top: 1px solid rgba(185,141,62,.2); padding-top: 4px;
+}
+.build-item {
+  background: rgba(40,28,14,.8);
+  border: 1px solid rgba(106,82,40,.5); border-radius: 5px;
+  color: #e8d5a0; padding: 5px 2px; font-size: 0; line-height: 1;
+  cursor: pointer; text-align: center; user-select: none;
+  font-family: "Trebuchet MS", Arial, sans-serif;
+  transition: all .15s;
+  width: 56px; height: 56px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  position: relative;
+}
+.build-item:hover {
+  border-color: #ffd76a; color: #fff;
+  background: rgba(80,56,28,.9);
+  box-shadow: 0 0 8px rgba(255,215,106,.25);
+}
+.build-item:disabled { opacity: .3; cursor: not-allowed; }
+.build-item .icon { font-size: 22px; display: block; margin-bottom: 0; }
+.build-item .cost-mini {
+  position: absolute; bottom: 1px; right: 3px;
+  font-size: 8px; color: #b98d3e; letter-spacing: 0;
+}
+.build-item:hover .cost-mini { color: #ffd76a; }
 
+  /* --- PANEL INFORMATIVO DE ESCLAVO --- */
+#slave-info {
+  position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%);
+  z-index: 25; display: none;
+  background: linear-gradient(180deg, rgba(30, 22, 10, 0.95), rgba(18, 12, 6, 0.95));
+  border: 2px solid #b98d3e; border-radius: 10px;
+  padding: 10px 14px; min-width: 260px;
+  color: #e8d5a0; font-size: 13px; user-select: none;
+  box-shadow: 0 6px 20px rgba(0,0,0,.6);
+  flex-direction: row; align-items: center; gap: 14px;
+}
+#slave-info.visible { display: flex; }
+.slave-info-left { display: flex; align-items: center; gap: 10px; }
+.slave-icon {
+  font-size: 32px; line-height: 1;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,.5));
+}
+.slave-details { display: flex; flex-direction: column; gap: 3px; }
+#slave-name {
+  color: #ffd76a; font-weight: bold; font-size: 15px; letter-spacing: 1px;
+}
+#slave-hp-text {
+  color: #ccc; font-size: 11px; font-family: "Courier New", monospace;
+}
+.slave-hp-bar {
+  width: 140px; height: 10px; background: #1a0808; border-radius: 5px;
+  overflow: hidden; border: 1px solid #6a5228; margin-top: 2px;
+}
+.slave-hp-fill {
+  height: 100%; width: 100%;
+  background: linear-gradient(90deg, #39ff5a, #a0e050);
+  transition: width 0.25s ease-out;
+}
+.slave-build-btn {
+  background: linear-gradient(180deg, rgba(60,42,20,.95), rgba(30,20,10,.95));
+  border: 2px solid #b98d3e; border-radius: 8px;
+  color: #ffd76a; font-size: 22px; line-height: 1;
+  padding: 8px 14px; cursor: pointer;
+  font-family: "Trebuchet MS", Arial, sans-serif;
+  transition: all .2s;
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+}
+.slave-build-btn span {
+  font-size: 10px; color: #b98d3e; letter-spacing: 1px;
+}
+.slave-build-btn:hover {
+  border-color: #ffd76a; color: #fff;
+  transform: translateY(-2px);
+  box-shadow: 0 3px 10px rgba(255,215,106,.3);
+}
+.slave-build-btn:hover span { color: #fff; }
   /* --- PANEL INFORMATIVO DE ESTRUCTURA --- */
   #structure-info {
     position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%);
@@ -200,6 +266,43 @@
   #structure-info #info-desc {
     color: #b8a878; font-size: 12px; font-style: italic; line-height: 1.4;
   }
+  #structure-info #info-desc {
+    color: #b8a878; font-size: 12px; font-style: italic; line-height: 1.4;
+  }
+
+  /* --- PANEL DE PRODUCCIÓN DEL CASTILLO --- */
+  #castle-production {
+    display: none;
+    margin-top: 10px; border-top: 1px solid #6a5228; padding-top: 8px;
+  }
+  #castle-production .prod-title {
+    color: #ffd76a; font-size: 12px; letter-spacing: 2px; margin-bottom: 6px;
+  }
+  .train-bar {
+    width: 100%; height: 14px; background: #1a0808;
+    border: 1px solid #6a5228; border-radius: 7px; overflow: hidden; margin-bottom: 4px;
+  }
+  .train-fill {
+    height: 100%; width: 0%;
+    background: linear-gradient(90deg, #b98d3e, #ffd76a);
+  }
+  #train-status { font-size: 12px; color: #ccc; margin-bottom: 6px; }
+  #train-queue { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 8px; min-height: 24px; align-items: center; }
+  .queue-slot {
+    width: 24px; height: 24px;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(60,42,20,.9); border: 1px solid #6a5228; border-radius: 4px;
+    font-size: 14px;
+  }
+  .queue-slot.active { border-color: #ffd76a; box-shadow: 0 0 6px rgba(255,215,106,.5); }
+  #btn-train-slave {
+    width: 100%; padding: 8px;
+    background: linear-gradient(180deg, rgba(60,42,20,.9), rgba(30,20,10,.9));
+    color: #ffd76a; border: 2px solid #b98d3e; border-radius: 6px;
+    cursor: pointer; font-family: "Trebuchet MS", Arial, sans-serif; font-size: 13px;
+  }
+  #btn-train-slave:hover { border-color: #ffd76a; color: #fff; }
+  #btn-train-slave:disabled { opacity: .4; cursor: not-allowed; }
 
   /* --- MINIMAPA --- */
   #minimap-wrap {
@@ -214,13 +317,45 @@
     color: #ffd76a; font-size: 11px; letter-spacing: 2px;
     text-align: center; margin-bottom: 4px;
   }
-  #minimap {
-    width: 200px; height: 200px;
-    display: block; margin: 0 auto;
-    background: #0a0804;
-    border-radius: 3px;
-    image-rendering: pixelated;
-  }
+#minimap {
+  width: 200px; height: 200px;
+  display: block; margin: 0 auto;
+  background: #0a0804;
+  border-radius: 3px;
+  image-rendering: pixelated;
+}
+
+/* --- MENÚ CONTEXTUAL DEL CASTILLO --- */
+#castle-menu, #npc-menu {
+  position: fixed; z-index: 100; display: none;
+  background: rgba(20, 14, 6, 0.92);
+  border: 2px solid #b98d3e; border-radius: 8px;
+  padding: 8px 0; min-width: 200px;
+  box-shadow: 0 4px 14px rgba(0,0,0,.6);
+}
+#castle-menu.visible, #npc-menu.visible { display: block; }
+#castle-menu h3, #npc-menu h3 {
+  margin: 0 12px 6px; color: #ffd76a; font-size: 13px;
+  letter-spacing: 2px; text-align: center; user-select: none;
+}
+.menu-option {
+  display: block; width: 100%;
+  background: transparent; color: #e8d5a0; border: none;
+  padding: 8px 18px; font-size: 13px; text-align: left;
+  cursor: pointer; font-family: "Trebuchet MS", Arial, sans-serif;
+  transition: all 0.15s;
+}
+.menu-option:hover { background: rgba(185, 141, 62, 0.3); color: #fff; }
+.menu-option:disabled { opacity: 0.4; cursor: not-allowed; }
+.menu-option .cost { float: right; color: #b98d3e; font-size: 11px; }
+
+/* --- RECTÁNGULO DE SELECCIÓN --- */
+#select-rect {
+  position: fixed; z-index: 90; pointer-events: none;
+  border: 2px solid #39ff5a;
+  background: rgba(57, 255, 90, 0.15);
+  display: none;
+}
 </style>
 </head>
 <body>
@@ -233,17 +368,32 @@
 
 <!-- HUD en juego -->
 <div id="hud">
-  <b>👑 EL REY</b><br/>
-  Muévelo con <b>W A S D</b> o las <b>flechas</b>.<br/>
-  Click <b>izq</b>: atacar · Click <b>der</b>: bloquear.<br/>
-  Pulsa <b>C</b>: menú de construcción.<br/>
-  El agua profunda le impide el paso.
+  <div class="res-row">
+    <span class="res" title="Oro">🪙 <b id="res-gold">0</b></span>
+    <span class="res" title="Madera">🪵 <b id="res-wood">0</b></span>
+    <span class="res" title="Piedra">🪨 <b id="res-stone">0</b></span>
+  </div>
+<div id="hud-help">
+  <b>👑 W A S D</b> mover · Click <b>esclavo</b> = información · <b>Click izq</b> atacar · <b>Click der</b> rotar cámara
+</div>
 </div>
 <button id="exit-btn">↩ Menú Principal</button>
 
 <!-- Aviso de modo colocación -->
 <div id="build-hint">🏗️ Colocando: <b id="build-hint-name"></b> · Click izq: colocar · R: rotar · Click der / ESC: cancelar</div>
 
+<!-- Panel informativo del esclavo seleccionado -->
+<div id="slave-info">
+  <div class="slave-info-left">
+    <div class="slave-icon">👤</div>
+    <div class="slave-details">
+      <div id="slave-name">Esclavo</div>
+      <div id="slave-hp-text">100 / 100</div>
+      <div class="slave-hp-bar"><div class="slave-hp-fill" id="slave-hp-fill"></div></div>
+    </div>
+  </div>
+  <button id="btn-slave-build" class="slave-build-btn">🏗️<br><span>Construir</span></button>
+</div>
 <!-- Panel informativo de estructura seleccionada -->
 <div id="structure-info">
   <div class="info-header">
@@ -254,6 +404,13 @@
     <div class="info-hp-fill" id="info-hp-fill"></div>
   </div>
   <div id="info-desc"></div>
+  <div id="castle-production">
+    <div class="prod-title">⚒ PRODUCCIÓN DE ESCLAVOS</div>
+    <div class="train-bar"><div class="train-fill" id="train-fill"></div></div>
+    <div id="train-status">Sin producción activa</div>
+    <div id="train-queue"></div>
+    <button id="btn-train-slave">👥 Entrenar esclavo (10 🪙)</button>
+  </div>
 </div>
 
 <!-- Menú de construcción -->
@@ -325,10 +482,24 @@
 <div class="modal" id="modal-options">
   <div class="modal-box">
     <h2>⚙ Opciones</h2>
-    <p>Calidad gráfica: <b style="color:#ffd76a">Alta</b><br>
-    Dificultad: <b style="color:#ffd76a">Normal</b><br>
-    Volumen: <b style="color:#ffd76a">80%</b></p>
-    <p style="font-size:12px; color:#888;">(Ajustes de ejemplo — próximamente editables)</p>
+    <div style="text-align:left; margin: 14px 0;">
+      <p style="margin:6px 0;">Calidad gráfica: <b style="color:#ffd76a; float:right;">Alta</b></p>
+      <p style="margin:6px 0;">Dificultad: <b style="color:#ffd76a; float:right;">Normal</b></p>
+      <div style="margin:14px 0 8px; border-top:1px solid #6a5228; padding-top:10px;">
+        <label style="color:#ffd76a; font-size:13px; display:block; margin-bottom:6px;">
+          🎵 Volumen de música: <b id="music-vol-label" style="color:#fff; float:right;">50%</b>
+        </label>
+        <input type="range" id="music-volume" min="0" max="100" value="50" 
+               style="width:100%; accent-color:#b98d3e; cursor:pointer;">
+      </div>
+      <div style="margin:6px 0;">
+        <label style="color:#ffd76a; font-size:13px; display:block; margin-bottom:6px;">
+          🔊 Volumen de efectos: <b id="sfx-vol-label" style="color:#fff; float:right;">70%</b>
+        </label>
+        <input type="range" id="sfx-volume" min="0" max="100" value="70" 
+               style="width:100%; accent-color:#b98d3e; cursor:pointer;">
+      </div>
+    </div>
     <button class="modal-close" data-close="options">Cerrar</button>
   </div>
 </div>
@@ -368,6 +539,9 @@ import { ShaderPass }     from 'three/addons/postprocessing/ShaderPass.js';
 import { OutputPass }     from 'three/addons/postprocessing/OutputPass.js';
 import { GLTFLoader }     from 'three/addons/loaders/GLTFLoader.js';
 
+// 🎁 gifuct-js (decodificador de GIF) se cargará más abajo de forma dinámica y segura
+let parseGIF = null, decompressFrames = null;
+
 /* ============================================================
    MENÚ PRINCIPAL - NAVEGACIÓN
 ============================================================ */
@@ -392,9 +566,61 @@ document.getElementById('level-back').onclick = () => {
 document.querySelectorAll('.modal-close').forEach(b => {
   b.onclick = () => b.closest('.modal').classList.remove('visible');
 });
-exitBtn.onclick = () => {
-  location.reload(); // Volver al menú recargando
-};
+// 🎵 Sliders de volumen
+const musicVolSlider = document.getElementById('music-volume');
+const musicVolLabel = document.getElementById('music-vol-label');
+const sfxVolSlider = document.getElementById('sfx-volume');
+const sfxVolLabel = document.getElementById('sfx-vol-label');
+
+function applyMusicVolume(val) {
+  const v = val / 100;
+  menuMusic.volume = v;
+  gameMusic.volume = v;
+  musicVolLabel.textContent = val + '%';
+}
+musicVolSlider.addEventListener('input', (e) => applyMusicVolume(parseInt(e.target.value)));
+
+sfxVolSlider.addEventListener('input', (e) => {
+  sfxVolLabel.textContent = e.target.value + '%';
+});
+
+/* ============================================================
+   🎵 MÚSICA DEL MENÚ (assets/music/menumusic.mp3)
+============================================================ */
+const menuMusic = new Audio('assets/music/menumusic.mp3');
+menuMusic.loop = true;
+menuMusic.volume = 0.5;
+
+let gameStarted = false;   // 👑 será true en cuanto arranque cualquier nivel
+
+function tryPlayMenuMusic() {
+  if (gameStarted) return;               // 🚫 ya no debe sonar durante la partida
+  menuMusic.play().catch(() => {});
+}
+function stopMenuMusic()    { menuMusic.pause(); menuMusic.currentTime = 0; }
+
+// Intento inmediato; si el navegador bloquea el autoplay,
+// arrancará con la primera interacción del jugador (click/tecla).
+tryPlayMenuMusic();
+window.addEventListener('pointerdown', tryPlayMenuMusic, { once: true });
+window.addEventListener('keydown',     tryPlayMenuMusic, { once: true });
+
+/* ============================================================
+   🎵 MÚSICA DE LA PARTIDA (assets/music/soundtrack001.mp3)
+============================================================ */
+const gameMusic = new Audio('assets/music/soundtrack001.mp3');
+gameMusic.loop = true;
+gameMusic.volume = 0.5;
+applyMusicVolume(parseInt(musicVolSlider.value));
+
+function startGameMusic() {
+  gameMusic.currentTime = 0;
+  gameMusic.play().catch(() => {
+    // Si el navegador lo bloquea, arranca con el primer click dentro del nivel
+    window.addEventListener('pointerdown', () => gameMusic.play().catch(() => {}), { once: true });
+  });
+}
+function stopGameMusic() { gameMusic.pause(); gameMusic.currentTime = 0; }
 
 /* ============================================================
    CONFIGURACIÓN DE NIVELES
@@ -477,8 +703,6 @@ const LEVELS = {
 /* ============================================================
    FUNCIÓN DE CARGA DEL JUEGO
 ============================================================ */
-let gameStarted = false;
-
 async function startGame(levelNum) {
   const CFG = LEVELS[levelNum];
 
@@ -486,6 +710,9 @@ async function startGame(levelNum) {
   levelSelect.classList.remove('visible');
   loadingScreen.classList.remove('hidden');
   loadingTitle.textContent = `Cargando: ${CFG.name}...`;
+  gameStarted = true;   // 👑 desactiva la música del menú definitivamente
+  stopMenuMusic();      // 🎵 la música del menú se detiene al entrar al mapa
+  startGameMusic();     // 🎵 soundtrack001 suena desde el inicio del nivel
 
   const progressFill = document.querySelector('.progress-fill');
   const loadingText = document.querySelector('.loading-text');
@@ -503,7 +730,7 @@ async function startGame(levelNum) {
   const WORLD_SIZE  = 440;   // ×2 por eje = ×4 de área
   const SEGMENTS    = 480;   // más subdivisión para el mapa grande
   const WATER_LEVEL = CFG.waterLevel;
-  const KING_SPEED  = 14;    // un poco más rápido para un mapa grande
+  const KING_SPEED  = 18;    // 👑 paso más ágil
   const BOUND       = WORLD_SIZE / 2 - 6;
 
   /* --- RUIDO --- */
@@ -561,6 +788,7 @@ async function startGame(levelNum) {
   const ssao = new SSAOPass(scene, camera, innerWidth, innerHeight);
   ssao.kernelRadius = 6; ssao.minDistance = 0.0015; ssao.maxDistance = 0.12;
   composer.addPass(ssao);
+
   const bloom = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), 0.45, 0.9, 0.85);
   composer.addPass(bloom);
 
@@ -899,10 +1127,8 @@ async function startGame(levelNum) {
     makeHouse(9, -6, 0.4); makeHouse(-8, -10, -0.6); makeHouse(-11, 5, 1.2);
   }
 
-  /* --- REY PIXEL ART (sprite 2.5D generado por código) --- */
-  const KING_HEIGHT = 4.8;
-  const PX = 48, FRAME_COUNT = 12;
-  const IDLE = [0, 1], WALK = [2, 3, 4, 5], ATTACK = [6, 7, 8, 9, 10], BLOCK = 11;
+  /* --- REY (sprites reales 2.5D) --- */
+  const KING_HEIGHT = 6.5;
 
   // 🏰 Bases: jugador abajo-izquierda, ciudad enemiga en la esquina opuesta
   function findLandSpot(cx, cz) {
@@ -926,242 +1152,274 @@ async function startGame(levelNum) {
 
   let mouseAttackQueued = false, mouseBlockHeld = false;
 
-  // ---- Paleta del rey extendida (más matices y detalles) ----
-  const PAL = {
-    'k': '#0f0f17', 'ks': '#2a2a38',        // contornos negro y gris
-    's': '#e8b48c', 'S': '#c98d66', 'sk': '#f5cba8', // piel (base, sombra, luz)
-    'g': '#ffd75e', 'G': '#d9a733', 'd': '#9a741f',  // oro (claro, medio, oscuro)
-    'w': '#f4f4f8', 'W': '#cdd2de', 'WW': '#9aa0ae', // blanco y grises de la capa
-    'b': '#2b3f92', 'B': '#1d2c66',                   // azul armadura
-    'm': '#8d99a6', 'M': '#dfe6ee',                   // acero
-    'e': '#22222c', 'ew': '#ffffff',                  // ojos (pupila y blanco)
-    'r': '#a83232', 'R': '#d84545', 'cr': '#e62e2e',  // rojos (tela, sangre, rubí)
-    'y': '#6b4a2b', 'Y': '#8a6840',                   // madera (empuñadura)
-    'c': '#3a6ea8', 'C': '#274d78'                    // azul escudo
+  // ============================================================
+  // REY CON SPRITES REALES (idle / walking / attack por dirección)
+  // ============================================================
+  const KING_DIRS = ['south','south-west','west','north-west','north','north-east','east','south-east'];
+  const IDLE_PATH   = 'assets/characters/rey/animations/idle/';
+  const ATTACK_PATH = 'assets/characters/rey/animations/attack/';
+  const WALK_PATH   = 'assets/characters/rey/animations/walking/';
+
+  // ⚔️ Nombres reales de los GIF de ataque (diagonales sin guion).
+  const ATTACK_FILE = {
+    'south':      'attack_south.gif',
+    'south-east': 'attack_southeast.gif',
+    'east':       'attack_east.gif',
+    'north-east': 'attack_northeast.gif',
+    'north':      'attack_north.gif',      // ✅ animación de espaldas disponible
+    'north-west': 'attack_northwest.gif',
+    'west':       'attack_west.gif',
+    'south-west': 'attack_southwest.gif',
   };
 
-  const atlas = document.createElement('canvas');
-  atlas.width = PX * FRAME_COUNT; atlas.height = PX;
-  const actx = atlas.getContext('2d');
+  const kingAssets = {};   // dir -> { idle, attack, walk:[{tex,delay}], aspectIdle, aspectAttack, aspectWalk }
+  const texLoader = new THREE.TextureLoader();
 
-  function drawKingFrame(idx, p) {
-    const ox = idx * PX;
-    const P = (x, y, c) => { if (PAL[c]) { actx.fillStyle = PAL[c]; actx.fillRect(ox + x, y, 1, 1); } };
-    const R = (x, y, w, h, c) => { for (let i = 0; i < w; i++) for (let j = 0; j < h; j++) P(x + i, y + j, c); };
-    const b = p.breathe || 0;
+  function prepTexture(tex) {
+    tex.magFilter = THREE.NearestFilter;   // píxel nítido
+    tex.minFilter = THREE.NearestFilter;
+    tex.generateMipmaps = false;
+    tex.colorSpace = THREE.SRGBColorSpace;
+    return tex;
+  }
 
-    // ============ CAPA BLANCA (detrás) ============
-    R(13, 16 + b, 22, 22, 'w');
-    R(13, 16 + b, 1, 22, 'W');  R(34, 16 + b, 1, 22, 'W');
-    R(13, 16 + b, 22, 1, 'W');
-    R(13 + (p.cape || 0), 37 + b, 22, 1, 'W');
-    // Pliegues de la capa
-    R(17, 20 + b, 1, 16, 'WW');
-    R(21, 22 + b, 1, 14, 'WW');
-    R(27, 22 + b, 1, 14, 'WW');
-    R(31, 20 + b, 1, 16, 'WW');
-    // Broche dorado en el cuello
-    R(22, 16 + b, 4, 2, 'g'); P(23, 16 + b, 'G'); P(24, 16 + b, 'G');
+  const ALPHA_CUT = 100;   // 👻 píxeles con alfa menor se consideran fondo/velo
 
-    // ============ PIERNAS (armadura azul) ============
-    const leg = (x, lift) => {
-      R(x, 30, 4, 10 - lift, 'B');
-      R(x, 30, 4, 1, 'b');              // rodillera
-      R(x + 1, 30, 2, 1, 'm');          // detalle metálico
-      R(x, 40 - lift, 4, 3, 'k');       // botas negras
-      R(x + 1, 40 - lift, 2, 1, 'Y');   // hebilla
-      R(x, 30, 1, 10 - lift, 'ks');     // brillo lateral
-    };
-    leg(18, p.legL || 0);
-    leg(26, p.legR || 0);
-
-    // ============ TORSO (armadura dorada con emblema) ============
-    R(16, 18 + b, 16, 13, 'G');
-    R(16, 18 + b, 16, 1, 'g');
-    R(16, 30 + b, 16, 1, 'd');
-    // Placa pectoral con emblema (cruz real)
-    R(21, 20 + b, 6, 8, 'g');
-    R(21, 20 + b, 6, 1, 'sk');
-    R(23, 21 + b, 2, 6, 'r');   // cruz vertical
-    R(21, 23 + b, 6, 2, 'r');   // cruz horizontal
-    P(23, 23 + b, 'R'); P(24, 23 + b, 'R'); P(23, 24 + b, 'R'); P(24, 24 + b, 'R');
-    // Cinturón
-    R(16, 28 + b, 16, 1, 'k');
-    P(23, 28 + b, 'g'); P(24, 28 + b, 'g'); P(22, 28 + b, 'G'); P(25, 28 + b, 'G');
-    // Detalles laterales
-    R(16, 18 + b, 1, 13, 'd');
-    R(31, 18 + b, 1, 13, 'd');
-
-    // ============ HOMBROS (hombreras doradas detalladas) ============
-    R(13, 18 + b, 3, 4, 'G'); P(13, 18 + b, 'g'); P(15, 18 + b, 'g');
-    R(32, 18 + b, 3, 4, 'G'); P(32, 18 + b, 'g'); P(34, 18 + b, 'g');
-    P(14, 19 + b, 'M'); P(33, 19 + b, 'M');  // remaches
-
-    // ============ BRAZOS ============
-    R(13, 22 + b, 3, 8, 'b');   // brazo izquierdo (azul)
-    R(32, 22 + b, 3, 8, 'b');   // brazo derecho (azul)
-    R(13, 22 + b, 1, 8, 'ks');  // brillo
-    R(34, 22 + b, 1, 8, 'ks');
-    // Manos (piel)
-    P(13, 30 + b, 's'); P(14, 30 + b, 's'); P(15, 30 + b, 's');
-    P(32, 30 + b, 's'); P(33, 30 + b, 's'); P(34, 30 + b, 's');
-
-    // ============ CABEZA ============
-    R(21, 16 + b, 6, 2, 's');              // cuello
-    R(18, 7 + b, 12, 10, 's');             // cara
-    R(18, 7 + b, 1, 10, 'S');              // sombra izq
-    R(29, 7 + b, 1, 10, 'S');              // sombra der
-    R(22, 7 + b, 4, 1, 'sk');              // brillo frente
-    // Cabello blanco (lados)
-    R(17, 7 + b, 1, 7, 'W'); R(30, 7 + b, 1, 7, 'W');
-    // Cejas
-    R(19, 9 + b, 3, 1, 'W'); R(26, 9 + b, 3, 1, 'W');
-    // Ojos (blanco + pupila)
-    P(20, 11 + b, 'ew'); P(21, 11 + b, 'e');
-    P(26, 11 + b, 'ew'); P(27, 11 + b, 'e');
-    // Nariz
-    P(23, 13 + b, 'S'); P(24, 13 + b, 'S');
-    // Boca (bajo la barba)
-    P(23, 15 + b, 'R'); P(24, 15 + b, 'R');
-    // Barba blanca majestuosa (con textura)
-    R(18, 14 + b, 12, 5, 'w');
-    R(18, 14 + b, 1, 5, 'W');  R(29, 14 + b, 1, 5, 'W');
-    R(20, 19 + b, 8, 1, 'W');  R(22, 20 + b, 4, 1, 'W');
-    // Detalle bigote
-    R(21, 14 + b, 2, 1, 'W'); R(25, 14 + b, 2, 1, 'W');
-
-    // ============ CORONA (5 picos con joyas) ============
-    R(17, 5 + b, 14, 2, 'G');
-    R(17, 5 + b, 14, 1, 'g');
-    // Picos (5 picos)
-    P(17, 4 + b, 'g'); P(17, 3 + b, 'g'); P(17, 2 + b, 'g');
-    P(20, 4 + b, 'g'); P(20, 3 + b, 'g'); P(20, 2 + b, 'g');
-    P(23, 4 + b, 'g'); P(23, 2 + b, 'g'); P(24, 2 + b, 'g');
-    P(27, 4 + b, 'g'); P(27, 3 + b, 'g'); P(27, 2 + b, 'g');
-    P(30, 4 + b, 'g'); P(30, 3 + b, 'g'); P(30, 2 + b, 'g');
-    // Perlas en los picos
-    P(17, 1 + b, 'M'); P(20, 1 + b, 'M'); P(24, 1 + b, 'M');
-    P(27, 1 + b, 'M'); P(30, 1 + b, 'M');
-    // Rubí central y laterales
-    P(23, 3 + b, 'cr'); P(24, 3 + b, 'cr');
-    P(20, 5 + b, 'r'); P(27, 5 + b, 'r');
-    // Diamantes pequeños
-    P(18, 5 + b, 'M'); P(29, 5 + b, 'M');
-
-    // ============ ESCUDO ============
-    if (p.shieldUp) {
-      R(16, 14 + b, 16, 14, 'c');
-      R(16, 14 + b, 16, 1, 'C'); R(16, 27 + b, 16, 1, 'C');
-      R(16, 14 + b, 1, 14, 'C'); R(31, 14 + b, 1, 14, 'C');
-      R(31, 14 + b, 1, 14, 'C');
-      // Emblema heráldico (cruz con borde dorado)
-      R(22, 17 + b, 4, 8, 'g');
-      R(19, 20 + b, 10, 2, 'g');
-      R(23, 18 + b, 2, 6, 'G');
-      R(20, 20 + b, 8, 1, 'G');
-      // Remaches
-      P(17, 15 + b, 'M'); P(30, 15 + b, 'M');
-      P(17, 26 + b, 'M'); P(30, 26 + b, 'M');
-    } else {
-      R(10, 22 + b, 7, 12, 'c');
-      R(10, 22 + b, 7, 1, 'C'); R(10, 33 + b, 7, 1, 'C');
-      R(10, 22 + b, 1, 12, 'C'); R(16, 22 + b, 1, 12, 'C');
-      // Emblema
-      R(12, 25 + b, 3, 6, 'g');
-      R(11, 27 + b, 5, 2, 'g');
-      R(13, 26 + b, 1, 4, 'G');
-      R(12, 27 + b, 3, 1, 'G');
-      P(10, 23 + b, 'M'); P(16, 23 + b, 'M');
-    }
-
-    // ============ ESPADA (más detallada) ============
-    const hx = 34, hy = 30 + b;
-    const a = (p.sword === undefined ? 110 : p.sword) * Math.PI / 180;
-    const dx = Math.cos(a), dy = Math.sin(a);
-    // Pomo
-    P(hx - Math.round(dx * 2), hy - Math.round(dy * 2), 'g');
-    // Empuñadura
-    P(hx - Math.round(dx), hy - Math.round(dy), 'y');
-    P(hx, hy, 'y');
-    // Guarda (cruz)
-    P(hx + Math.round(-dy), hy + Math.round(dx), 'g');
-    P(hx - Math.round(-dy), hy - Math.round(dx), 'g');
-    P(hx + Math.round(-dy * 1.5), hy + Math.round(dx * 1.5), 'G');
-    P(hx - Math.round(-dy * 1.5), hy - Math.round(dx * 1.5), 'G');
-    // Hoja larga con reflejo
-    for (let i = 1; i <= 16; i++) {
-      const px = hx + Math.round(dx * i);
-      const py = hy + Math.round(dy * i);
-      P(px, py, i >= 13 ? 'M' : 'm');
-      if (i % 2 === 0 && i < 13) P(px + Math.round(-dy * 0.5), py + Math.round(dx * 0.5), 'M');
-    }
-    // Punta brillante
-    P(hx + Math.round(dx * 17), hy + Math.round(dy * 17), 'ew');
-
-    // ============ ESTELA DEL TAJO ============
-    if (p.trail) {
-      for (let i = 5; i <= 15; i += 2) {
-        P(hx + Math.round(Math.cos(a - 0.5) * i), hy + Math.round(Math.sin(a - 0.5) * i), 'M');
+  // 🧹 Limpia el sprite: chroma key + elimina velos semitransparentes.
+  // Devuelve la caja de contenido visible (para recorte y apoyo en el suelo).
+  function cleanSprite(canvas) {
+    const ctx = canvas.getContext('2d');
+    const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const d = img.data;
+    let minX = canvas.width, minY = canvas.height, maxX = -1, maxY = -1;
+    for (let y = 0; y < canvas.height; y++) {
+      for (let x = 0; x < canvas.width; x++) {
+        const i = (y * canvas.width + x) * 4;
+        const r = d[i], g = d[i + 1], b = d[i + 2];
+        if (g > 110 && g - r > 40 && g - b > 40) d[i + 3] = 0;  // 🟩 chroma key
+        if (d[i + 3] < ALPHA_CUT) d[i + 3] = 0;                 // 👻 fuera velos
+        if (d[i + 3] > 0) {
+          if (x < minX) minX = x;
+          if (x > maxX) maxX = x;
+          if (y < minY) minY = y;
+          if (y > maxY) maxY = y;
+        }
       }
+    }
+    ctx.putImageData(img, 0, 0);
+    return { minX, minY, maxX, maxY };
+  }
+
+  // 📐 Métricas de recorte: cuánto ocupa el personaje y cuánto margen hay abajo
+  function metricsFromBox(W, H, box) {
+    if (box.maxX < 0) return { padBottom: 0, contentRatio: 1, aspect: W / H };
+    return {
+      padBottom: (H - 1 - box.maxY) / H,
+      contentRatio: (box.maxY - box.minY + 1) / H,
+      aspect: W / H
+    };
+  }
+  function unionBox(a, b) {
+    return {
+      minX: Math.min(a.minX, b.minX), minY: Math.min(a.minY, b.minY),
+      maxX: Math.max(a.maxX, b.maxX), maxY: Math.max(a.maxY, b.maxY)
+    };
+  }
+
+  // Carga un PNG, lo limpia y devuelve textura + métricas
+  async function loadCleanPNG(url) {
+    const t = await texLoader.loadAsync(url);
+    const c = document.createElement('canvas');
+    c.width = t.image.width; c.height = t.image.height;
+    c.getContext('2d').drawImage(t.image, 0, 0);
+    const box = cleanSprite(c);
+    return { tex: prepTexture(new THREE.CanvasTexture(c)), metrics: metricsFromBox(c.width, c.height, box) };
+  }
+
+  // Textura de emergencia por si falta algún archivo
+  function placeholderTex() {
+    const c = document.createElement('canvas'); c.width = 24; c.height = 32;
+    const x = c.getContext('2d');
+    x.fillStyle = '#ffd75e'; x.fillRect(6, 10, 12, 12);
+    x.fillStyle = '#e8b48c'; x.fillRect(8, 4, 8, 6);
+    x.fillStyle = '#d9a733'; x.fillRect(7, 2, 10, 2);
+    x.fillStyle = '#1d2c66'; x.fillRect(8, 22, 3, 8); x.fillRect(13, 22, 3, 8);
+    return prepTexture(new THREE.CanvasTexture(c));
+  }
+
+  // Decodifica un GIF animado frame a frame y quita el chroma
+  async function loadGifFrames(url) {
+    if (!parseGIF || !decompressFrames) throw new Error('gifuct-js no disponible');
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const buf = await res.arrayBuffer();
+    const gif = parseGIF(buf);
+    const frames = decompressFrames(gif, true);
+    const W = gif.lsd.width, H = gif.lsd.height;
+    const base = document.createElement('canvas'); base.width = W; base.height = H;
+    const bctx = base.getContext('2d');
+    const out = [];
+    let ubox = { minX: W, minY: H, maxX: -1, maxY: -1 };
+    for (const f of frames) {
+      const patch = bctx.createImageData(f.dims.width, f.dims.height);
+      patch.data.set(f.patch);
+      bctx.putImageData(patch, f.dims.left, f.dims.top);
+      const snap = document.createElement('canvas'); snap.width = W; snap.height = H;
+      snap.getContext('2d').drawImage(base, 0, 0);
+      ubox = unionBox(ubox, cleanSprite(snap));   // 🧹 chroma + velos + caja de contenido
+      out.push({ tex: prepTexture(new THREE.CanvasTexture(snap)), delay: Math.max(f.delay || 100, 33) });
+      if (f.disposalType === 2) bctx.clearRect(f.dims.left, f.dims.top, f.dims.width, f.dims.height);
+    }
+    if (!out.length) throw new Error('GIF sin frames');
+    return { frames: out, metrics: metricsFromBox(W, H, ubox) };
+  }
+
+  updateLoading(90, "Cargando animaciones del rey...");
+  await yieldToBrowser();
+
+  // 🎁 Carga segura de gifuct-js (jsdelivr lo convierte a ESM con /+esm).
+  // Si el CDN fallara, el juego NO se rompe: los walking usan el idle.
+  if (!parseGIF) {
+    try {
+      const g = await import('https://cdn.jsdelivr.net/npm/gifuct-js@2.1.2/+esm');
+      parseGIF       = g.parseGIF       || (g.default && g.default.parseGIF);
+      decompressFrames = g.decompressFrames || (g.default && g.default.decompressFrames);
+    } catch (e) {
+      console.warn('⚠ No se pudo cargar gifuct-js; los walking GIF usarán el sprite idle.', e);
     }
   }
 
-  // ---- Hornear los 12 frames ----
-  drawKingFrame(0, {});
-  drawKingFrame(1, { breathe: 1 });
-  drawKingFrame(2, { legL: 1, cape: 1 });
-  drawKingFrame(3, { breathe: 1 });
-  drawKingFrame(4, { legR: 1, cape: -1 });
-  drawKingFrame(5, { breathe: 1 });
-  drawKingFrame(6, { sword: -120 });
-  drawKingFrame(7, { sword: -70, trail: 1 });
-  drawKingFrame(8, { sword: -15, trail: 1 });
-  drawKingFrame(9, { sword: 45, trail: 1 });
-  drawKingFrame(10, { sword: 100 });
-  drawKingFrame(11, { shieldUp: 1, sword: 140 });
+  for (const dir of KING_DIRS) {
+    kingAssets[dir] = { idle: null, attack: null, walk: [] };
+    try {
+      const r = await loadCleanPNG(IDLE_PATH + dir + '.png');
+      kingAssets[dir].idle = r.tex;
+      kingAssets[dir].idleM = r.metrics;
+    } catch (e) { console.warn('⚠ Falta idle de ' + dir, e); }
+    try {
+      const g = await loadGifFrames(ATTACK_PATH + ATTACK_FILE[dir]);
+      kingAssets[dir].attack = g.frames;   // ⚔️ ahora es una lista de frames animados
+      kingAssets[dir].attackM = g.metrics;
+    } catch (e) { console.warn('⚠ Falta attack de ' + dir + ' (usará idle)', e); }
+    try {
+      const g = await loadGifFrames(WALK_PATH + 'Idle_v3_walking_' + dir + '.gif');
+      kingAssets[dir].walk = g.frames;
+      kingAssets[dir].walkM = g.metrics;
+    } catch (e) { console.warn('⚠ Falta walking de ' + dir, e); }
+    await yieldToBrowser();
+  }
 
-  const kingTex = new THREE.CanvasTexture(atlas);
-  kingTex.magFilter = THREE.NearestFilter;   // píxel nítido
-  kingTex.minFilter = THREE.NearestFilter;
-  kingTex.generateMipmaps = false;
-  kingTex.colorSpace = THREE.SRGBColorSpace;
-  kingTex.repeat.set(1 / FRAME_COUNT, 1);
+  // Rellenos de seguridad (que nunca quede un hueco sin textura)
+  const ph = placeholderTex();
+  const phM = { padBottom: 0, contentRatio: 1, aspect: 24 / 32 };
+  for (const dir of KING_DIRS) {
+    const a = kingAssets[dir];
+    if (!a.idle)   { a.idle = ph; a.idleM = phM; }
+    if (!a.attack || !a.attack.length) { a.attack = [{ tex: a.idle, delay: 100 }]; a.attackM = a.idleM; }
+    if (!a.walk.length) { a.walk = [{ tex: a.idle, delay: 100 }]; a.walkM = a.idleM; }
+    if (!a.idleM)   a.idleM   = phM;
+    if (!a.attackM) a.attackM = a.idleM;
+    if (!a.walkM)   a.walkM   = a.idleM;
+  }
 
-  const kingMat = new THREE.MeshBasicMaterial({ map: kingTex, transparent: true, alphaTest: 0.1, side: THREE.DoubleSide });
-  const kingMesh = new THREE.Mesh(new THREE.PlaneGeometry(KING_HEIGHT, KING_HEIGHT), kingMat);
-  kingMesh.position.y = KING_HEIGHT / 2 - 0.1;
+  const kingMat = new THREE.MeshBasicMaterial({ map: kingAssets.south.idle, transparent: true, alphaTest: 0.1, side: THREE.DoubleSide });
+  const kingMesh = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), kingMat);
   king.add(kingMesh);
+
+  // 📐 Tamaño y apoyo inicial: el personaje mide KING_HEIGHT y los pies tocan el suelo
+  {
+    const m = kingAssets.south.idleM;
+    const planeH = KING_HEIGHT / m.contentRatio;
+    kingMesh.scale.set(planeH * m.aspect, planeH, 1);
+    kingMesh.position.y = planeH / 2 - planeH * m.padBottom - 0.05;  // -0.05 para "clavar" los pies
+  }
 
   // Sombra falsa + anillo de selección
   const shadow = new THREE.Mesh(new THREE.CircleGeometry(0.55, 24), new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.35 }));
   shadow.rotation.x = -Math.PI / 2; shadow.position.y = 0.06; king.add(shadow);
   const ring = new THREE.Mesh(new THREE.RingGeometry(0.9, 1.15, 32), new THREE.MeshBasicMaterial({ color: 0x39ff5a, transparent: true, opacity: 0.75, side: THREE.DoubleSide }));
   ring.rotation.x = -Math.PI / 2; ring.position.y = 0.08; king.add(ring);
+  
+  // 🎭 Adiós al "recuadro" SSAO sin capas ni pases extra:
+  // ocultamos al rey SOLO durante el pase de normales del SSAO.
+  // Su pase de belleza lo incluye (se ve) pero el SSAO no "ve" su plano (sin recuadro).
+  if (typeof ssao.renderOverride === 'function') {
+    const _ssaoOverride = ssao.renderOverride.bind(ssao);
+    ssao.renderOverride = (renderer, overrideMaterial, renderTarget, clearColor, clearAlpha) => {
+      king.visible = false;
+      _ssaoOverride(renderer, overrideMaterial, renderTarget, clearColor, clearAlpha);
+      king.visible = true;
+    };
+  }
 
-  // ---- Máquina de estados de animación ----
-  let kingState = 'idle', attackT = 0, walkAcc = 0, idleAcc = 0, lastFrame = -1;
-  const ATTACK_DUR = 0.45;
+  // ---- Máquina de estados de animación (sprites direccionales) ----
+  let kingState = 'idle', attackT = 0, attackDur = 0.45;
+  const ATTACK_DUR = 0.45;             // duración mínima del ataque
+  const WALK_ANIM_SPEED = 1.7;         // ⚡ reproducción acelerada del GIF de caminar
+  const ATTACK_ANIM_SPEED = 5.0;       // ⚔️ velocidad de reproducción del GIF de ataque
+  let currentDir = 'south';
+  let walkIdx = 0, walkMs = 0;
+  let attackIdx = 0, attackMs = 0;
+  let lastTex = null;
 
-  function updateKingSprite(moving, dt) {
-    if (mouseAttackQueued) { mouseAttackQueued = false; kingState = 'attack'; attackT = 0; }
+  function setKingTexture(tex, m) {
+    if (lastTex === tex) return;
+    kingMat.map = tex;
+    // El PERSONAJE (no el canvas) mide KING_HEIGHT; los pies quedan apoyados
+    const planeH = KING_HEIGHT / m.contentRatio;
+    kingMesh.scale.set(planeH * m.aspect, planeH, 1);
+    kingMesh.position.y = planeH / 2 - planeH * m.padBottom - 0.05;
+    lastTex = tex;
+  }
+
+  function updateKingSprite(moving, dt, dirName) {
+    if (dirName) currentDir = dirName;
+
+    // ⚔️ Si está atacando, forzar estado 'attack' y NO permitir cambiar a walk/idle
+    if (mouseAttackQueued) {
+      mouseAttackQueued = false;
+      kingState = 'attack';
+      attackT = 0; attackMs = 0; attackIdx = 0;
+      const total = kingAssets[currentDir].attack.reduce((s, f) => s + f.delay, 0);
+      attackDur = Math.max(ATTACK_DUR, (total / 1000) / ATTACK_ANIM_SPEED);
+    }
+
     if (kingState === 'attack') {
       attackT += dt;
-      if (attackT >= ATTACK_DUR) kingState = moving ? 'walk' : 'idle';
+      if (attackT >= attackDur) {
+        kingState = moving ? 'walk' : 'idle';
+      }
     } else if (mouseBlockHeld) {
       kingState = 'block';
     } else {
       kingState = moving ? 'walk' : 'idle';
     }
 
-    let frame;
-    if (kingState === 'idle')            { idleAcc += dt; frame = IDLE[Math.floor(idleAcc * 2) % 2]; }
-    else if (kingState === 'walk')       { walkAcc += dt; frame = WALK[Math.floor(walkAcc * 8) % 4]; }
-    else if (kingState === 'attack')     { frame = ATTACK[Math.min(ATTACK.length - 1, Math.floor((attackT / ATTACK_DUR) * ATTACK.length))]; }
-    else                                 { frame = BLOCK; }
+    const A = kingAssets[currentDir];
 
-    if (frame !== lastFrame) { kingTex.offset.x = frame / FRAME_COUNT; lastFrame = frame; }
+    if (kingState === 'attack') {
+      attackMs += dt * 1000 * ATTACK_ANIM_SPEED;
+      let frame = A.attack[attackIdx];
+      while (attackIdx < A.attack.length - 1 && attackMs >= frame.delay) {
+        attackMs -= frame.delay;
+        attackIdx++;
+        frame = A.attack[attackIdx];
+      }
+      setKingTexture(frame.tex, A.attackM);
+    } else if (kingState === 'walk') {
+      walkMs += dt * 1000 * WALK_ANIM_SPEED;
+      let frame = A.walk[walkIdx % A.walk.length];
+      while (walkMs >= frame.delay) {
+        walkMs -= frame.delay;
+        walkIdx = (walkIdx + 1) % A.walk.length;
+        frame = A.walk[walkIdx];
+      }
+      setKingTexture(frame.tex, A.walkM);
+    } else {
+      walkMs = 0;
+      setKingTexture(A.idle, A.idleM);
+    }
 
-    // Billboard: el sprite siempre mira a la cámara
     const yaw = Math.atan2(camera.position.x - king.position.x, camera.position.z - king.position.z);
     kingMesh.rotation.y = yaw - king.rotation.y;
   }
@@ -1171,38 +1429,38 @@ async function startGame(levelNum) {
   ============================================================ */
   const BUILDINGS_PATH = 'assets/structures/buildings/blue/';
   const BUILDINGS = [
-    { id: 'archeryrange', name: 'Arquería',         icon: '🏹', size: 9,  hp: 400, desc: 'Entrena arqueros de élite para defensa a distancia.',      file: 'building_archeryrange_blue.gltf' },
-    { id: 'barracks',     name: 'Cuarteles',        icon: '⚔️', size: 9,  hp: 450, desc: 'Forma soldados de infantería para el reino.',               file: 'building_barracks_blue.gltf' },
-    { id: 'blacksmith',   name: 'Herrería',         icon: '🔨', size: 7,  hp: 350, desc: 'Forja armas y armaduras para tus tropas.',                  file: 'building_blacksmith_blue.gltf' },
-    { id: 'castle',       name: 'Castillo',         icon: '🏰', size: 14, hp: 1200,desc: 'Fortaleza central del reino. Difícil de destruir.',         file: 'building_castle_blue.gltf' },
-    { id: 'church',       name: 'Iglesia',          icon: '⛪', size: 9,  hp: 500, desc: 'Templo sagrado que cura a los heridos cercanos.',           file: 'building_church_blue.gltf' },
-    { id: 'home_A',       name: 'Casa A',           icon: '🏠', size: 6,  hp: 200, desc: 'Vivienda humilde de los aldeanos del reino.',               file: 'building_home_A_blue.gltf' },
-    { id: 'home_B',       name: 'Casa B',           icon: '🏡', size: 6,  hp: 220, desc: 'Casa de campo confortable y acogedora.',                    file: 'building_home_B_blue.gltf' },
-    { id: 'lumbermill',   name: 'Aserradero',       icon: '🪵', size: 8,  hp: 380, desc: 'Produce madera aprovechando los bosques cercanos.',         file: 'building_lumbermill_blue.gltf' },
-    { id: 'market',       name: 'Mercado',          icon: '⛺', size: 10, hp: 300, desc: 'Centro de comercio e intercambio de bienes.',               file: 'building_market_blue.gltf' },
-    { id: 'mine',         name: 'Mina',             icon: '⛏️', size: 6,  hp: 420, desc: 'Extrae piedra y minerales de las entrañas de la tierra.',   file: 'building_mine_blue.gltf' },
-    { id: 'tavern',       name: 'Taberna',          icon: '🍺', size: 8,  hp: 280, desc: 'Recluta mercenarios y aventureros errantes.',               file: 'building_tavern_blue.gltf' },
-    { id: 'tower_A',      name: 'Torre A',          icon: '🗼', size: 5,  hp: 500, desc: 'Torre de vigilancia ligera, buena visión.',                 file: 'building_tower_A_blue.gltf' },
-    { id: 'tower_B',      name: 'Torre B',          icon: '🏯', size: 5,  hp: 600, desc: 'Torre defensiva fortificada con almenas.',                  file: 'building_tower_B_blue.gltf' },
-    { id: 'watermill',    name: 'Molino de agua',   icon: '💧', size: 7,  hp: 320, desc: 'Muele grano aprovechando la fuerza del río.',               file: 'building_watermill_blue.gltf' },
-    { id: 'well',         name: 'Pozo',             icon: '🪣', size: 3,  hp: 150, desc: 'Fuente de agua potable para los aldeanos.',                 file: 'building_well_blue.gltf' },
-    { id: 'windmill',     name: 'Molino de viento', icon: '🌬️', size: 7,  hp: 300, desc: 'Muele grano aprovechando la fuerza del viento.',            file: 'building_windmill_blue.gltf' }
+    { id: 'archeryrange', name: 'Arquería',         icon: '🏹', size: 9,  hp: 400, desc: 'Entrena arqueros de élite para defensa a distancia.',      file: 'building_archeryrange_blue.gltf', cost: { gold: 150, wood: 80, stone: 40 }, buildTime: 20 },
+    { id: 'barracks',     name: 'Cuarteles',        icon: '⚔️', size: 9,  hp: 450, desc: 'Forma soldados de infantería para el reino.',               file: 'building_barracks_blue.gltf', cost: { gold: 200, wood: 60, stone: 80 }, buildTime: 25 },
+    { id: 'blacksmith',   name: 'Herrería',         icon: '🔨', size: 7,  hp: 350, desc: 'Forja armas y armaduras para tus tropas.',                  file: 'building_blacksmith_blue.gltf', cost: { gold: 180, wood: 50, stone: 100 }, buildTime: 18 },
+    { id: 'castle',       name: 'Castillo',         icon: '🏰', size: 14, hp: 1200,desc: 'Fortaleza central del reino. Difícil de destruir.',         file: 'building_castle_blue.gltf', cost: { gold: 500, wood: 200, stone: 300 }, buildTime: 45 },
+    { id: 'church',       name: 'Iglesia',          icon: '⛪', size: 9,  hp: 500, desc: 'Templo sagrado que cura a los heridos cercanos.',           file: 'building_church_blue.gltf', cost: { gold: 250, wood: 100, stone: 120 }, buildTime: 22 },
+    { id: 'home_A',       name: 'Casa A',           icon: '🏠', size: 6,  hp: 200, desc: 'Vivienda humilde de los aldeanos del reino.',               file: 'building_home_A_blue.gltf', cost: { gold: 30, wood: 40, stone: 0 }, buildTime: 10 },
+    { id: 'home_B',       name: 'Casa B',           icon: '🏡', size: 6,  hp: 220, desc: 'Casa de campo confortable y acogedora.',                    file: 'building_home_B_blue.gltf', cost: { gold: 50, wood: 60, stone: 10 }, buildTime: 12 },
+    { id: 'lumbermill',   name: 'Aserradero',       icon: '🪵', size: 8,  hp: 380, desc: 'Produce madera aprovechando los bosques cercanos.',         file: 'building_lumbermill_blue.gltf', cost: { gold: 100, wood: 80, stone: 20 }, buildTime: 15 },
+    { id: 'market',       name: 'Mercado',          icon: '⛺', size: 10, hp: 300, desc: 'Centro de comercio e intercambio de bienes.',               file: 'building_market_blue.gltf', cost: { gold: 180, wood: 120, stone: 30 }, buildTime: 18 },
+    { id: 'mine',         name: 'Mina',             icon: '⛏️', size: 6,  hp: 420, desc: 'Extrae piedra y minerales de las entrañas de la tierra.',   file: 'building_mine_blue.gltf', cost: { gold: 120, wood: 50, stone: 80 }, buildTime: 16 },
+    { id: 'tavern',       name: 'Taberna',          icon: '🍺', size: 8,  hp: 280, desc: 'Recluta mercenarios y aventureros errantes.',               file: 'building_tavern_blue.gltf', cost: { gold: 160, wood: 90, stone: 20 }, buildTime: 17 },
+    { id: 'tower_A',      name: 'Torre A',          icon: '🗼', size: 5,  hp: 500, desc: 'Torre de vigilancia ligera, buena visión.',                 file: 'building_tower_A_blue.gltf', cost: { gold: 120, wood: 40, stone: 80 }, buildTime: 14 },
+    { id: 'tower_B',      name: 'Torre B',          icon: '🏯', size: 5,  hp: 600, desc: 'Torre defensiva fortificada con almenas.',                  file: 'building_tower_B_blue.gltf', cost: { gold: 150, wood: 50, stone: 100 }, buildTime: 16 },
+    { id: 'watermill',    name: 'Molino de agua',   icon: '💧', size: 7,  hp: 320, desc: 'Muele grano aprovechando la fuerza del río.',               file: 'building_watermill_blue.gltf', cost: { gold: 110, wood: 70, stone: 40 }, buildTime: 14 },
+    { id: 'well',         name: 'Pozo',             icon: '🪣', size: 3,  hp: 150, desc: 'Fuente de agua potable para los aldeanos.',                 file: 'building_well_blue.gltf', cost: { gold: 40, wood: 20, stone: 30 }, buildTime: 8 },
+    { id: 'windmill',     name: 'Molino de viento', icon: '🌬️', size: 7,  hp: 300, desc: 'Muele grano aprovechando la fuerza del viento.',            file: 'building_windmill_blue.gltf', cost: { gold: 130, wood: 90, stone: 30 }, buildTime: 15 }
   ];
 
   // Murallas y vallas "neutral" (formato .gltf; su .bin y textura se cargan solos)
   const WALLS_PATH = 'assets/structures/buildings/neutral/';
   const WALLS = [
-    { id: 'wall_straight',             name: 'Muralla recta',        icon: '🧱', size: 6, hp: 400, desc: 'Tramo recto de muralla defensiva.',                 file: 'wall_straight.gltf' },
-    { id: 'wall_straight_gate',        name: 'Muralla c/ puerta',    icon: '🚪', size: 6, hp: 450, desc: 'Muralla con portón de acceso al recinto.',          file: 'wall_straight_gate.gltf' },
-    { id: 'wall_corner_A_gate',        name: 'Esquina A c/ puerta',  icon: '🏰', size: 6, hp: 500, desc: 'Esquina fortificada con portón lateral.',           file: 'wall_corner_A_gate.gltf' },
-    { id: 'wall_corner_A_inside',      name: 'Esquina A int.',       icon: '📐', size: 6, hp: 400, desc: 'Esquina interior de muralla.',                      file: 'wall_corner_A_inside.gltf' },
-    { id: 'wall_corner_A_outside',     name: 'Esquina A ext.',       icon: '📐', size: 6, hp: 400, desc: 'Esquina exterior de muralla.',                      file: 'wall_corner_A_outside.gltf' },
-    { id: 'wall_corner_B_inside',      name: 'Esquina B int.',       icon: '📏', size: 6, hp: 420, desc: 'Esquina B interior reforzada.',                     file: 'wall_corner_B_inside.gltf' },
-    { id: 'wall_corner_B_outside',     name: 'Esquina B ext.',       icon: '📏', size: 6, hp: 420, desc: 'Esquina B exterior reforzada.',                     file: 'wall_corner_B_outside.gltf' },
-    { id: 'fence_stone_straight',      name: 'Valla de piedra',      icon: '🪨', size: 6, hp: 200, desc: 'Valla simple de piedra, fácil de derribar.',        file: 'fence_stone_straight.gltf' },
-    { id: 'fence_stone_straight_gate', name: 'Valla piedra c/ pta.', icon: '🪨', size: 6, hp: 220, desc: 'Valla de piedra con pequeño portón.',               file: 'fence_stone_straight_gate.gltf' },
-    { id: 'fence_wood_straight',       name: 'Valla de madera',      icon: '🪵', size: 6, hp: 120, desc: 'Valla liviana de madera, muy frágil.',              file: 'fence_wood_straight.gltf' },
-    { id: 'fence_wood_straight_gate',  name: 'Valla madera c/ pta.', icon: '🪵', size: 6, hp: 140, desc: 'Valla de madera con portón pequeño.',               file: 'fence_wood_straight_gate.gltf' }
+    { id: 'wall_straight',             name: 'Muralla recta',        icon: '🧱', size: 6, hp: 400, desc: 'Tramo recto de muralla defensiva.',                 file: 'wall_straight.gltf', cost: { gold: 20, wood: 10, stone: 40 }, buildTime: 8 },
+    { id: 'wall_straight_gate',        name: 'Muralla c/ puerta',    icon: '🚪', size: 6, hp: 450, desc: 'Muralla con portón de acceso al recinto.',          file: 'wall_straight_gate.gltf', cost: { gold: 30, wood: 20, stone: 50 }, buildTime: 10 },
+    { id: 'wall_corner_A_gate',        name: 'Esquina A c/ puerta',  icon: '🏰', size: 6, hp: 500, desc: 'Esquina fortificada con portón lateral.',           file: 'wall_corner_A_gate.gltf', cost: { gold: 35, wood: 20, stone: 55 }, buildTime: 10 },
+    { id: 'wall_corner_A_inside',      name: 'Esquina A int.',       icon: '📐', size: 6, hp: 400, desc: 'Esquina interior de muralla.',                      file: 'wall_corner_A_inside.gltf', cost: { gold: 20, wood: 10, stone: 40 }, buildTime: 8 },
+    { id: 'wall_corner_A_outside',     name: 'Esquina A ext.',       icon: '📐', size: 6, hp: 400, desc: 'Esquina exterior de muralla.',                      file: 'wall_corner_A_outside.gltf', cost: { gold: 20, wood: 10, stone: 40 }, buildTime: 8 },
+    { id: 'wall_corner_B_inside',      name: 'Esquina B int.',       icon: '📏', size: 6, hp: 420, desc: 'Esquina B interior reforzada.',                     file: 'wall_corner_B_inside.gltf', cost: { gold: 22, wood: 10, stone: 45 }, buildTime: 8 },
+    { id: 'wall_corner_B_outside',     name: 'Esquina B ext.',       icon: '📏', size: 6, hp: 420, desc: 'Esquina B exterior reforzada.',                     file: 'wall_corner_B_outside.gltf', cost: { gold: 22, wood: 10, stone: 45 }, buildTime: 8 },
+    { id: 'fence_stone_straight',      name: 'Valla de piedra',      icon: '🪨', size: 6, hp: 200, desc: 'Valla simple de piedra, fácil de derribar.',        file: 'fence_stone_straight.gltf', cost: { gold: 10, wood: 5, stone: 20 }, buildTime: 5 },
+    { id: 'fence_stone_straight_gate', name: 'Valla piedra c/ pta.', icon: '🪨', size: 6, hp: 220, desc: 'Valla de piedra con pequeño portón.',               file: 'fence_stone_straight_gate.gltf', cost: { gold: 12, wood: 8, stone: 25 }, buildTime: 6 },
+    { id: 'fence_wood_straight',       name: 'Valla de madera',      icon: '🪵', size: 6, hp: 120, desc: 'Valla liviana de madera, muy frágil.',              file: 'fence_wood_straight.gltf', cost: { gold: 5, wood: 15, stone: 0 }, buildTime: 4 },
+    { id: 'fence_wood_straight_gate',  name: 'Valla madera c/ pta.', icon: '🪵', size: 6, hp: 140, desc: 'Valla de madera con portón pequeño.',               file: 'fence_wood_straight_gate.gltf', cost: { gold: 6, wood: 20, stone: 0 }, buildTime: 5 }
   ];
 
   // Lista unificada: cada elemento sabe su carpeta y en qué rejilla del menú va
@@ -1366,7 +1624,7 @@ async function startGame(levelNum) {
     root.userData.doorCenter = [c.x, c.y, c.z];
   }
 
-  function addStructure(bld, def) {
+  function addStructure(bld, def, team) {
     const bar = createHealthBar3D();
     bld.add(bar);
     bld.updateMatrixWorld(true);
@@ -1393,6 +1651,7 @@ async function startGame(levelNum) {
     const data = {
       mesh: bld,
       def: def,
+      team: team || 'neutral',   // 👑 'player' | 'enemy' | 'neutral'
       hp: def.hp,
       maxHp: def.hp,
       healthBar: bar,
@@ -1414,13 +1673,22 @@ async function startGame(levelNum) {
     const ratio = s.hp / s.maxHp;
     s.healthBar.userData.fg.scale.x = Math.max(0.001, ratio);
     s.healthBar.userData.fg.position.x = -(1 - ratio) * 1.05;
+    
     let color;
-    if (ratio > 0.6) color = 0x39ff5a;
-    else if (ratio > 0.3) color = 0xffd76a;
-    else color = 0xff4040;
+    if (s.underConstruction) {
+      // 🔵 Barra azul mientras se construye
+      color = 0x4488ff;
+    } else if (ratio > 0.6) {
+      color = 0x39ff5a;
+    } else if (ratio > 0.3) {
+      color = 0xffd76a;
+    } else {
+      color = 0xff4040;
+    }
     s.healthBar.userData.fg.material.color.setHex(color);
-    // Oculta la barra cuando está al 100%
-    s.healthBar.visible = (ratio < 0.999);
+    
+    // Oculta la barra cuando está completa y no en construcción
+    s.healthBar.visible = (ratio < 0.999 || s.underConstruction);
   }
 
   function damageStructure(s, amount) {
@@ -1442,10 +1710,11 @@ async function startGame(levelNum) {
     updateInfoPanel();
   }
 
-  function deselectStructure() {
-    selectedStructure = null;
-    document.getElementById('structure-info').classList.remove('visible');
-  }
+function deselectStructure() {
+  selectedStructure = null;
+  document.getElementById('structure-info').classList.remove('visible');
+  hideSlaveInfo();
+}
 
   function updateInfoPanel() {
     if (!selectedStructure) {
@@ -1464,10 +1733,45 @@ async function startGame(levelNum) {
     document.getElementById('info-desc').textContent = s.def.desc;
     document.getElementById('structure-info').classList.add('visible');
   }
+  // Panel de info del esclavo seleccionado
+let selectedSlaveInfo = null;
+
+function showSlaveInfo(slave) {
+  selectedSlaveInfo = slave;
+  document.getElementById('slave-name').textContent = '👤 Esclavo';
+  updateSlaveInfoUI();
+  document.getElementById('slave-info').classList.add('visible');
+}
+
+function updateSlaveInfoUI() {
+  if (!selectedSlaveInfo) return;
+  const hp = selectedSlaveInfo.hp || 100;
+  const maxHp = selectedSlaveInfo.maxHp || 100;
+  document.getElementById('slave-hp-text').textContent = Math.ceil(hp) + ' / ' + maxHp;
+  const ratio = hp / maxHp;
+  const fill = document.getElementById('slave-hp-fill');
+  fill.style.width = (ratio * 100) + '%';
+  if (ratio > 0.6)      fill.style.background = 'linear-gradient(90deg, #39ff5a, #a0e050)';
+  else if (ratio > 0.3) fill.style.background = 'linear-gradient(90deg, #ffd76a, #ff9a3a)';
+  else                  fill.style.background = 'linear-gradient(90deg, #ff4040, #c01010)';
+}
+
+function hideSlaveInfo() {
+  selectedSlaveInfo = null;
+  document.getElementById('slave-info').classList.remove('visible');
+}
+
+// Botón construir del panel de esclavo
+document.getElementById('btn-slave-build').addEventListener('click', () => {
+  toggleBuildMenu();
+});
 
   // Colisión circular del rey contra las estructuras
   function collidesWithStructure(x, z, radius) {
     for (const s of structures) {
+      // Ignorar colisión con estructuras en construcción
+      if (s.underConstruction) continue;
+      
       const dx = x - s.mesh.position.x;
       const dz = z - s.mesh.position.z;
       const distSq = dx*dx + dz*dz;
@@ -1479,11 +1783,10 @@ async function startGame(levelNum) {
           const ddx = x - doorWorld.x;
           const ddz = z - doorWorld.z;
           const doorDistSq = ddx*ddx + ddz*ddz;
-          // Radio del "hueco": más amplio si tiene dos hojas
           const leafCount = s.doorLeaves ? s.doorLeaves.length : 1;
           const passageRadius = leafCount >= 2
-            ? Math.max(4.0, s.radius * 0.85)   // doble hoja: hueco más grande
-            : Math.max(2.5, s.radius * 0.55);  // hoja simple: hueco normal
+            ? Math.max(4.0, s.radius * 0.85)
+            : Math.max(2.5, s.radius * 0.55);
           if (doorDistSq < passageRadius * passageRadius) {
             return false;
           }
@@ -1499,10 +1802,26 @@ async function startGame(levelNum) {
     const btn = document.createElement('button');
     btn.className = 'build-item';
     btn.id = 'build-item-' + b.id;
-    btn.innerHTML = '<span class="icon">' + b.icon + '</span>' + b.name;
+    const costParts = [];
+    if (b.cost.gold) costParts.push(b.cost.gold + '🪙');
+    if (b.cost.wood) costParts.push(b.cost.wood + '🪵');
+    if (b.cost.stone) costParts.push(b.cost.stone + '🪨');
+    const costShort = b.cost.gold || b.cost.wood || b.cost.stone || 0;
+    btn.innerHTML = '<span class="icon">' + b.icon + '</span>' +
+                '<span class="cost-mini">' + costShort + '</span>';
+    btn.title = b.name + ' — ' + costParts.join(' ') + ' · ⏱' + b.buildTime + 's';
     btn.addEventListener('click', () => startPlacement(b.id));
     document.getElementById(b.grid).appendChild(btn);
   });
+
+  function updateBuildMenuButtons() {
+    ALL_STRUCTURES.forEach(b => {
+      const btn = document.getElementById('build-item-' + b.id);
+      if (!btn) return;
+      const canAfford = gold >= b.cost.gold && wood >= b.cost.wood && stone >= b.cost.stone;
+      btn.style.opacity = canAfford ? '1' : '0.4';
+    });
+  }
 
   function toggleBuildMenu() {
     if (build.placing) { cancelPlacement(); buildMenuEl.classList.add('visible'); return; }
@@ -1582,16 +1901,60 @@ async function startGame(levelNum) {
 
   function buildPlace() {
     if (!build.placing || !build.ok) return;
-    const model = build.models[build.placing];
     const def = ALL_STRUCTURES.find(b => b.id === build.placing);
+    
+    // Verificar recursos
+    if (gold < def.cost.gold || wood < def.cost.wood || stone < def.cost.stone) {
+      // Flash rojo en los recursos insuficientes
+      const flashEl = document.getElementById('res-gold').parentElement;
+      flashEl.style.color = '#ff4040';
+      setTimeout(() => { flashEl.style.color = ''; }, 300);
+      return;
+    }
+    
+    // Cobrar recursos
+    gold -= def.cost.gold;
+    wood -= def.cost.wood;
+    stone -= def.cost.stone;
+    updateResourcesUI();
+    
+    const model = build.models[build.placing];
     const bld = model.scene.clone(true);
     bld.scale.setScalar(build.ghostScale);
     bld.position.copy(build.ghost.position);
     bld.rotation.y = build.ghost.rotation.y;
-    bld.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+    
+    // Material de construcción (semi-transparente mientras se construye)
+    const constructionMat = new THREE.MeshBasicMaterial({ 
+      color: 0x88ccff, transparent: true, opacity: 0.5, depthWrite: false 
+    });
+    bld.traverse(o => { 
+      if (o.isMesh) { 
+        o.castShadow = true; 
+        o.receiveShadow = true; 
+        o.userData.originalMaterial = o.material;
+        o.material = constructionMat;
+      } 
+    });
     scene.add(bld);
-    addStructure(bld, def);
-    // El modo colocación sigue activo para poner varias; click der / ESC para salir
+    
+    // Crear estructura en modo "en construcción" (HP empieza en 0)
+    const data = addStructure(bld, def, 'player');
+    data.hp = 0;
+    data.underConstruction = true;
+    data.buildProgress = 0;
+    updateHealthBar3D(data);
+    
+// Asignar constructores: los esclavos SELECCIONADOS si los hay, si no el más cercano
+const builders = selectedSlaves.length > 0 ? selectedSlaves : [findClosestSlave(build.ghost.position)];
+for (const builder of builders) {
+if (!builder) continue;
+builder.state = 'build';
+builder.buildTarget = data;
+builder.buildTimer = 0;
+}
+    
+    // El modo colocación sigue activo para poner varias
   }
 
   // ---- Cargar los 24 modelos (.gltf edificios + .glb murallas) ----
@@ -1620,12 +1983,12 @@ async function startGame(levelNum) {
       const gltf = await gltfLoader.loadAsync(RED_PATH + b.file.replace('_blue', '_red'));
       setupDoors(gltf.scene);
       redModels[b.id] = { scene: gltf.scene };
-    } catch (err) { console.warn('⚠ No se pudo cargar el modelo rojo de ' + b.id, err); }
+    }catch (err) { console.warn('⚠ No se pudo cargar el modelo rojo de ' + b.id, err); }
     await yieldToBrowser();
   }
 
   // Coloca una estructura directamente en el mapa (azul o roja)
-  function placeAt(models, id, x, z, rotY) {
+  function placeAt(models, id, x, z, rotY, team) {
     const model = models[id];
     const def = ALL_STRUCTURES.find(s => s.id === id);
     if (!model || !def) return;
@@ -1643,11 +2006,11 @@ async function startGame(levelNum) {
     bld.position.set(x - c.x, h - box.min.y, z - c.z);   // apoyada en el terreno
     bld.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
     scene.add(bld);
-    addStructure(bld, def);   // tiene vida, colisión y sale en el minimapa
+    addStructure(bld, def, team);   // tiene vida, colisión, team y sale en el minimapa
   }
 
   // 🏰 Tu castillo azul en la esquina inferior izquierda
-  placeAt(build.models, 'castle', playerBase.x, playerBase.z, 0);
+  placeAt(build.models, 'castle', playerBase.x, playerBase.z, 0, 'player');
 
   // 🔥 Ciudad enemiga roja en la esquina opuesta
   const CITY = [
@@ -1669,7 +2032,7 @@ async function startGame(levelNum) {
     { id: 'mine',         dx: -8,  dz: -30, rot: Math.PI },
   ];
   for (const b of CITY) {
-    placeAt(redModels, b.id, enemyBase.x + b.dx, enemyBase.z + b.dz, b.rot);
+    placeAt(redModels, b.id, enemyBase.x + b.dx, enemyBase.z + b.dz, b.rot, 'enemy');
     await yieldToBrowser();
   }
 
@@ -1725,6 +2088,14 @@ async function startGame(levelNum) {
       minimapCtx.fillRect(mx - 1.5, my - 1.5, 3, 3);
     }
 
+    // Esclavos (puntos azules claros)
+    minimapCtx.fillStyle = '#7ab8ff';
+    for (let i = 0; i < slaves.length; i++) {
+      const s = slaves[i];
+      const mx = (s.mesh.position.x / WORLD_SIZE + 0.5) * MINIMAP_RES;
+      const my = (s.mesh.position.z / WORLD_SIZE + 0.5) * MINIMAP_RES;
+      minimapCtx.fillRect(mx - 1.2, my - 1.2, 2.4, 2.4);
+    }
     // Rey (círculo blanco con borde)
     const kx = (king.position.x / WORLD_SIZE + 0.5) * MINIMAP_RES;
     const ky = (king.position.z / WORLD_SIZE + 0.5) * MINIMAP_RES;
@@ -1747,6 +2118,369 @@ async function startGame(levelNum) {
     minimapCtx.stroke();
   }
 
+  /* ============================================================
+     SISTEMA DE ESCLAVOS (NPCs)
+  ============================================================ */
+  const slaves = [];
+  const SLAVE_COST = 10;          // 💰 cada esclavo cuesta 10 de oro
+  const SLAVE_TRAIN_TIME = 10;    // ⏱️ tarda 10 segundos en fabricarse
+  const SLAVE_SPEED = 8;
+  const SLAVE_FOLLOW_DIST = 5;
+  const SLAVE_ATTACK_RANGE = 4;
+  const SLAVE_DETECT_RANGE = 14;
+  const SLAVE_DAMAGE = 25;
+  // 💰 Recursos del jugador
+  let gold = 500, wood = 200, stone = 100;
+  const resGoldEl  = document.getElementById('res-gold');
+  const resWoodEl  = document.getElementById('res-wood');
+  const resStoneEl = document.getElementById('res-stone');
+
+  function updateResourcesUI() {
+    resGoldEl.textContent  = Math.floor(gold);
+    resWoodEl.textContent  = Math.floor(wood);
+    resStoneEl.textContent = Math.floor(stone);
+    if (typeof updateBuildMenuButtons === 'function') updateBuildMenuButtons();
+  }
+
+  // 🏭 Producción pasiva de los edificios del jugador (por segundo):
+  // Castillo = impuestos (oro) · Aserradero = madera · Mina = piedra + algo de oro · Mercado = oro
+  const PRODUCERS = {
+    castle:     { gold: 1.0 },
+    lumbermill: { wood: 1.0 },
+    mine:       { stone: 0.8, gold: 0.3 },
+    market:     { gold: 0.5 },
+  };
+  function updateResources(dt) {
+    for (const s of structures) {
+      const p = PRODUCERS[s.def.id];
+      if (!p || s.team !== 'player' || s.hp <= 0) continue;
+      if (p.gold)  gold  += p.gold  * dt;
+      if (p.wood)  wood  += p.wood  * dt;
+      if (p.stone) stone += p.stone * dt;
+    }
+    updateResourcesUI();
+  }
+
+  // Pixel art del esclavo: afrodescendiente con taparrabos blanco
+  function createSlaveSprite() {
+    const c = document.createElement('canvas');
+    c.width = 24; c.height = 32;
+    const x = c.getContext('2d');
+    // Pelo (negro abundante)
+    x.fillStyle = '#1a1008';
+    x.fillRect(7, 0, 10, 5);
+    // Cara
+    x.fillStyle = '#4a2a18';
+    x.fillRect(8, 3, 8, 7);
+    // Ojos
+    x.fillStyle = '#ffffff';
+    x.fillRect(9, 5, 2, 2); x.fillRect(13, 5, 2, 2);
+    x.fillStyle = '#1a1008';
+    x.fillRect(10, 5, 1, 2); x.fillRect(14, 5, 1, 2);
+    // Boca
+    x.fillStyle = '#2a1a10';
+    x.fillRect(10, 8, 4, 1);
+    // Torso
+    x.fillStyle = '#3a2010';
+    x.fillRect(7, 10, 10, 10);
+    // Brazos
+    x.fillStyle = '#3a2010';
+    x.fillRect(4, 11, 3, 8); x.fillRect(17, 11, 3, 8);
+    // Taparrabos blanco
+    x.fillStyle = '#f5f0e8';
+    x.fillRect(7, 19, 10, 4);
+    x.fillStyle = '#d8d0c0';
+    x.fillRect(7, 22, 10, 1);
+    // Piernas
+    x.fillStyle = '#3a2010';
+    x.fillRect(8, 23, 3, 7); x.fillRect(13, 23, 3, 7);
+    // Pies
+    x.fillStyle = '#1a1008';
+    x.fillRect(7, 29, 4, 2); x.fillRect(13, 29, 4, 2);
+
+    const tex = prepTexture(new THREE.CanvasTexture(c));
+    return tex;
+  }
+
+  const slaveTex = createSlaveSprite();
+  const slaveMat = new THREE.MeshBasicMaterial({ map: slaveTex, transparent: true, alphaTest: 0.1, side: THREE.DoubleSide });
+  const SLAVE_HEIGHT = 4.5;
+
+  function createSlave(x, z) {
+    const group = new THREE.Group();
+    const mesh = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), slaveMat.clone());
+    const aspect = 24 / 32;
+    mesh.scale.set(SLAVE_HEIGHT * aspect, SLAVE_HEIGHT, 1);
+    mesh.position.y = SLAVE_HEIGHT / 2 - 0.05;
+    group.add(mesh);
+
+    const shadow = new THREE.Mesh(new THREE.CircleGeometry(0.4, 16), new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.3 }));
+    shadow.rotation.x = -Math.PI / 2; shadow.position.y = 0.05;
+    group.add(shadow);
+
+    const ring = new THREE.Mesh(new THREE.RingGeometry(0.5, 0.65, 24), new THREE.MeshBasicMaterial({ color: 0x39ff5a, transparent: true, opacity: 0, side: THREE.DoubleSide }));
+    ring.rotation.x = -Math.PI / 2; ring.position.y = 0.07;
+    group.add(ring);
+
+    group.position.set(x, Math.max(getHeight(x, z), WATER_LEVEL + 0.5), z);
+    scene.add(group);
+
+const slave = {
+  mesh: group,
+  sprite: mesh,
+  ring: ring,
+  state: 'idle',
+  target: null,
+  buildTarget: null,
+  buildTimer: 0,
+  attackCooldown: 0,
+  speed: SLAVE_SPEED,
+  walkAnim: 0,
+  hp: 100,
+  maxHp: 100,
+  moveTarget: null,
+};
+  slaves.push(slave);
+  return slave;
+  }
+  // 👥 Crear esclavos iniciales (3 esclavos cerca del castillo)
+  for (let i = 0; i < 3; i++) {
+  const angle = (i / 3) * Math.PI * 2 + Math.random() * 0.5;
+  const r = 6 + Math.random() * 3;
+  const sx = playerBase.x + Math.cos(angle) * r;
+  const sz = playerBase.z + Math.sin(angle) * r;
+  createSlave(sx, sz);   // nacen en 'idle': quietos hasta que les des una orden
+  }
+  // ⚒️ Cola de fabricación: 1 esclavo en fábrica + el resto en espera
+  const slaveQueue = [];
+  let trainProgress = 0;
+
+  function hireSlave() {
+    if (gold < SLAVE_COST) return;
+    gold -= SLAVE_COST;                 // se paga al encargar
+    slaveQueue.push(true);              // entra en la cola
+    updateResourcesUI();
+    refreshQueueUI();
+  }
+
+  function spawnSlaveAtCastle() {
+    const castle = structures.find(s => s.def.id === 'castle' && s.team === 'player');
+    if (!castle) return;
+    const angle = Math.random() * Math.PI * 2;
+    const r = 8 + Math.random() * 4;
+    createSlave(castle.mesh.position.x + Math.cos(angle) * r,
+                castle.mesh.position.z + Math.sin(angle) * r);
+  }
+  function findClosestSlave(pos) {
+    let closest = null;
+    let minDist = Infinity;
+    for (const s of slaves) {
+      if (s.state === 'build') continue; // Ya está construyendo
+      const dist = s.mesh.position.distanceTo(pos);
+      if (dist < minDist) {
+        minDist = dist;
+        closest = s;
+      }
+    }
+    // Si no hay esclavos libres, tomar cualquiera
+    if (!closest && slaves.length > 0) closest = slaves[0];
+    return closest;
+  }
+  function updateTraining(dt) {
+    if (slaveQueue.length > 0) {
+      trainProgress += dt;
+      if (trainProgress >= SLAVE_TRAIN_TIME) {   // se terminó de fabricar
+        trainProgress = 0;
+        slaveQueue.shift();
+        spawnSlaveAtCastle();
+        refreshQueueUI();
+      }
+    } else {
+      trainProgress = 0;
+    }
+    updateProductionUI();
+  }
+
+  // ---- Interfaz del panel de producción ----
+  const prodEl        = document.getElementById('castle-production');
+  const trainFillEl   = document.getElementById('train-fill');
+  const trainStatusEl = document.getElementById('train-status');
+  const trainQueueEl  = document.getElementById('train-queue');
+  const btnTrainEl    = document.getElementById('btn-train-slave');
+
+  btnTrainEl.addEventListener('click', () => hireSlave());
+
+  function refreshQueueUI() {
+    trainQueueEl.innerHTML = '';
+    if (slaveQueue.length === 0) {
+      trainQueueEl.innerHTML = '<span style="font-size:11px;color:#888;">Cola vacía</span>';
+      return;
+    }
+    slaveQueue.forEach((q, i) => {
+      const slot = document.createElement('div');
+      slot.className = 'queue-slot' + (i === 0 ? ' active' : '');
+      slot.textContent = '👤';
+      slot.title = (i === 0) ? 'En fabricación' : 'En cola de espera';
+      trainQueueEl.appendChild(slot);
+    });
+  }
+
+  function updateProductionUI() {
+    const isPlayerCastle = selectedStructure &&
+      selectedStructure.def.id === 'castle' && selectedStructure.team === 'player';
+    prodEl.style.display = isPlayerCastle ? 'block' : 'none';
+    if (!isPlayerCastle) return;
+
+    if (slaveQueue.length > 0) {
+      trainFillEl.style.width = (trainProgress / SLAVE_TRAIN_TIME * 100) + '%';
+      trainStatusEl.textContent =
+        '⚒ Fabricando esclavo... ' + Math.max(0, SLAVE_TRAIN_TIME - trainProgress).toFixed(1) + ' s' +
+        (slaveQueue.length > 1 ? ' · En cola: ' + (slaveQueue.length - 1) : '');
+    } else {
+      trainFillEl.style.width = '0%';
+      trainStatusEl.textContent = 'Sin producción activa';
+    }
+    btnTrainEl.disabled = gold < SLAVE_COST;
+  }
+
+  updateResourcesUI();
+  refreshQueueUI();
+
+  function updateSlaveHighlights() {
+    for (const s of slaves) {
+      s.ring.material.opacity = selectedSlaves.includes(s) ? 0.75 : 0;
+    }
+  }
+
+  function updateSlaves(dt) {
+    for (const s of slaves) {
+      if (s.state === 'follow') {
+        // Si hay un objetivo de movimiento explícito, ir allí primero
+        let targetPos = king.position;
+        if (s.moveTarget) {
+          const distToTarget = s.mesh.position.distanceTo(s.moveTarget);
+          if (distToTarget < 1.5) {
+            s.moveTarget = null; // Llegó al destino
+          } else {
+            targetPos = s.moveTarget;
+          }
+        }
+        const dist = s.mesh.position.distanceTo(targetPos);
+        if (dist > SLAVE_FOLLOW_DIST) {
+          const dir = new THREE.Vector3().subVectors(targetPos, s.mesh.position);
+          dir.y = 0;
+          dir.normalize();
+          const nx = s.mesh.position.x + dir.x * s.speed * dt;
+          const nz = s.mesh.position.z + dir.z * s.speed * dt;
+          if (!collidesWithTree(nx, nz, 0.5) && !collidesWithStructure(nx, nz, 0.5)) {
+            s.mesh.position.x = nx;
+            s.mesh.position.z = nz;
+          }
+          s.mesh.rotation.y = Math.atan2(dir.x, dir.z);
+          s.walkAnim += dt * 8;
+        } else {
+          s.walkAnim = 0;
+        }
+        // Detectar estructuras enemigas cercanas
+        for (const struct of structures) {
+          if (struct.team === 'enemy' && struct.hp > 0) {
+            const d = s.mesh.position.distanceTo(struct.mesh.position);
+            if (d < SLAVE_DETECT_RANGE) {
+              s.state = 'attack';
+              s.target = struct;
+              break;
+            }
+          }
+        }
+        } else if (s.state === 'build') {
+  // Si no hay objetivo o ya se terminó de construir, volver a seguir
+  if (!s.buildTarget || s.buildTarget.hp >= s.buildTarget.maxHp || !s.buildTarget.underConstruction) {
+    s.state = 'follow';
+    s.buildTarget = null;
+    continue;
+  }
+  const dist = s.mesh.position.distanceTo(s.buildTarget.mesh.position);
+  if (dist > 5) {
+    // Moverse hacia la estructura
+    const dir = new THREE.Vector3().subVectors(s.buildTarget.mesh.position, s.mesh.position);
+    dir.y = 0;
+    dir.normalize();
+    const nx = s.mesh.position.x + dir.x * s.speed * dt;
+    const nz = s.mesh.position.z + dir.z * s.speed * dt;
+    if (!collidesWithTree(nx, nz, 0.5) && !collidesWithStructure(nx, nz, 0.5)) {
+      s.mesh.position.x = nx;
+      s.mesh.position.z = nz;
+    }
+    s.mesh.rotation.y = Math.atan2(dir.x, dir.z);
+    s.walkAnim += dt * 8;
+  } else {
+    // Construyendo: animación de martilleo
+    s.walkAnim += dt * 6;
+    s.buildTimer += dt;
+    if (s.buildTimer >= 1.0) {
+      s.buildTimer = 0;
+      // Progreso: maxHp / buildTime por segundo
+      const progress = s.buildTarget.maxHp / s.buildTarget.def.buildTime;
+      s.buildTarget.hp = Math.min(s.buildTarget.maxHp, s.buildTarget.hp + progress);
+      updateHealthBar3D(s.buildTarget);
+      // Si se completó
+      if (s.buildTarget.hp >= s.buildTarget.maxHp) {
+        s.buildTarget.underConstruction = false;
+        // Restaurar materiales originales
+        s.buildTarget.mesh.traverse(o => {
+          if (o.isMesh && o.userData.originalMaterial) {
+            o.material = o.userData.originalMaterial;
+            o.castShadow = true;
+            o.receiveShadow = true;
+          }
+        });
+        s.state = 'follow';
+        s.buildTarget = null;
+      }
+    }
+  }
+      } else if (s.state === 'attack') {
+        if (s.target && s.target.hp > 0) {
+          const d = s.mesh.position.distanceTo(s.target.mesh.position);
+          if (d > SLAVE_ATTACK_RANGE) {
+            const dir = new THREE.Vector3().subVectors(s.target.mesh.position, s.mesh.position);
+            dir.y = 0;
+            dir.normalize();
+            const nx = s.mesh.position.x + dir.x * s.speed * dt;
+            const nz = s.mesh.position.z + dir.z * s.speed * dt;
+            if (!collidesWithTree(nx, nz, 0.5)) {
+              s.mesh.position.x = nx;
+              s.mesh.position.z = nz;
+            }
+            s.mesh.rotation.y = Math.atan2(dir.x, dir.z);
+            s.walkAnim += dt * 8;
+          } else {
+            s.attackCooldown -= dt;
+            if (s.attackCooldown <= 0) {
+              damageStructure(s.target, SLAVE_DAMAGE);
+              s.attackCooldown = 1.0;
+            }
+            s.walkAnim = 0;
+          }
+        } else {
+          s.state = 'follow';
+          s.target = null;
+        }
+      } else {
+        s.walkAnim = 0;
+      }
+      s.mesh.position.y = Math.max(getHeight(s.mesh.position.x, s.mesh.position.z), WATER_LEVEL + 0.5);
+      // Billboard
+      const yaw = Math.atan2(camera.position.x - s.mesh.position.x, camera.position.z - s.mesh.position.z);
+      s.sprite.rotation.y = yaw - s.mesh.rotation.y;
+      // Animación de caminar (sube y baja)
+      if (s.state !== 'idle' && s.walkAnim > 0) {
+        s.sprite.position.y = SLAVE_HEIGHT / 2 - 0.05 + Math.abs(Math.sin(s.walkAnim)) * 0.15;
+      } else {
+        s.sprite.position.y = SLAVE_HEIGHT / 2 - 0.05;
+      }
+    }
+  }
   /* --- LISTO --- */
   updateLoading(100, `¡Bienvenido a ${CFG.name}!`);
 
@@ -1761,7 +2495,6 @@ async function startGame(levelNum) {
   const keydownHandler = e => {
     keys[e.code] = true;
     if (e.code.startsWith('Arrow')) e.preventDefault();
-    if (e.code === 'KeyC')  toggleBuildMenu();
     if (e.code === 'Escape') {
       if (build.placing) cancelPlacement();
       else if (selectedStructure) deselectStructure();
@@ -1773,93 +2506,331 @@ async function startGame(levelNum) {
   window.addEventListener('keydown', keydownHandler);
   window.addEventListener('keyup', keyupHandler);
 
-  /* Ratón: click izq ataca, click der bloquea, click medio rota cámara */
-  let cameraAzimuth = 0;          // ángulo horizontal de la cámara
-  const CAMERA_RADIUS = 30;       // distancia horizontal al rey
-  const CAMERA_HEIGHT = 42;       // altura de la cámara
-  let isMiddleMouseDown = false;
-  let lastMouseX = 0;
+  /* Ratón: click izq ataca/selecciona, click der rota cámara + menús contextuales, rueda = zoom */
+  let cameraAzimuth = 0;
+  let cameraPitch   = 0.95;
+  let cameraDistance = 52;
+  const CAMERA_DIST_MIN = 20;
+  const CAMERA_DIST_MAX = 120;
+  const PITCH_MIN = 0.25;
+  const PITCH_MAX = 1.40;
 
-  window.addEventListener('mousedown', (e) => {
-    if (e.target !== renderer.domElement) return;   // ignorar clicks sobre la interfaz
+  let isRotatingCamera = false;
+  let lastMouseX = 0, lastMouseY = 0;
+  let rightClickStart = { x: 0, y: 0, time: 0 };
+
+  // Sistema de selección por arrastre
+  let isSelecting = false;
+  let selectStartX = 0, selectStartY = 0;
+  const selectRect = document.getElementById('select-rect');
+  let selectedSlaves = [];
+
+  // Menús contextuales
+  const castleMenuEl = document.getElementById('castle-menu');
+  const npcMenuEl = document.getElementById('npc-menu');
+
+  function showCastleMenu(x, y) {
+    castleMenuEl.style.left = x + 'px';
+    castleMenuEl.style.top = y + 'px';
+    castleMenuEl.classList.add('visible');
+    npcMenuEl.classList.remove('visible');
+  }
+  function showNpcMenu(x, y) {
+    npcMenuEl.style.left = x + 'px';
+    npcMenuEl.style.top = y + 'px';
+    npcMenuEl.classList.add('visible');
+    castleMenuEl.classList.remove('visible');
+  }
+  function hideContextMenus() {
+    castleMenuEl.classList.remove('visible');
+    npcMenuEl.classList.remove('visible');
+  }
+
+  document.getElementById('npc-follow').onclick = () => {
+    for (const s of selectedSlaves) {
+      s.state = 'follow';
+      s.target = null;
+      s.buildTarget = null;
+    }
+    hideContextMenus();
+  };
+  document.getElementById('npc-stop').onclick = () => {
+    for (const s of selectedSlaves) {
+      s.state = 'idle';
+      s.target = null;
+      s.buildTarget = null;
+    }
+    hideContextMenus();
+  };
+  document.getElementById('npc-build').onclick = () => {
+    toggleBuildMenu();
+    hideContextMenus();
+  };
+
+    window.addEventListener('mousedown', (e) => {
+    if (e.target !== renderer.domElement) {
+    // ✅ Si el click es DENTRO de un menú contextual, NO ocultarlo aquí:
+    // si el menú desaparece entre el mousedown y el mouseup, el 'click'
+    // nunca llega al botón y las órdenes no se ejecutan.
+    if (!e.target.closest('#castle-menu') && !e.target.closest('#npc-menu')) {
+    hideContextMenus();
+    }
+    return;
+    }
 
     if (e.button === 0) {
-      if (build.placing) { buildPlace(); return; }
-      if (buildMenuEl.classList.contains('visible')) { closeBuildMenu(); return; }
+      hideContextMenus();
+    if (build.placing) { buildPlace(); return; }
+    // Cerrar menú si se clickea en el canvas (fuera del menú)
+    if (buildMenuEl.classList.contains('visible') && e.target === renderer.domElement) { 
+      closeBuildMenu(); 
+    }
+        // Si hay esclavos seleccionados y no está colocando, dar orden de moverse al punto
+  if (selectedSlaves.length > 0 && !build.placing) {
+    const p = terrainPoint();
+    if (p) {
+      // Verificar que no clickeó un esclavo o estructura
+      buildRay.setFromCamera(mouseNDC, camera);
+      const slaveMeshes = slaves.map(s => s.sprite);
+      const slaveHits = buildRay.intersectObjects(slaveMeshes, false);
+      const allMeshes = [];
+      structures.forEach(s => s.mesh.traverse(o => { if (o.isMesh) allMeshes.push(o); }));
+      const structHits = buildRay.intersectObjects(allMeshes, false);
       
-      // 🛡️ Evitar ataque doble en un doble click (solo el primer click ataca)
+      if (slaveHits.length === 0 && structHits.length === 0) {
+        // Mover esclavos al punto clickeado
+        for (const s of selectedSlaves) {
+          s.state = 'follow';
+          s.moveTarget = p.clone();
+          s.target = null;
+        }
+        // Visual: marcador temporal
+        const marker = new THREE.Mesh(
+          new THREE.RingGeometry(0.4, 0.6, 16),
+          new THREE.MeshBasicMaterial({ color: 0x39ff5a, transparent: true, opacity: 0.8, side: THREE.DoubleSide })
+        );
+        marker.rotation.x = -Math.PI / 2;
+        marker.position.copy(p);
+        marker.position.y = getHeight(p.x, p.z) + 0.1;
+        scene.add(marker);
+        setTimeout(() => scene.remove(marker), 1000);
+        return;
+      }
+    }
+  }
+
+      // Empezar selección por arrastre
+      isSelecting = true;
+      selectStartX = e.clientX;
+      selectStartY = e.clientY;
+      selectRect.style.left = e.clientX + 'px';
+      selectRect.style.top = e.clientY + 'px';
+      selectRect.style.width = '0px';
+      selectRect.style.height = '0px';
+      selectRect.style.display = 'block';
+
       const now = performance.now();
-      if (now - (window.__lastLeftClick || 0) < 400) return;
+      if (now - (window.__lastLeftClick || 0) < 400) {
+        isSelecting = false;
+        selectRect.style.display = 'none';
+        return;
+      }
       window.__lastLeftClick = now;
+
+      // Detectar clic en esclavo (raycasting sobre sprites de esclavos)
+      buildRay.setFromCamera(mouseNDC, camera);
+      const slaveMeshes = slaves.map(s => s.sprite);
+      const slaveHits = buildRay.intersectObjects(slaveMeshes, false);
       
+if (slaveHits.length > 0) {
+  const clickedSlave = slaves.find(s => s.sprite === slaveHits[0].object);
+  if (clickedSlave) {
+    selectedSlaves = [clickedSlave];
+    updateSlaveHighlights();
+    mouseAttackQueued = false;
+    // Desactivar otros paneles
+    document.getElementById('structure-info').classList.remove('visible');
+    // Mostrar panel de esclavo
+    showSlaveInfo(clickedSlave);
+    return;
+  }
+}
+
       mouseAttackQueued = true;
 
-      // Raycast contra estructuras colocadas
       const allMeshes = [];
       structures.forEach(s => s.mesh.traverse(o => { if (o.isMesh) allMeshes.push(o); }));
       if (allMeshes.length > 0) {
-        buildRay.setFromCamera(mouseNDC, camera);
         const hits = buildRay.intersectObjects(allMeshes, false);
         if (hits.length > 0) {
           const data = hits[0].object.userData.structureData;
           if (data) {
             selectStructure(data);
-            const dist = king.position.distanceTo(data.mesh.position);
-            if (dist < KING_ATTACK_RANGE) damageStructure(data, KING_ATTACK_DAMAGE);
+            if (data.team === 'player') {
+              mouseAttackQueued = false;
+            } else if (data.team === 'enemy') {
+              const dist = king.position.distanceTo(data.mesh.position);
+              if (dist < KING_ATTACK_RANGE) damageStructure(data, KING_ATTACK_DAMAGE);
+            } else {
+              mouseAttackQueued = false;
+            }
             return;
           }
         }
       }
-      deselectStructure();   // click en vacío deselecciona
+      deselectStructure();
     }
     if (e.button === 2) {
+      hideContextMenus();
       if (build.placing) { cancelPlacement(); return; }
+
+      rightClickStart = { x: e.clientX, y: e.clientY, time: performance.now() };
+      isRotatingCamera = true;
+      lastMouseX = e.clientX;
+      lastMouseY = e.clientY;
       mouseBlockHeld = true;
     }
-    if (e.button === 1) {         // botón central (ruedita)
-      isMiddleMouseDown = true;
-      lastMouseX = e.clientX;
-      e.preventDefault();
+  });
+
+    window.addEventListener('mouseup', (e) => {
+    if (e.button === 0) {
+      if (isSelecting) {
+        isSelecting = false;
+        selectRect.style.display = 'none';
+        const x1 = Math.min(selectStartX, e.clientX);
+        const y1 = Math.min(selectStartY, e.clientY);
+        const x2 = Math.max(selectStartX, e.clientX);
+        const y2 = Math.max(selectStartY, e.clientY);
+        const rectW = x2 - x1, rectH = y2 - y1;
+
+        if (rectW > 5 || rectH > 5) {
+          selectedSlaves = [];
+          for (const s of slaves) {
+            const pos = s.mesh.position.clone().project(camera);
+            if (pos.z > 1) continue;
+            const sx = (pos.x * 0.5 + 0.5) * innerWidth;
+            const sy = (-pos.y * 0.5 + 0.5) * innerHeight;
+            if (sx >= x1 && sx <= x2 && sy >= y1 && sy <= y2) {
+              selectedSlaves.push(s);
+            }
+          }
+          updateSlaveHighlights();
+          mouseAttackQueued = false;
+        }
+      }
+    }
+
+    if (e.button === 2) {
+      mouseBlockHeld = false;
+      const dx = e.clientX - rightClickStart.x;
+      const dy = e.clientY - rightClickStart.y;
+      const dt = performance.now() - rightClickStart.time;
+      const dist = Math.sqrt(dx*dx + dy*dy);
+
+      if (dist < 5 && dt < 500) {
+        buildRay.setFromCamera(mouseNDC, camera);
+
+        // Primero verificar si se clickeó un esclavo (para dar órdenes)
+        const slaveMeshes = slaves.map(s => s.sprite);
+        const slaveHits = buildRay.intersectObjects(slaveMeshes, false);
+        if (slaveHits.length > 0) {
+          const clickedSlave = slaves.find(s => s.sprite === slaveHits[0].object);
+          if (clickedSlave) {
+            selectedSlaves = [clickedSlave];
+            updateSlaveHighlights();
+            showNpcMenu(e.clientX, e.clientY);
+            isRotatingCamera = false;
+            return;
+          }
+        }
+
+        // Verificar estructuras
+        const allMeshes = [];
+        structures.forEach(s => s.mesh.traverse(o => { if (o.isMesh) allMeshes.push(o); }));
+        const hits = buildRay.intersectObjects(allMeshes, false);
+        if (hits.length > 0) {
+          const data = hits[0].object.userData.structureData;
+          if (data && data.def.id === 'castle' && data.team === 'player') {
+            showCastleMenu(e.clientX, e.clientY);
+            isRotatingCamera = false;
+            return;
+          }
+        }
+        if (selectedSlaves.length > 0) {
+          showNpcMenu(e.clientX, e.clientY);
+          isRotatingCamera = false;
+          return;
+        }
+      }
+      isRotatingCamera = false;
     }
   });
-  window.addEventListener('mouseup', (e) => {
-    if (e.button === 2) mouseBlockHeld = false;
-    if (e.button === 1) isMiddleMouseDown = false;
-  });
+
   window.addEventListener('mousemove', (e) => {
-    if (isMiddleMouseDown) {
+    if (isSelecting) {
+      const x = Math.min(selectStartX, e.clientX);
+      const y = Math.min(selectStartY, e.clientY);
+      const w = Math.abs(e.clientX - selectStartX);
+      const h = Math.abs(e.clientY - selectStartY);
+      selectRect.style.left = x + 'px';
+      selectRect.style.top = y + 'px';
+      selectRect.style.width = w + 'px';
+      selectRect.style.height = h + 'px';
+    }
+    if (isRotatingCamera) {
       const dx = e.clientX - lastMouseX;
-      cameraAzimuth -= dx * 0.005;   // sensibilidad de rotación
+      const dy = e.clientY - lastMouseY;
+      cameraAzimuth -= dx * 0.005;
+      cameraPitch = THREE.MathUtils.clamp(cameraPitch - dy * 0.005, PITCH_MIN, PITCH_MAX);
       lastMouseX = e.clientX;
+      lastMouseY = e.clientY;
     }
   });
-  // 🚪 DOBLE CLICK: abrir/cerrar puertas (soporta 1 o 2 hojas)
+
+  // Rueda del mouse para zoom
+  window.addEventListener('wheel', (e) => {
+    cameraDistance = THREE.MathUtils.clamp(cameraDistance + e.deltaY * 0.05, CAMERA_DIST_MIN, CAMERA_DIST_MAX);
+  }, { passive: true });
+
   window.addEventListener('dblclick', (e) => {
     if (e.target !== renderer.domElement) return;
     if (build.placing) return;
-    
+
     buildRay.setFromCamera(mouseNDC, camera);
     const allMeshes = [];
     structures.forEach(s => s.mesh.traverse(o => { if (o.isMesh) allMeshes.push(o); }));
     const hits = buildRay.intersectObjects(allMeshes, false);
-    
+
     if (hits.length > 0) {
       const data = hits[0].object.userData.structureData;
       if (data && data.doorLeaves && data.doorLeaves.length > 0) {
         data.doorOpen = !data.doorOpen;
         for (const leaf of data.doorLeaves) {
-          // Cada hoja gira 90° según su bisagra y sentido guardados al cargar
           leaf.targetRot = data.doorOpen ? leaf.openDir * DOOR_OPEN_SIGN * (Math.PI / 2) : 0;
         }
       }
     }
   });
   window.addEventListener('contextmenu', (e) => e.preventDefault());
-  window.addEventListener('auxclick', (e) => { if (e.button === 1) e.preventDefault(); });
 
   const clock = new THREE.Clock();
-  let walkT = 0;
-  camera.position.copy(king.position).add(new THREE.Vector3(0, CAMERA_HEIGHT, CAMERA_RADIUS));
+  camera.position.set(
+    king.position.x + Math.sin(cameraAzimuth) * Math.cos(cameraPitch) * cameraDistance,
+    king.position.y + Math.sin(cameraPitch) * cameraDistance,
+    king.position.z + Math.cos(cameraAzimuth) * Math.cos(cameraPitch) * cameraDistance
+  );
+
+  // Convierte el movimiento a una de las 8 direcciones de sprites,
+  // RELATIVA A LA CÁMARA (así se ve bien aunque gires la cámara)
+  function screenDirName(d) {
+    const fwd   = new THREE.Vector3(-Math.sin(cameraAzimuth), 0, -Math.cos(cameraAzimuth));
+    const right = new THREE.Vector3( Math.cos(cameraAzimuth), 0, -Math.sin(cameraAzimuth));
+    const sx = d.dot(right);   // + → este (derecha en pantalla)
+    const sy = d.dot(fwd);     // + → norte (arriba en pantalla)
+    const ang = Math.atan2(sx, sy);
+    const idx = ((Math.round(ang / (Math.PI / 4)) % 8) + 8) % 8;
+    return ['north','north-east','east','south-east','south','south-west','west','north-west'][idx];
+  }
 
   function update(dt, t) {
     const dir = new THREE.Vector3();
@@ -1867,14 +2838,20 @@ async function startGame(levelNum) {
     const forward = new THREE.Vector3(-Math.sin(cameraAzimuth), 0, -Math.cos(cameraAzimuth));
     const right   = new THREE.Vector3( Math.cos(cameraAzimuth), 0, -Math.sin(cameraAzimuth));
 
-    if (keys['KeyW'] || keys['ArrowUp'])    dir.add(forward);
-    if (keys['KeyS'] || keys['ArrowDown'])  dir.sub(forward);
-    if (keys['KeyD'] || keys['ArrowRight']) dir.add(right);
-    if (keys['KeyA'] || keys['ArrowLeft'])  dir.sub(right);
+    // 🛑 Bloquear movimiento si el rey está atacando
+    const isAttacking = kingState === 'attack';
+    if (!isAttacking) {
+      if (keys['KeyW'] || keys['ArrowUp'])    dir.add(forward);
+      if (keys['KeyS'] || keys['ArrowDown'])  dir.sub(forward);
+      if (keys['KeyD'] || keys['ArrowRight']) dir.add(right);
+      if (keys['KeyA'] || keys['ArrowLeft'])  dir.sub(right);
+    }
 
-    const moving = dir.lengthSq() > 0;
+    const moving = dir.lengthSq() > 0 && !isAttacking;
+    let dirName = null;
     if (moving) {
       dir.normalize();
+      dirName = screenDirName(dir);
       const speed = KING_SPEED * (mouseBlockHeld ? 0.45 : 1);
       let nx = THREE.MathUtils.clamp(king.position.x + dir.x * speed * dt, -BOUND, BOUND);
       let nz = THREE.MathUtils.clamp(king.position.z + dir.z * speed * dt, -BOUND, BOUND);
@@ -1886,9 +2863,9 @@ async function startGame(levelNum) {
       diff = Math.atan2(Math.sin(diff), Math.cos(diff));
       king.rotation.y += diff * Math.min(1, dt * 12);
 
-      updateKingSprite(true, dt);
+      updateKingSprite(true, dt, dirName);
     } else {
-      updateKingSprite(false, dt);
+      updateKingSprite(false, dt, null);
     }
 
     king.position.y = Math.max(getHeight(king.position.x, king.position.z), WATER_LEVEL + 0.5);
@@ -1899,9 +2876,9 @@ async function startGame(levelNum) {
     flowerMat.uniforms.uTime.value = t;
 
     const desired = new THREE.Vector3(
-      king.position.x + Math.sin(cameraAzimuth) * CAMERA_RADIUS,
-      king.position.y + CAMERA_HEIGHT,
-      king.position.z + Math.cos(cameraAzimuth) * CAMERA_RADIUS
+      king.position.x + Math.sin(cameraAzimuth) * Math.cos(cameraPitch) * cameraDistance,
+      king.position.y + Math.sin(cameraPitch) * cameraDistance,
+      king.position.z + Math.cos(cameraAzimuth) * Math.cos(cameraPitch) * cameraDistance
     );
     camera.position.lerp(desired, 1 - Math.exp(-6 * dt));
     camera.lookAt(king.position.x, king.position.y + 2, king.position.z);
@@ -1923,6 +2900,10 @@ async function startGame(levelNum) {
     }
 
     // Minimapa cada frame (muy barato: 200x200)
+    updateResources(dt);
+    updateTraining(dt);
+    updateSlaves(dt);
+    if (selectedSlaveInfo) updateSlaveInfoUI();
     updateMinimap();
   }
 
@@ -1952,5 +2933,23 @@ document.querySelectorAll('.level-card').forEach(card => {
   };
 });
 </script>
+<!-- Menú contextual del castillo -->
+<div id="castle-menu">
+  <h3>🏰 CASTILLO</h3>
+  <button class="menu-option" id="hire-slaves">👥 Contratar esclavo <span class="cost">10 🪙</span></button>
+  <button class="menu-option" disabled>🔧 Mejorar murallas</button>
+  <button class="menu-option" disabled>🏹 Entrenar arqueros</button>
+</div>
+
+<!-- Menú de órdenes para NPCs -->
+<div id="npc-menu">
+  <h3>⚔ ÓRDENES</h3>
+  <button class="menu-option" id="npc-build">🏗️ Construir...</button>
+  <button class="menu-option" id="npc-follow">🏃 Seguirme</button>
+  <button class="menu-option" id="npc-stop">✋ Dejar de seguirme</button>
+</div>
+
+<!-- Rectángulo de selección -->
+<div id="select-rect"></div>
 </body>
 </html>
