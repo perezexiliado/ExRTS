@@ -280,23 +280,47 @@
   }
 
   /* --- PANEL DE PRODUCCIÓN (CASTILLO / CUARTEL) --- */
-  #castle-production, #barracks-production {
+  #castle-production, #barracks-production, #archeryrange-production {
     display: none;
     margin-top: 10px; border-top: 1px solid #6a5228; padding-top: 8px;
   }
-  #castle-production .prod-title, #barracks-production .prod-title {
+  #castle-production .prod-title, #barracks-production .prod-title, #archeryrange-production .prod-title {
     color: #ffd76a; font-size: 12px; letter-spacing: 2px; margin-bottom: 6px;
   }
+  .unit-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(168px, 1fr));
+    gap: 8px;
+  }
+  .unit-card {
+    background: rgba(40, 28, 14, .55);
+    border: 1px solid rgba(106, 82, 40, .6); border-radius: 8px;
+    padding: 8px;
+  }
+  .unit-card-head {
+    display: flex; align-items: center; gap: 6px; margin-bottom: 6px;
+  }
+  .unit-card-icon {
+    width: 26px; height: 26px; flex: none;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(60, 42, 20, .9); border: 1px solid #6a5228; border-radius: 4px;
+  }
+  .unit-card-name {
+    color: #ffd76a; font-weight: bold; font-size: 13px; flex: 1;
+  }
+  .unit-card-cost {
+    color: #b98d3e; font-size: 11px; white-space: nowrap;
+  }
   .train-bar {
-    width: 100%; height: 14px; background: #1a0808;
-    border: 1px solid #6a5228; border-radius: 7px; overflow: hidden; margin-bottom: 4px;
+    width: 100%; height: 12px; background: #1a0808;
+    border: 1px solid #6a5228; border-radius: 6px; overflow: hidden; margin-bottom: 4px;
   }
   .train-fill {
     height: 100%; width: 0%;
     background: linear-gradient(90deg, #b98d3e, #ffd76a);
   }
-  #train-status, #train-status-soldier { font-size: 12px; color: #ccc; margin-bottom: 6px; }
-  #train-queue { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 8px; min-height: 24px; align-items: center; }
+  #train-status, #train-status-soldier, #train-status-archer, #train-status-cavalry { font-size: 11px; color: #ccc; margin-bottom: 6px; min-height: 13px; }
+  #train-queue, #train-queue-soldier, #train-queue-archer, #train-queue-cavalry { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 8px; min-height: 24px; align-items: center; }
   .queue-slot {
     width: 24px; height: 24px;
     display: flex; align-items: center; justify-content: center;
@@ -304,22 +328,15 @@
     font-size: 14px;
   }
   .queue-slot.active { border-color: #ffd76a; box-shadow: 0 0 6px rgba(255,215,106,.5); }
-  #btn-train-slave {
+  #btn-train-slave, #btn-train-soldier, #btn-train-archer, #btn-train-cavalry {
     width: 100%; padding: 8px;
     background: linear-gradient(180deg, rgba(60,42,20,.9), rgba(30,20,10,.9));
     color: #ffd76a; border: 2px solid #b98d3e; border-radius: 6px;
-    cursor: pointer; font-family: "Trebuchet MS", Arial, sans-serif; font-size: 13px;
+    cursor: pointer; font-family: "Trebuchet MS", Arial, sans-serif; font-size: 12px;
   }
-  #btn-train-slave:hover { border-color: #ffd76a; color: #fff; }
-  #btn-train-slave:disabled { opacity: .4; cursor: not-allowed; }
-  #btn-train-soldier {
-    width: 100%; padding: 8px;
-    background: linear-gradient(180deg, rgba(60,42,20,.9), rgba(30,20,10,.9));
-    color: #ffd76a; border: 2px solid #b98d3e; border-radius: 6px;
-    cursor: pointer; font-family: "Trebuchet MS", Arial, sans-serif; font-size: 13px;
-  }
-  #btn-train-soldier:hover { border-color: #ffd76a; color: #fff; }
-  #btn-train-soldier:disabled { opacity: .4; cursor: not-allowed; }
+  #btn-train-slave:hover, #btn-train-soldier:hover, #btn-train-archer:hover, #btn-train-cavalry:hover { border-color: #ffd76a; color: #fff; }
+  #btn-train-slave:disabled, #btn-train-soldier:disabled, #btn-train-archer:disabled, #btn-train-cavalry:disabled { opacity: .4; cursor: not-allowed; }
+  .prod-note { color: #8a7a58; font-size: 11px; font-style: italic; margin-top: 6px; }
 
   /* --- MINIMAPA --- */
   #minimap-wrap {
@@ -391,7 +408,7 @@
     <span class="res" title="Piedra">🪨 <b id="res-stone">0</b></span>
   </div>
 <div id="hud-help">
-  <b>👑 W A S D</b> mover · Click izq <b>aldeano/soldado</b> = seleccionar · <b>Arrastra</b> = selección múltiple · <b>Click der</b> = órdenes / Mover aquí / Atacar
+  <b>👑 W A S D</b> mover · Click izq <b>aldeano/soldado/arquero/caballero</b> = seleccionar · <b>Arrastra</b> = selección múltiple · <b>Click der</b> = órdenes / Mover aquí / Atacar
 </div>
 </div>
 <button id="exit-btn">↩ Menú Principal</button>
@@ -423,17 +440,63 @@
   <div id="info-desc"></div>
   <div id="castle-production">
     <div class="prod-title">⚒ PRODUCCIÓN DE ALDEANOS</div>
-    <div class="train-bar"><div class="train-fill" id="train-fill"></div></div>
-    <div id="train-status">Sin producción activa</div>
-    <div id="train-queue"></div>
-    <button id="btn-train-slave">👥 Entrenar aldeano (10 🪙)</button>
+    <div class="unit-cards">
+      <div class="unit-card">
+        <div class="unit-card-head">
+          <div class="unit-card-icon">👥</div>
+          <div class="unit-card-name">Aldeano</div>
+          <div class="unit-card-cost">10 🪙</div>
+        </div>
+        <div class="train-bar"><div class="train-fill" id="train-fill"></div></div>
+        <div id="train-status">Sin producción activa</div>
+        <div id="train-queue"></div>
+        <button id="btn-train-slave">👥 Entrenar</button>
+      </div>
+    </div>
   </div>
   <div id="barracks-production">
-    <div class="prod-title">⚔ PRODUCCIÓN DE SOLDADOS</div>
-    <div class="train-bar"><div class="train-fill" id="train-fill-soldier"></div></div>
-    <div id="train-status-soldier">Sin producción activa</div>
-    <div id="train-queue-soldier"></div>
-    <button id="btn-train-soldier">⚔️ Contratar soldado (20 🪙)</button>
+    <div class="prod-title">⚔ PRODUCCIÓN DE COMBATE</div>
+    <div class="unit-cards">
+      <div class="unit-card">
+        <div class="unit-card-head">
+          <div class="unit-card-icon">⚔️</div>
+          <div class="unit-card-name">Soldado</div>
+          <div class="unit-card-cost">20 🪙</div>
+        </div>
+        <div class="train-bar"><div class="train-fill" id="train-fill-soldier"></div></div>
+        <div id="train-status-soldier">Sin producción activa</div>
+        <div id="train-queue-soldier"></div>
+        <button id="btn-train-soldier">⚔️ Contratar</button>
+      </div>
+      <div class="unit-card">
+        <div class="unit-card-head">
+          <div class="unit-card-icon">🐎</div>
+          <div class="unit-card-name">Caballero</div>
+          <div class="unit-card-cost">35 🪙</div>
+        </div>
+        <div class="train-bar"><div class="train-fill" id="train-fill-cavalry"></div></div>
+        <div id="train-status-cavalry">Sin producción activa</div>
+        <div id="train-queue-cavalry"></div>
+        <button id="btn-train-cavalry">🐎 Entrenar</button>
+      </div>
+    </div>
+    <div class="prod-note">🏹 Los arqueros se entrenan en la Arquería.</div>
+  </div>
+  <div id="archeryrange-production">
+    <div class="prod-title">🏹 PRODUCCIÓN DE ARQUEROS</div>
+    <div class="unit-cards">
+      <div class="unit-card">
+        <div class="unit-card-head">
+          <div class="unit-card-icon">🏹</div>
+          <div class="unit-card-name">Arquero</div>
+          <div class="unit-card-cost">25 🪙</div>
+        </div>
+        <div class="train-bar"><div class="train-fill" id="train-fill-archer"></div></div>
+        <div id="train-status-archer">Sin producción activa</div>
+        <div id="train-queue-archer"></div>
+        <button id="btn-train-archer">🏹 Entrenar</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -752,7 +815,8 @@ async function startGame(levelNum) {
   const LOADING_TIPS = [
     '<b>Consejo:</b> Haz click derecho con un aldeano seleccionado y usa <b>📍 Mover aquí</b> para enviarlo a un punto.',
     '<b>Consejo:</b> Selecciona aldeanos, haz click derecho sobre una <b>Mina de oro</b> y pulsa <b>⛏️ Minar</b> para extraerla.',
-    '<b>Consejo:</b> Haz click izquierdo en tu <b>Cuartel</b> y pulsa <b>⚔️ Contratar soldado</b> para reclutar tropas (20 🪙).',
+    '<b>Consejo:</b> Haz click izquierdo en tu <b>Cuartel</b> y pulsa <b>⚔️ Contratar soldado</b> (20 🪙) o <b>🐎 Entrenar caballero</b> (35 🪙) para reclutar tropas.',
+    '<b>Consejo:</b> Haz click izquierdo en tu <b>Arquería</b> y pulsa <b>🏹 Entrenar arquero</b> (25 🪙): disparan de lejos y son baratos.',
     '<b>Consejo:</b> Los <b>soldados</b> atacan automáticamente a los edificios enemigos cercanos y cumplen tus órdenes por click derecho.',
     '<b>Consejo:</b> Click izquierdo sobre un aldeano lo selecciona y abre su panel; si clickeas el mapa se deselecciona.',
     '<b>Consejo:</b> Arrastra el ratón sobre varios aldeanos o soldados para seleccionarlos a la vez.',
@@ -1099,79 +1163,102 @@ async function startGame(levelNum) {
   }
 
   // 🌳 Árboles talables: cada uno tiene madera aleatoria (50-100)
+  // Optimización de FPS: UNA InstancedMesh por tipo de parte (tronco, rama,
+  // copas...) en lugar de ~7 meshes sueltos por árbol. Los draw calls pasan de
+  // ~7 × nºárboles (hasta ~19.000 con 2.700 árboles) a ~8 fijos.
   const trees = [];
-  const treeMeshes = [];   // meshes de todos los árboles (raycasting del click derecho)
+  const treePartMeshes = {};   // InstancedMesh por parte (un draw call cada una)
+  const treeRayMeshes = [];    // mallas para raycasting (1 por tipo de parte)
+  const treeCapacity = CFG.treeCount * 3;
+  const treeZero = new THREE.Matrix4();
+  const TREE_GEO = {
+    trunk:  new THREE.CylinderGeometry(0.16, 0.38, 2.4, 6),
+    branch: new THREE.CylinderGeometry(0.05, 0.11, 1.3, 5),
+    mid:    new THREE.IcosahedronGeometry(0.95, 0),
+    blob:   new THREE.IcosahedronGeometry(0.55, 0),
+    top:    new THREE.IcosahedronGeometry(0.45, 0),
+    body:   new THREE.CylinderGeometry(0.3, 0.35, 2.5, 6),
+    arm:    new THREE.CylinderGeometry(0.18, 0.18, 1.0, 5)
+  };
+  const cactusMat = new THREE.MeshStandardMaterial({ color: 0x3a6a2a, roughness: 0.9 });
+
+  function makeTreePartMesh(name, geo, mat, castShadow) {
+    const im = new THREE.InstancedMesh(geo, mat, treeCapacity);
+    im.count = 0;
+    im.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    im.castShadow = !!castShadow;
+    im.frustumCulled = false;
+    im.userData.instanceTree = [];
+    scene.add(im);
+    treePartMeshes[name] = im;
+    treeRayMeshes.push(im);
+    return im;
+  }
+  makeTreePartMesh('trunk',  TREE_GEO.trunk,  trunkMat,   true);
+  makeTreePartMesh('branch', TREE_GEO.branch, trunkMat,   false);
+  makeTreePartMesh('mid',    TREE_GEO.mid,    leavesMat,  false);
+  makeTreePartMesh('blobA',  TREE_GEO.blob,   leafDark,   false);
+  makeTreePartMesh('blobB',  TREE_GEO.blob,   leafLight,  false);
+  makeTreePartMesh('top',    TREE_GEO.top,    leafLight,  false);
+  makeTreePartMesh('body',   TREE_GEO.body,   cactusMat,  true);
+  makeTreePartMesh('arm',    TREE_GEO.arm,    cactusMat,  false);
+
+  // Jerarquía scratch idéntica al grupo antiguo: padre Tw·Ry·S (base del árbol)
+  // y parte hija Toff·Rz (offset propio de tronco/rama/copa). Se reutiliza con
+  // updateMatrixWorld para componer cada instancia SIN multiplicar matrices a mano.
+  const scratchTree = new THREE.Group();
+  const scratchPart = new THREE.Object3D();
+  scratchTree.add(scratchPart);
+
+  function treeInstance(name, px, py, pz, s, rotY, rz, x, h, z, treeData) {
+    const im = treePartMeshes[name];
+    const idx = im.count;
+    im.userData.instanceTree[idx] = treeData;
+    scratchTree.position.set(x, h, z);
+    scratchTree.rotation.set(0, rotY, 0);
+    scratchTree.scale.setScalar(s);
+    scratchPart.position.set(px, py, pz);
+    scratchPart.rotation.set(0, 0, rz || 0);
+    scratchTree.updateMatrixWorld(true);
+    im.setMatrixAt(idx, scratchPart.matrixWorld.clone());
+    im.count = idx + 1;
+    return { name, idx };
+  }
 
   function makeTree(x, z) {
-    const g = new THREE.Group();
     const s = 0.9 + Math.random() * 0.9;
-
+    const h = getHeight(x, z);
+    const wood = 50 + Math.floor(Math.random() * 51);
+    const data = { x, z, wood, maxWood: wood, parts: [] };
+    const rotY = Math.random() * Math.PI;
     // Tronco robusto (base ancha) + rama ocasional (SOLO el tronco proyecta sombra)
-    const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.38, 2.4, 6), trunkMat);
-    trunk.position.y = 1.2; trunk.castShadow = true;
-    g.add(trunk);
+    data.parts.push(treeInstance('trunk', 0, 1.2, 0, s, rotY, 0, x, h, z, data));
     if (Math.random() > 0.5) {
-      const branch = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.11, 1.3, 5), trunkMat);
-      branch.position.set(0.4, 1.9, 0.15);
-      branch.rotation.z = -Math.PI / 5;
-      g.add(branch);
+      data.parts.push(treeInstance('branch', 0.4, 1.9, 0.15, s, rotY, -Math.PI / 5, x, h, z, data));
     }
-
-    // 🪓 Copa LOW-POLY: un icosaedro central + 4 satélites + cima.
-    // ~130 triángulos por árbol (antes ~1.000 con esferas) y la copa NO
-    // proyecta sombra: con 400-900 árboles era lo que hundía los FPS.
-    const leaves = new THREE.Group();
-    const mid = new THREE.Mesh(new THREE.IcosahedronGeometry(0.95, 0), leavesMat);
-    mid.position.set(0, 2.55, 0);
-    leaves.add(mid);
+    // 🪓 Copa LOW-POLY: icosaedro central + 4 satélites + cima (~130 triángulos por árbol)
+    data.parts.push(treeInstance('mid', 0, 2.55, 0, s, rotY, 0, x, h, z, data));
     for (let i = 0; i < 4; i++) {
       const a = (i / 4) * Math.PI * 2 + 0.4;
-      const blob = new THREE.Mesh(new THREE.IcosahedronGeometry(0.55, 0), i % 2 ? leafDark : leafLight);
-      blob.position.set(Math.cos(a) * 0.62, 2.25 + Math.sin(i * 2.1) * 0.18, Math.sin(a) * 0.62);
-      leaves.add(blob);
+      data.parts.push(treeInstance(i % 2 ? 'blobA' : 'blobB', Math.cos(a) * 0.62, 2.25 + Math.sin(i * 2.1) * 0.18, Math.sin(a) * 0.62, s, rotY, 0, x, h, z, data));
     }
-    const top = new THREE.Mesh(new THREE.IcosahedronGeometry(0.45, 0), leafLight);
-    top.position.set(0, 3.15, 0);
-    leaves.add(top);
-    g.add(leaves);
-
-    g.scale.setScalar(s);
-    g.position.set(x, getHeight(x, z), z);
-    g.rotation.y = Math.random() * Math.PI;
-    scene.add(g);
-    // 🌳 Madera aleatoria (50-100) + colisión proporcional al tamaño
-    const wood = 50 + Math.floor(Math.random() * 51);
-    const data = { group: g, x, z, wood, maxWood: wood };
+    data.parts.push(treeInstance('top', 0, 3.15, 0, s, rotY, 0, x, h, z, data));
     trees.push(data);
     treeColliders.push({ x, z, r: 0.42 * s, tree: data });
-    g.traverse(o => {
-      if (o.isMesh) { o.userData.treeData = data; treeMeshes.push(o); }
-    });
     return data;
   }
 
   function makeCactus(x, z) {
-    const g = new THREE.Group();
     const s = 0.7 + Math.random() * 0.5;
-    const cactusMat = new THREE.MeshStandardMaterial({ color: 0x3a6a2a, roughness: 0.9 });
-    const body = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.35, 2.5, 6), cactusMat);
-    body.position.y = 1.25; body.castShadow = true;
-    g.add(body);
-    if (Math.random() > 0.4) {
-      const arm = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.18, 1.0, 5), cactusMat);
-      arm.position.set(0.35, 1.6, 0); arm.rotation.z = -Math.PI / 4;
-      g.add(arm);
-    }
-    g.scale.setScalar(s);
-    g.position.set(x, getHeight(x, z), z);
-    scene.add(g);
+    const h = getHeight(x, z);
     const wood = 50 + Math.floor(Math.random() * 51);
-    const data = { group: g, x, z, wood, maxWood: wood };
+    const data = { x, z, wood, maxWood: wood, parts: [] };
+    data.parts.push(treeInstance('body', 0, 1.25, 0, s, 0, 0, x, h, z, data));
+    if (Math.random() > 0.4) {
+      data.parts.push(treeInstance('arm', 0.35, 1.6, 0, s, 0, -Math.PI / 4, x, h, z, data));
+    }
     trees.push(data);
     treeColliders.push({ x, z, r: 0.42 * s, tree: data });
-    g.traverse(o => {
-      if (o.isMesh) { o.userData.treeData = data; treeMeshes.push(o); }
-    });
   }
 
   // Árbol según nivel (el desierto conserva sus cactus)
@@ -1190,6 +1277,11 @@ async function startGame(levelNum) {
     }
   }
 
+  // 🪓 Subir las instancias a la GPU UNA sola vez (patrón idéntico a hierba/flores)
+  for (const key in treePartMeshes) treePartMeshes[key].instanceMatrix.needsUpdate = true;
+  console.log('🌳 Árboles creados:', trees.length, '· partes:',
+    Object.keys(treePartMeshes).map(k => k + '=' + treePartMeshes[k].count).join(', '));
+
   for (let i = 0; i < CFG.rockCount * 3; i++) {
     const x = (Math.random() - 0.5) * (WORLD_SIZE - 16), z = (Math.random() - 0.5) * (WORLD_SIZE - 16);
     const h = getHeight(x, z);
@@ -1203,19 +1295,27 @@ async function startGame(levelNum) {
     scene.add(rock);
   }
 
-  // 🪓 Elimina un árbol talado del mapa (escena + colisión + raycast)
+  // 🪓 Elimina un árbol talado del mapa (instancias + colisión + raycast)
   function removeTree(data) {
-    scene.remove(data.group);
+    for (const p of data.parts) {
+      const im = treePartMeshes[p.name];
+      im.setMatrixAt(p.idx, treeZero.makeScale(0, 0, 0));
+      im.userData.instanceTree[p.idx] = null;
+      im.instanceMatrix.needsUpdate = true;
+    }
     const ci = treeColliders.findIndex(c => c.tree === data);
     if (ci >= 0) treeColliders.splice(ci, 1);
     const ti = trees.indexOf(data);
     if (ti >= 0) trees.splice(ti, 1);
-    data.group.traverse(o => {
-      if (o.isMesh) {
-        const mi = treeMeshes.indexOf(o);
-        if (mi >= 0) treeMeshes.splice(mi, 1);
-      }
-    });
+  }
+
+  // 🪓 Primer árbol (con madera) golpeado por el rayo del cursor
+  function treeHitTree(hits) {
+    for (const hit of hits) {
+      const t = hit.object.userData.instanceTree[hit.instanceId];
+      if (t && t.wood > 0) return t;
+    }
+    return null;
   }
 
   // Casas (solo niveles 1 y 2)
@@ -1619,6 +1719,51 @@ async function startGame(levelNum) {
     return group;
   }
 
+  // 🌳 Barra 3D de madera restante (verde) para los árboles
+  function createTreeBar3D() {
+    const group = new THREE.Group();
+    const bg = new THREE.Mesh(
+      new THREE.PlaneGeometry(2.2, 0.28),
+      new THREE.MeshBasicMaterial({ color: 0x1a0808, transparent: true, opacity: 0.85, side: THREE.DoubleSide, depthTest: false })
+    );
+    group.add(bg);
+    const fg = new THREE.Mesh(
+      new THREE.PlaneGeometry(2.1, 0.20),
+      new THREE.MeshBasicMaterial({ color: 0x7ec850, side: THREE.DoubleSide, depthTest: false })
+    );
+    fg.position.z = 0.02;
+    group.add(fg);
+    group.userData.fg = fg;
+    group.renderOrder = 999;
+    bg.renderOrder = 999;
+    fg.renderOrder = 999;
+    return group;
+  }
+
+  // 🌳 Pool de barras de árboles: se reutilizan y solo se muestran mientras
+  // el árbol está seleccionado o siendo talado
+  const treeBarPool = [];
+  function getTreeBar() {
+    let b = treeBarPool.find(b => !b.userData.used);
+    if (!b) {
+      b = createTreeBar3D();
+      b.userData.used = false;
+      treeBarPool.push(b);
+      scene.add(b);
+    }
+    b.userData.used = true;
+    b.visible = true;
+    return b;
+  }
+  function releaseTreeBars() {
+    for (const b of treeBarPool) {
+      if (b.userData.used) {
+        b.userData.used = false;
+        b.visible = false;
+      }
+    }
+  }
+
   // 🚪 Palabras clave para detectar puertas (evita tocar piezas de muralla)
   // FUERTES: indican casi seguro una HOJA de puerta.
   const DOOR_STRONG = ['door', 'puerta', 'porton', 'portón', 'portcullis', 'hoja', 'leaf'];
@@ -1826,6 +1971,7 @@ async function startGame(levelNum) {
   function selectStructure(s) {
     selectedStructure = s;
     hideTreeInfo();
+    hideSlaveInfo();
     updateInfoPanel();
   }
 
@@ -1919,9 +2065,18 @@ let selectedSlaveInfo = null;
 
 function showSlaveInfo(slave) {
   selectedSlaveInfo = slave;
-  const isSoldier = slave.type === 'soldier';
-  document.getElementById('slave-name').textContent = isSoldier ? '⚔️ Soldado' : '👤 Aldeano';
-  document.getElementById('btn-slave-build').style.display = isSoldier ? 'none' : 'flex';
+  const type = slave.type || 'slave';
+  const names = {
+    slave:   '👤 Aldeano',
+    soldier: '⚔️ Soldado',
+    archer:  '🏹 Arquero',
+    cavalry: '🐎 Caballero',
+  };
+  document.getElementById('slave-name').textContent = names[type] || '👤 Aldeano';
+  document.getElementById('btn-slave-build').style.display = type === 'slave' ? 'flex' : 'none';
+  // 🔄 Paneles excluyentes: la unidad cierra el panel de estructura/árbol
+  hideTreeInfo();
+  document.getElementById('structure-info').classList.remove('visible');
   updateSlaveInfoUI();
   document.getElementById('slave-info').classList.add('visible');
 }
@@ -2438,6 +2593,22 @@ builder.mineTarget = null;
       const my = (s.mesh.position.z / WORLD_SIZE + 0.5) * MINIMAP_RES;
       minimapCtx.fillRect(mx - 1.2, my - 1.2, 2.4, 2.4);
     }
+    // Arqueros (puntos verdes claros)
+    minimapCtx.fillStyle = '#7ae85a';
+    for (let i = 0; i < archers.length; i++) {
+      const s = archers[i];
+      const mx = (s.mesh.position.x / WORLD_SIZE + 0.5) * MINIMAP_RES;
+      const my = (s.mesh.position.z / WORLD_SIZE + 0.5) * MINIMAP_RES;
+      minimapCtx.fillRect(mx - 1.2, my - 1.2, 2.4, 2.4);
+    }
+    // Caballería (puntos rojos)
+    minimapCtx.fillStyle = '#ff5a5a';
+    for (let i = 0; i < cavalry.length; i++) {
+      const s = cavalry[i];
+      const mx = (s.mesh.position.x / WORLD_SIZE + 0.5) * MINIMAP_RES;
+      const my = (s.mesh.position.z / WORLD_SIZE + 0.5) * MINIMAP_RES;
+      minimapCtx.fillRect(mx - 1.2, my - 1.2, 2.4, 2.4);
+    }
     // Rey (círculo blanco con borde)
     const kx = (king.position.x / WORLD_SIZE + 0.5) * MINIMAP_RES;
     const ky = (king.position.z / WORLD_SIZE + 0.5) * MINIMAP_RES;
@@ -2555,6 +2726,14 @@ builder.mineTarget = null;
     x.fillStyle = eye;
     x.fillRect(14, 8, 1, 2);
     x.fillRect(18, 8, 1, 2);
+    // Cejas
+    x.fillStyle = outline;
+    x.fillRect(13, 7, 2, 1);
+    x.fillRect(17, 7, 2, 1);
+    // Pómulos
+    x.fillStyle = skinL;
+    x.fillRect(12, 11, 1, 1);
+    x.fillRect(19, 11, 1, 1);
     // Nariz
     x.fillStyle = skinS;
     x.fillRect(15, 9, 2, 2);
@@ -2597,6 +2776,13 @@ builder.mineTarget = null;
     x.fillRect(10, 28, 12, 2);
     x.fillStyle = buckle;
     x.fillRect(14, 28, 4, 2);
+    // Bolsa de cuero colgada del cinturón
+    x.fillStyle = outline;
+    x.fillRect(18, 24, 5, 5);
+    x.fillStyle = '#7a4a28';
+    x.fillRect(19, 25, 3, 3);
+    x.fillStyle = '#5a3520';
+    x.fillRect(19, 27, 3, 1);
 
     // ---- Brazo izquierdo (el derecho se pinta según la acción) ----
     x.fillStyle = outline;
@@ -2816,13 +3002,21 @@ const slave = {
   slaves.push(slave);
   return slave;
   }
-  // 👥 Crear esclavos iniciales (3 esclavos cerca del castillo)
+  // 👥 Crear esclavos iniciales (3 esclavos cerca del castillo,
+  // alejándose hasta quedar fuera de estructuras y árboles)
   for (let i = 0; i < 3; i++) {
-  const angle = (i / 3) * Math.PI * 2 + Math.random() * 0.5;
-  const r = 6 + Math.random() * 3;
-  const sx = playerBase.x + Math.cos(angle) * r;
-  const sz = playerBase.z + Math.sin(angle) * r;
-  createSlave(sx, sz);   // nacen en 'idle': quietos hasta que les des una orden
+    const angle = (i / 3) * Math.PI * 2 + Math.random() * 0.5;
+    let r = 6 + Math.random() * 3;
+    let sx = playerBase.x + Math.cos(angle) * r;
+    let sz = playerBase.z + Math.sin(angle) * r;
+    let tries = 0;
+    while ((collidesWithStructure(sx, sz, 0.5) || collidesWithTree(sx, sz, 0.5)) && tries < 40) {
+      r += 1.5;
+      sx = playerBase.x + Math.cos(angle) * r;
+      sz = playerBase.z + Math.sin(angle) * r;
+      tries++;
+    }
+    createSlave(sx, sz);   // nacen en 'idle': quietos hasta que les des una orden
   }
   // ⚒️ Cola de fabricación: 1 esclavo en fábrica + el resto en espera
   const slaveQueue = [];
@@ -2920,33 +3114,91 @@ const slave = {
   updateResourcesUI();
   refreshQueueUI();
 
-  // 🧭 Movimiento con rodeo de obstáculos: cada eje se prueba por separado.
-  // Si un eje queda bloqueado, el otro avanza y la unidad rodea el obstáculo.
-  // Si AMBOS ejes quedan bloqueados, la unidad se desliza en perpendicular
-  // para bordear la estructura y continuar su camino.
+  // 🧭 Movimiento con RODEO real: se desliza alrededor del borde de cada
+  // obstáculo (empuje radial hacia fuera + conservación de la componente
+  // tangencial), así las unidades bordean estructuras y árboles sin atascarse.
   function moveUnit(s, dir, speed, dt, radius) {
-    const ox = s.mesh.position.x, oz = s.mesh.position.z;
     const step = speed * dt;
-    const nx = ox + dir.x * step;
-    const nz = oz + dir.z * step;
-    const canX = !collidesWithTree(nx, oz, radius) && !collidesWithStructure(nx, oz, radius);
-    const canZ = !collidesWithTree(ox, nz, radius) && !collidesWithStructure(ox, nz, radius);
-    if (canX) s.mesh.position.x = nx;
-    if (canZ) s.mesh.position.z = nz;
-    // 🧭 Atascado frontal: probar ambos sentidos perpendiculares y avanzar por el libre
-    if (!canX && !canZ) {
-      const p1x = ox - dir.z * step, p1z = oz + dir.x * step;
-      const p2x = ox + dir.z * step, p2z = oz - dir.x * step;
-      const ok1 = !collidesWithTree(p1x, p1z, radius) && !collidesWithStructure(p1x, p1z, radius);
-      const ok2 = !collidesWithTree(p2x, p2z, radius) && !collidesWithStructure(p2x, p2z, radius);
-      if (ok1) { s.mesh.position.x = p1x; s.mesh.position.z = p1z; }
-      else if (ok2) { s.mesh.position.x = p2x; s.mesh.position.z = p2z; }
+    let tx = s.mesh.position.x + dir.x * step;
+    let tz = s.mesh.position.z + dir.z * step;
+    for (let pass = 0; pass < 3; pass++) {
+      let pushed = false;
+      for (const st of structures) {
+        if (st.underConstruction) continue;
+        const dx = tx - st.mesh.position.x, dz = tz - st.mesh.position.z;
+        const d2 = dx * dx + dz * dz;
+        const maxD = radius + st.radius;
+        if (d2 >= maxD * maxD) continue;                       // lejos: nada que hacer
+        // 🚪 Cerca de la puerta abierta: permitir el paso por la apertura
+        if (st.doorOpen && st.doorLocalPos) {
+          const doorWorld = st.doorLocalPos.clone().applyMatrix4(st.mesh.matrixWorld);
+          const ddx = tx - doorWorld.x, ddz = tz - doorWorld.z;
+          const leafCount = st.doorLeaves ? st.doorLeaves.length : 1;
+          const passageRadius = leafCount >= 2
+            ? Math.max(4.0, st.radius * 0.85)
+            : Math.max(2.5, st.radius * 0.55);
+          if (ddx * ddx + ddz * ddz < passageRadius * passageRadius) continue;
+        }
+        if (d2 < 0.0001) { tx = st.mesh.position.x + maxD; tz = st.mesh.position.z; pushed = true; continue; }
+        const d = Math.sqrt(d2);
+        tx = st.mesh.position.x + (dx / d) * maxD;
+        tz = st.mesh.position.z + (dz / d) * maxD;
+        pushed = true;
+      }
+      for (const c of treeColliders) {
+        const dx = tx - c.x, dz = tz - c.z;
+        const d2 = dx * dx + dz * dz;
+        const maxD = radius + c.r;
+        if (d2 < maxD * maxD) {
+          if (d2 < 0.0001) { tx = c.x + maxD; tz = c.z; pushed = true; continue; }
+          const d = Math.sqrt(d2);
+          tx = c.x + (dx / d) * maxD;
+          tz = c.z + (dz / d) * maxD;
+          pushed = true;
+        }
+      }
+      if (!pushed) break;
+    }
+    s.mesh.position.x = tx;
+    s.mesh.position.z = tz;
+  }
+
+  // 🧱 Desatasca unidades que quedaron DENTRO de una estructura o árbol
+  // (empuje radial hasta el borde exterior de cada obstáculo)
+  function depenetrateUnits() {
+    const all = slaves.concat(soldiers, archers, cavalry);
+    const R = 0.5;
+    for (let pass = 0; pass < 2; pass++) {
+      for (const s of all) {
+        const x = s.mesh.position.x, z = s.mesh.position.z;
+        for (const st of structures) {
+          if (st.underConstruction) continue;
+          const dx = x - st.mesh.position.x, dz = z - st.mesh.position.z;
+          const d2 = dx * dx + dz * dz;
+          const maxD = R + st.radius;
+          if (d2 < maxD * maxD && d2 > 0.0001) {
+            const d = Math.sqrt(d2);
+            s.mesh.position.x = st.mesh.position.x + (dx / d) * maxD;
+            s.mesh.position.z = st.mesh.position.z + (dz / d) * maxD;
+          }
+        }
+        for (const c of treeColliders) {
+          const dx = x - c.x, dz = z - c.z;
+          const d2 = dx * dx + dz * dz;
+          const maxD = R + c.r;
+          if (d2 < maxD * maxD && d2 > 0.0001) {
+            const d = Math.sqrt(d2);
+            s.mesh.position.x = c.x + (dx / d) * maxD;
+            s.mesh.position.z = c.z + (dz / d) * maxD;
+          }
+        }
+      }
     }
   }
 
   // 👥 Separación entre unidades: evita que se amontonen unas sobre otras
   function separateUnits() {
-    const all = slaves.concat(soldiers);
+    const all = slaves.concat(soldiers, archers, cavalry);
     const MIN_DIST = 1.1;
     for (let i = 0; i < all.length; i++) {
       for (let j = i + 1; j < all.length; j++) {
@@ -3056,10 +3308,9 @@ const slave = {
     continue;
   }
   const t = s.chopTarget;
-  const dist = s.mesh.position.distanceTo(t.group.position);
+  const dist = Math.hypot(s.mesh.position.x - t.x, s.mesh.position.z - t.z);
   if (dist > SLAVE_CHOP_RANGE) {
-    const dir = new THREE.Vector3().subVectors(t.group.position, s.mesh.position);
-    dir.y = 0;
+    const dir = new THREE.Vector3(t.x - s.mesh.position.x, 0, t.z - s.mesh.position.z);
     dir.normalize();
     moveUnit(s, dir, s.speed, dt, 0.5);
     s.mesh.rotation.y = Math.atan2(dir.x, dir.z);
@@ -3079,7 +3330,7 @@ const slave = {
       t.wood = Math.max(0, t.wood - amount);
       wood += amount;
       updateResourcesUI();
-      spawnWoodFloat(t.group.position, amount);
+      spawnWoodFloat(new THREE.Vector3(t.x, getHeight(t.x, t.z), t.z), amount);
       if (t.wood <= 0) {
         removeTree(t);
         s.state = 'follow';
@@ -3246,6 +3497,10 @@ const slave = {
     x.fillRect(11, 2, 3, 1);
     x.fillStyle = helmS;
     x.fillRect(18, 2, 2, 2);
+    // Remaches dorados del yelmo
+    x.fillStyle = buckle;
+    x.fillRect(12, 4, 1, 1);
+    x.fillRect(19, 4, 1, 1);
     // Pluma del yelmo
     x.fillStyle = outline;
     x.fillRect(14, 0, 4, 1);
@@ -3273,6 +3528,14 @@ const slave = {
     x.fillStyle = eye;
     x.fillRect(14, 8, 1, 2);
     x.fillRect(18, 8, 1, 2);
+    // Cejas
+    x.fillStyle = outline;
+    x.fillRect(13, 7, 2, 1);
+    x.fillRect(17, 7, 2, 1);
+    // Pómulos
+    x.fillStyle = skinL;
+    x.fillRect(12, 11, 1, 1);
+    x.fillRect(19, 11, 1, 1);
     // Nariz
     x.fillStyle = skinS;
     x.fillRect(15, 9, 2, 2);
@@ -3299,6 +3562,12 @@ const slave = {
     x.fillRect(3, 17, 4, 2);
     x.fillStyle = woodS;
     x.fillRect(3, 26, 4, 2);
+    // Tachuelas doradas del escudo
+    x.fillStyle = buckle;
+    x.fillRect(3, 18, 1, 1);
+    x.fillRect(6, 18, 1, 1);
+    x.fillRect(3, 25, 1, 1);
+    x.fillRect(6, 25, 1, 1);
     // Cruz dorada del escudo
     x.fillStyle = buckle;
     x.fillRect(4, 20, 2, 5);
@@ -3692,6 +3961,1000 @@ const slave = {
       }
     }
   }
+  /* ============================================================
+     SISTEMA DE ARQUEROS (defensa a distancia)
+  ============================================================ */
+  const archers = [];
+  const ARCHER_COST = 25;          // 💰 cada arquero cuesta 25 de oro
+  const ARCHER_TRAIN_TIME = 8;     // ⏱️ tarda 8 segundos en entrenarse
+  const ARCHER_SPEED = 9;
+  const ARCHER_FOLLOW_DIST = 5;
+  const ARCHER_ATTACK_RANGE = 14;  // 🏹 dispara de lejos
+  const ARCHER_DETECT_RANGE = 22;
+  const ARCHER_DAMAGE = 20;
+  const ARCHER_HP = 90;
+  const ARCHER_HEIGHT = 4.6;
+
+  // 🎨 Paleta del arquero: cazador de capucha verde con arco
+  const archerPalette = {
+    outline: '#120a04',
+    hood:    '#3f7f4f',
+    hoodS:   '#2c5c38',
+    hoodL:   '#5aa86c',
+    skin:    '#d8b08c',
+    skinS:   '#c0966a',
+    skinL:   '#f0d0a8',
+    eye:     '#0f0a06',
+    eyeW:    '#ffffff',
+    mouth:   '#5a3020',
+    tunic:   '#4a6a4a',
+    tunicS:  '#35503a',
+    tunicL:  '#6a9068',
+    belt:    '#3a2410',
+    buckle:  '#d9a733',
+    pants:   '#3c4a32',
+    pantsS:  '#28341f',
+    boot:    '#2a1a10',
+    bootS:   '#1c1108',
+    wood:    '#8a5a28',
+    woodL:   '#a06a30',
+    woodS:   '#643c18',
+    string:  '#c8b88a',
+    fletch:  '#c0392b',
+    arrow:   '#dfe9f0',
+    quiver:  '#6a4a28',
+    quiverS: '#4a3520',
+  };
+
+  // 🎨 Cuerpo del arquero SIN el brazo derecho (se pinta según la acción)
+  function paintArcherBody(x) {
+    const { outline, hood, hoodS, hoodL, skin, skinS, skinL, eye, eyeW, mouth,
+            tunic, tunicS, tunicL, belt, buckle, pants, pantsS, boot, bootS,
+            quiver, quiverS } = archerPalette;
+
+    // ---- Capucha ----
+    x.fillStyle = outline;
+    x.fillRect(10, 0, 12, 3);
+    x.fillRect(9, 2, 14, 4);
+    x.fillStyle = hood;
+    x.fillRect(11, 1, 10, 2);
+    x.fillRect(10, 2, 12, 3);
+    x.fillStyle = hoodL;
+    x.fillRect(11, 1, 4, 1);
+    x.fillRect(10, 2, 3, 1);
+    x.fillStyle = hoodS;
+    x.fillRect(18, 2, 2, 2);
+
+    // ---- Cara ----
+    x.fillStyle = outline;
+    x.fillRect(11, 5, 10, 10);
+    x.fillStyle = skin;
+    x.fillRect(12, 6, 8, 8);
+    x.fillStyle = skinS;
+    x.fillRect(12, 6, 8, 1);
+    // Orejas
+    x.fillStyle = skin;
+    x.fillRect(10, 8, 2, 3);
+    x.fillRect(20, 8, 2, 3);
+    x.fillStyle = skinS;
+    x.fillRect(10, 10, 2, 1);
+    x.fillRect(20, 10, 2, 1);
+    // Ojos
+    x.fillStyle = eyeW;
+    x.fillRect(13, 8, 2, 2);
+    x.fillRect(17, 8, 2, 2);
+    x.fillStyle = eye;
+    x.fillRect(14, 8, 1, 2);
+    x.fillRect(18, 8, 1, 2);
+    // Cejas
+    x.fillStyle = outline;
+    x.fillRect(13, 7, 2, 1);
+    x.fillRect(17, 7, 2, 1);
+    // Nariz
+    x.fillStyle = skinS;
+    x.fillRect(15, 9, 2, 2);
+    // Boca
+    x.fillStyle = mouth;
+    x.fillRect(14, 12, 4, 1);
+    // Barbilla iluminada
+    x.fillStyle = skinL;
+    x.fillRect(13, 13, 6, 1);
+    // Pómulos
+    x.fillStyle = skinL;
+    x.fillRect(12, 11, 1, 1);
+    x.fillRect(19, 11, 1, 1);
+
+    // ---- Carcaj a la espalda (asoma por el hombro derecho) ----
+    x.fillStyle = outline;
+    x.fillRect(22, 10, 3, 8);
+    x.fillStyle = quiver;
+    x.fillRect(23, 10, 2, 7);
+    x.fillStyle = quiverS;
+    x.fillRect(23, 16, 2, 1);
+    // Flechas asomando del carcaj
+    x.fillStyle = outline;
+    x.fillRect(23, 8, 1, 2);
+    x.fillRect(24, 9, 1, 2);
+
+    // ---- Torso: ropa de cazador ----
+    x.fillStyle = outline;
+    x.fillRect(9, 15, 14, 16);
+    x.fillStyle = tunic;
+    x.fillRect(10, 16, 12, 14);
+    // Cuello
+    x.fillStyle = skinS;
+    x.fillRect(14, 15, 4, 2);
+    x.fillStyle = skin;
+    x.fillRect(14, 15, 4, 1);
+    // Capa corta sobre los hombros
+    x.fillStyle = hood;
+    x.fillRect(9, 15, 2, 5);
+    x.fillRect(21, 15, 2, 5);
+    x.fillStyle = hoodS;
+    x.fillRect(9, 19, 2, 1);
+    x.fillRect(21, 19, 2, 1);
+    // Solapas y sombras
+    x.fillStyle = tunicS;
+    x.fillRect(10, 18, 12, 2);
+    x.fillStyle = tunicL;
+    x.fillRect(11, 17, 10, 1);
+    x.fillStyle = tunicS;
+    x.fillRect(15, 20, 2, 8);
+    x.fillStyle = belt;
+    x.fillRect(15, 22, 2, 2);
+    x.fillRect(15, 25, 2, 2);
+    // Cinturón con hebilla
+    x.fillStyle = belt;
+    x.fillRect(10, 28, 12, 2);
+    x.fillStyle = buckle;
+    x.fillRect(14, 28, 4, 2);
+
+    // ---- Brazo izquierdo (el derecho se pinta según la acción) ----
+    x.fillStyle = outline;
+    x.fillRect(6, 16, 4, 13);
+    x.fillStyle = tunic;
+    x.fillRect(7, 16, 3, 4);
+    x.fillStyle = tunicS;
+    x.fillRect(7, 19, 3, 1);
+    x.fillStyle = skin;
+    x.fillRect(7, 20, 2, 8);
+    // Mano
+    x.fillStyle = skin;
+    x.fillRect(7, 28, 2, 2);
+    x.fillStyle = skinS;
+    x.fillRect(7, 28, 2, 1);
+
+    // ---- Piernas / Pantalón ----
+    x.fillStyle = outline;
+    x.fillRect(10, 30, 5, 12);
+    x.fillRect(17, 30, 5, 12);
+    x.fillStyle = pants;
+    x.fillRect(11, 31, 3, 10);
+    x.fillRect(18, 31, 3, 10);
+    x.fillStyle = pantsS;
+    x.fillRect(11, 31, 1, 10);
+    x.fillRect(18, 31, 1, 10);
+    x.fillRect(11, 38, 3, 3);
+    x.fillRect(18, 38, 3, 3);
+
+    // ---- Botas ----
+    x.fillStyle = outline;
+    x.fillRect(9, 41, 6, 5);
+    x.fillRect(17, 41, 6, 5);
+    x.fillStyle = boot;
+    x.fillRect(10, 42, 5, 3);
+    x.fillRect(18, 42, 5, 3);
+    x.fillStyle = bootS;
+    x.fillRect(10, 44, 5, 1);
+    x.fillRect(18, 44, 5, 1);
+  }
+
+  // 🏹 Brazo derecho con el arco en una pose concreta
+  // (hand = ancla de la mano, head = punta superior del arco)
+  function paintArcherArm(x, hand, head) {
+    const P = archerPalette;
+    // Arco: bastón de madera con puntas
+    x.fillStyle = P.outline;
+    x.fillRect(head[0] - 1, head[1], 3, 10);
+    x.fillStyle = P.wood;
+    x.fillRect(head[0], head[1], 1, 10);
+    x.fillStyle = P.woodL;
+    x.fillRect(head[0], head[1], 1, 2);
+    x.fillRect(head[0], head[1] + 8, 1, 2);
+    // Cuerda tensada
+    x.fillStyle = P.string;
+    x.fillRect(head[0] + 2, head[1] + 1, 1, 8);
+    // Flecha en la cuerda
+    x.fillStyle = P.outline;
+    x.fillRect(head[0] + 2, head[1] + 4, 2, 1);
+    x.fillStyle = P.arrow;
+    x.fillRect(head[0] + 3, head[1] + 4, 1, 1);
+    // Brazo derecho extendido
+    x.fillStyle = P.outline;
+    x.fillRect(hand[0], hand[1], 4, 7);
+    x.fillStyle = P.tunic;
+    x.fillRect(hand[0] + 1, hand[1], 3, 4);
+    x.fillStyle = P.tunicS;
+    x.fillRect(hand[0] + 1, hand[1] + 4, 3, 1);
+    // Mano que empuña el arco
+    x.fillStyle = P.skin;
+    x.fillRect(hand[0] + 1, hand[1] + 5, 2, 2);
+    x.fillStyle = P.skinS;
+    x.fillRect(hand[0] + 1, hand[1] + 5, 2, 1);
+  }
+
+  // 🏹 Sprite de reposo: cuerpo + arco en la mano derecha
+  function createArcherSprite() {
+    const c = document.createElement('canvas');
+    c.width = 32; c.height = 48;
+    const x = c.getContext('2d');
+    paintArcherBody(x);
+    const P = archerPalette;
+    // ---- Arco en reposo (junto al cuerpo) ----
+    x.fillStyle = P.outline;
+    x.fillRect(23, 22, 3, 10);
+    x.fillStyle = P.wood;
+    x.fillRect(24, 22, 1, 10);
+    x.fillStyle = P.woodL;
+    x.fillRect(24, 22, 1, 2);
+    x.fillStyle = P.string;
+    x.fillRect(25, 23, 1, 8);
+    // Brazo derecho
+    x.fillStyle = P.outline;
+    x.fillRect(22, 16, 4, 6);
+    x.fillStyle = P.tunic;
+    x.fillRect(23, 16, 3, 4);
+    x.fillStyle = P.tunicS;
+    x.fillRect(23, 20, 3, 1);
+    // Mano
+    x.fillStyle = P.skin;
+    x.fillRect(23, 20, 2, 2);
+    x.fillStyle = P.skinS;
+    x.fillRect(23, 20, 2, 1);
+    const tex = prepTexture(new THREE.CanvasTexture(c));
+    return tex;
+  }
+
+  const archerTex = createArcherSprite();
+  const archerMat = new THREE.MeshBasicMaterial({ map: archerTex, transparent: true, alphaTest: 0.1, side: THREE.DoubleSide });
+
+  // 🏹 Fases del disparo (hand = ancla de la mano, head = punta del arco)
+  const BOW_SHOOT = [
+    { hand: [21, 10], head: [23, 3] },   // arco alzado
+    { hand: [21, 12], head: [23, 5] },   // tensando
+    { hand: [21, 15], head: [23, 8] },   // flecha lista
+    { hand: [21, 13], head: [23, 6] },   // suelta
+  ];
+
+  // 🏹 Atlas horizontal del ciclo de disparo (un fotograma por columna)
+  function makeArcherShootAtlas() {
+    const c = document.createElement('canvas');
+    c.width = 32 * BOW_SHOOT.length; c.height = 48;
+    const x = c.getContext('2d');
+    BOW_SHOOT.forEach((f, i) => {
+      x.save();
+      x.translate(i * 32, 0);
+      paintArcherBody(x);
+      paintArcherArm(x, f.hand, f.head);
+      x.restore();
+    });
+    const tex = prepTexture(new THREE.CanvasTexture(c));
+    return { tex, count: BOW_SHOOT.length };
+  }
+  const archerShootAtlas = makeArcherShootAtlas();
+  const ARCHER_ATTACK_ANIM_SPEED = 8;
+
+  function createArcher(x, z) {
+    const group = new THREE.Group();
+    const mesh = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), archerMat.clone());
+    const aspect = 32 / 48;
+    mesh.scale.set(ARCHER_HEIGHT * aspect, ARCHER_HEIGHT, 1);
+    mesh.position.y = ARCHER_HEIGHT / 2 - 0.05;
+    group.add(mesh);
+
+    const shadow = new THREE.Mesh(new THREE.CircleGeometry(0.4, 16), new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.3 }));
+    shadow.rotation.x = -Math.PI / 2; shadow.position.y = 0.05;
+    group.add(shadow);
+
+    const ring = new THREE.Mesh(new THREE.RingGeometry(0.5, 0.65, 24), new THREE.MeshBasicMaterial({ color: 0x7ae85a, transparent: true, opacity: 0, side: THREE.DoubleSide }));
+    ring.rotation.x = -Math.PI / 2; ring.position.y = 0.07;
+    group.add(ring);
+
+    group.position.set(x, Math.max(getHeight(x, z), WATER_LEVEL + 0.5), z);
+    scene.add(group);
+
+    const archer = {
+      type: 'archer',
+      mesh: group,
+      sprite: mesh,
+      ring: ring,
+      state: 'idle',
+      target: null,
+      attackCooldown: 0,
+      speed: ARCHER_SPEED,
+      walkAnim: 0,
+      attackAnim: 0,
+      attackTex: archerShootAtlas.tex.clone(),
+      hp: ARCHER_HP,
+      maxHp: ARCHER_HP,
+      moveTarget: null,
+    };
+    archer.attackTex.repeat.set(1 / archerShootAtlas.count, 1);
+    archers.push(archer);
+    return archer;
+  }
+
+  // 🏹 Cola de entrenamiento: 1 arquero en entrenamiento + el resto en espera
+  const archerQueue = [];
+  let archerTrainProgress = 0;
+
+  function hireArcher() {
+    if (gold < ARCHER_COST) return;
+    gold -= ARCHER_COST;                 // se paga al encargar
+    archerQueue.push(true);              // entra en la cola
+    updateResourcesUI();
+    refreshArcherQueueUI();
+  }
+
+  function spawnArcherAtArcheryRange() {
+    const ar = structures.find(s => s.def.id === 'archeryrange' && s.team === 'player');
+    if (!ar) return;
+    const angle = Math.random() * Math.PI * 2;
+    const r = 7 + Math.random() * 3;
+    createArcher(ar.mesh.position.x + Math.cos(angle) * r,
+                 ar.mesh.position.z + Math.sin(angle) * r);
+  }
+
+  function updateArcherTraining(dt) {
+    if (archerQueue.length > 0) {
+      archerTrainProgress += dt;
+      if (archerTrainProgress >= ARCHER_TRAIN_TIME) {
+        archerTrainProgress = 0;
+        archerQueue.shift();
+        spawnArcherAtArcheryRange();
+        refreshArcherQueueUI();
+      }
+    } else {
+      archerTrainProgress = 0;
+    }
+    updateArcherProductionUI();
+  }
+
+  // ---- Interfaz del panel de entrenamiento de arqueros ----
+  const archerProdEl        = document.getElementById('archeryrange-production');
+  const archerTrainFillEl   = document.getElementById('train-fill-archer');
+  const archerTrainStatusEl = document.getElementById('train-status-archer');
+  const archerTrainQueueEl  = document.getElementById('train-queue-archer');
+  const btnTrainArcherEl    = document.getElementById('btn-train-archer');
+
+  btnTrainArcherEl.addEventListener('click', () => hireArcher());
+
+  function refreshArcherQueueUI() {
+    archerTrainQueueEl.innerHTML = '';
+    if (archerQueue.length === 0) {
+      archerTrainQueueEl.innerHTML = '<span style="font-size:11px;color:#888;">Cola vacía</span>';
+      return;
+    }
+    archerQueue.forEach((q, i) => {
+      const slot = document.createElement('div');
+      slot.className = 'queue-slot' + (i === 0 ? ' active' : '');
+      slot.textContent = '🏹';
+      slot.title = (i === 0) ? 'En entrenamiento' : 'En cola de espera';
+      archerTrainQueueEl.appendChild(slot);
+    });
+  }
+
+  function updateArcherProductionUI() {
+    const isPlayerArchery = selectedStructure &&
+      selectedStructure.def.id === 'archeryrange' && selectedStructure.team === 'player' &&
+      !selectedStructure.underConstruction;
+    archerProdEl.style.display = isPlayerArchery ? 'block' : 'none';
+    if (!isPlayerArchery) return;
+
+    if (archerQueue.length > 0) {
+      archerTrainFillEl.style.width = (archerTrainProgress / ARCHER_TRAIN_TIME * 100) + '%';
+      archerTrainStatusEl.textContent =
+        '🏹 Entrenando arquero... ' + Math.max(0, ARCHER_TRAIN_TIME - archerTrainProgress).toFixed(1) + ' s' +
+        (archerQueue.length > 1 ? ' · En cola: ' + (archerQueue.length - 1) : '');
+    } else {
+      archerTrainFillEl.style.width = '0%';
+      archerTrainStatusEl.textContent = 'Sin producción activa';
+    }
+    btnTrainArcherEl.disabled = gold < ARCHER_COST;
+  }
+
+  refreshArcherQueueUI();
+
+  function updateArcherHighlights() {
+    for (const s of archers) {
+      s.ring.material.opacity = selectedArchers.includes(s) ? 0.75 : 0;
+    }
+  }
+
+  // 🏹 IA del arquero: dispara a distancia y se mantiene en rango
+  function updateArchers(dt) {
+    for (const s of archers) {
+      let shooting = false;
+      if (s.state === 'attack') {
+        if (s.target && s.target.hp > 0) {
+          const d = s.mesh.position.distanceTo(s.target.mesh.position);
+          const reach = Math.max(0, d - s.target.radius);
+          if (reach > ARCHER_ATTACK_RANGE) {
+            const dir = new THREE.Vector3().subVectors(s.target.mesh.position, s.mesh.position);
+            dir.y = 0;
+            dir.normalize();
+            moveUnit(s, dir, s.speed, dt, 0.5);
+            s.mesh.rotation.y = Math.atan2(dir.x, dir.z);
+            s.walkAnim += dt * 8;
+          } else {
+            // 🏹 Animación de disparo mientras suelta la flecha
+            shooting = true;
+            s.attackAnim += dt * ARCHER_ATTACK_ANIM_SPEED;
+            if (s.sprite.material.map !== s.attackTex) {
+              s.sprite.material.map = s.attackTex;
+              s.sprite.material.needsUpdate = true;
+            }
+            s.attackTex.offset.set((Math.floor(s.attackAnim) % archerShootAtlas.count) / archerShootAtlas.count, 0);
+            s.attackCooldown -= dt;
+            if (s.attackCooldown <= 0) {
+              damageStructure(s.target, ARCHER_DAMAGE);
+              s.attackCooldown = 1.2;
+            }
+            s.walkAnim = 0;
+          }
+        } else {
+          s.state = 'follow';
+          s.target = null;
+        }
+      } else if (s.state === 'follow') {
+        let targetPos = king.position;
+        if (s.moveTarget) {
+          const distToTarget = s.mesh.position.distanceTo(s.moveTarget);
+          if (distToTarget < 1.5) {
+            s.moveTarget = null;
+          } else {
+            targetPos = s.moveTarget;
+          }
+        }
+        const dist = s.mesh.position.distanceTo(targetPos);
+        if (dist > ARCHER_FOLLOW_DIST) {
+          const dir = new THREE.Vector3().subVectors(targetPos, s.mesh.position);
+          dir.y = 0;
+          dir.normalize();
+          moveUnit(s, dir, s.speed, dt, 0.5);
+          s.mesh.rotation.y = Math.atan2(dir.x, dir.z);
+          s.walkAnim += dt * 8;
+        } else {
+          s.walkAnim = 0;
+        }
+        const enemy = findNearestEnemy(s.mesh.position, ARCHER_DETECT_RANGE);
+        if (enemy) {
+          s.state = 'attack';
+          s.target = enemy;
+          s.moveTarget = null;
+        }
+      } else {
+        s.walkAnim = 0;
+        const enemy = findNearestEnemy(s.mesh.position, ARCHER_DETECT_RANGE);
+        if (enemy) {
+          s.state = 'attack';
+          s.target = enemy;
+        }
+      }
+      s.mesh.position.y = Math.max(getHeight(s.mesh.position.x, s.mesh.position.z), WATER_LEVEL + 0.5);
+      // Billboard
+      const yaw = Math.atan2(camera.position.x - s.mesh.position.x, camera.position.z - s.mesh.position.z);
+      s.sprite.rotation.y = yaw - s.mesh.rotation.y;
+      if (s.state !== 'idle' && s.walkAnim > 0) {
+        s.sprite.position.y = ARCHER_HEIGHT / 2 - 0.05 + Math.abs(Math.sin(s.walkAnim)) * 0.15;
+      } else {
+        s.sprite.position.y = ARCHER_HEIGHT / 2 - 0.05;
+      }
+      if (!shooting && s.sprite.material.map !== archerTex) {
+        s.sprite.material.map = archerTex;
+        s.sprite.material.needsUpdate = true;
+      }
+    }
+  }
+
+  /* ============================================================
+     SISTEMA DE CABALLERÍA (carga rápida)
+  ============================================================ */
+  const cavalry = [];
+  const CAVALRY_COST = 35;         // 💰 cada caballero cuesta 35 de oro
+  const CAVALRY_TRAIN_TIME = 12;   // ⏱️ tarda 12 segundos en entrenarse
+  const CAVALRY_SPEED = 14;
+  const CAVALRY_FOLLOW_DIST = 5;
+  const CAVALRY_ATTACK_RANGE = 4;
+  const CAVALRY_DETECT_RANGE = 20;
+  const CAVALRY_DAMAGE = 30;
+  const CAVALRY_HP = 160;
+  const CAVALRY_HEIGHT = 5.2;
+
+  // 🎨 Paleta del caballero: jinete acorazado sobre caballo castaño
+  const cavalryPalette = {
+    outline: '#120a04',
+    helm:    '#aebfc9',
+    helmS:   '#7e8d99',
+    helmL:   '#d9e6ee',
+    plume:   '#c0392b',
+    skin:    '#f0dcc8',
+    skinS:   '#d8bfa8',
+    skinL:   '#ffe8d8',
+    eye:     '#0f0a06',
+    eyeW:    '#ffffff',
+    mouth:   '#2b1508',
+    tunic:   '#2f5f88',
+    tunicS:  '#20405c',
+    tunicL:  '#3f7fae',
+    belt:    '#3a2410',
+    buckle:  '#d9a733',
+    chain:   '#8a9aa8',
+    chainS:  '#6a7a88',
+    pants:   '#4a3820',
+    pantsS:  '#332612',
+    boot:    '#2a1a10',
+    bootS:   '#1c1108',
+    blade:   '#dfe9f0',
+    bladeL:  '#ffffff',
+    guard:   '#d9a733',
+    horse:   '#7a5230',
+    horseS:  '#5a3a20',
+    horseL:  '#9a7048',
+    mane:    '#3a2410',
+    tail:    '#3a2410',
+  };
+
+  // 🐎 Cuerpo del caballero (jinete + caballo) SIN el brazo derecho
+  function paintCavalryBody(x) {
+    const { outline, helm, helmS, helmL, plume, skin, skinS, skinL, eye, eyeW, mouth,
+            tunic, tunicS, tunicL, belt, buckle, chain, chainS,
+            pants, pantsS, boot, bootS, horse, horseS, horseL, mane, tail } = cavalryPalette;
+
+    // ---- Cola del caballo ----
+    x.fillStyle = outline;
+    x.fillRect(10, 22, 3, 9);
+    x.fillStyle = tail;
+    x.fillRect(11, 23, 2, 8);
+
+    // ---- Cuerpo del caballo ----
+    x.fillStyle = outline;
+    x.fillRect(14, 20, 22, 14);
+    x.fillStyle = horse;
+    x.fillRect(15, 21, 20, 12);
+    x.fillStyle = horseL;
+    x.fillRect(15, 21, 20, 2);
+    x.fillStyle = horseS;
+    x.fillRect(15, 30, 20, 3);
+
+    // ---- Cuello y cabeza del caballo ----
+    x.fillStyle = outline;
+    x.fillRect(33, 14, 7, 12);
+    x.fillStyle = horse;
+    x.fillRect(34, 15, 5, 10);
+    x.fillStyle = horseL;
+    x.fillRect(34, 15, 5, 2);
+    // Crin
+    x.fillStyle = outline;
+    x.fillRect(32, 14, 2, 5);
+    x.fillStyle = mane;
+    x.fillRect(32, 15, 1, 4);
+    // Ojo del caballo
+    x.fillStyle = eyeW;
+    x.fillRect(36, 20, 2, 1);
+    x.fillStyle = eye;
+    x.fillRect(37, 20, 1, 1);
+    // Hocico
+    x.fillStyle = horseS;
+    x.fillRect(38, 22, 2, 3);
+    x.fillStyle = outline;
+    x.fillRect(39, 23, 1, 2);
+
+    // ---- Patas del caballo ----
+    x.fillStyle = outline;
+    x.fillRect(16, 33, 4, 8);
+    x.fillRect(23, 33, 4, 8);
+    x.fillRect(28, 33, 4, 8);
+    x.fillStyle = horseS;
+    x.fillRect(17, 34, 2, 6);
+    x.fillRect(24, 34, 2, 6);
+    x.fillRect(29, 34, 2, 6);
+    x.fillStyle = outline;
+    x.fillRect(16, 40, 4, 2);
+    x.fillRect(23, 40, 4, 2);
+    x.fillRect(28, 40, 4, 2);
+
+    // ---- Jinete: torso con sobrevesta azul ----
+    x.fillStyle = outline;
+    x.fillRect(18, 7, 12, 15);
+    x.fillStyle = tunic;
+    x.fillRect(19, 8, 10, 13);
+    x.fillStyle = tunicL;
+    x.fillRect(20, 8, 8, 1);
+    x.fillStyle = tunicS;
+    x.fillRect(19, 19, 10, 2);
+    // Cruz blanca de la sobrevesta
+    x.fillStyle = '#f0f0f0';
+    x.fillRect(23, 10, 2, 5);
+    x.fillRect(21, 12, 6, 1);
+    // Cinturón con hebilla
+    x.fillStyle = belt;
+    x.fillRect(19, 18, 10, 2);
+    x.fillStyle = buckle;
+    x.fillRect(23, 18, 2, 2);
+
+    // ---- Cabeza del jinete con yelmo ----
+    x.fillStyle = outline;
+    x.fillRect(20, 0, 8, 3);
+    x.fillRect(19, 2, 10, 4);
+    x.fillStyle = helm;
+    x.fillRect(21, 1, 6, 3);
+    x.fillRect(20, 2, 8, 3);
+    x.fillStyle = helmL;
+    x.fillRect(21, 1, 3, 1);
+    x.fillStyle = helmS;
+    x.fillRect(25, 2, 2, 2);
+    // Pluma del yelmo
+    x.fillStyle = outline;
+    x.fillRect(22, 0, 3, 1);
+    x.fillStyle = plume;
+    x.fillRect(23, 0, 2, 2);
+    // Cara
+    x.fillStyle = outline;
+    x.fillRect(20, 5, 8, 8);
+    x.fillStyle = skin;
+    x.fillRect(21, 6, 6, 6);
+    x.fillStyle = skinS;
+    x.fillRect(21, 6, 6, 1);
+    // Ojos
+    x.fillStyle = eyeW;
+    x.fillRect(22, 8, 2, 2);
+    x.fillRect(26, 8, 2, 2);
+    x.fillStyle = eye;
+    x.fillRect(23, 8, 1, 2);
+    x.fillRect(27, 8, 1, 2);
+    // Cejas
+    x.fillStyle = outline;
+    x.fillRect(22, 7, 2, 1);
+    x.fillRect(26, 7, 2, 1);
+    // Boca
+    x.fillStyle = mouth;
+    x.fillRect(23, 11, 3, 1);
+
+    // ---- Brazo izquierdo con riendas ----
+    x.fillStyle = outline;
+    x.fillRect(16, 8, 4, 8);
+    x.fillStyle = chain;
+    x.fillRect(17, 8, 3, 4);
+    x.fillStyle = chainS;
+    x.fillRect(17, 12, 3, 1);
+    // Mano
+    x.fillStyle = skin;
+    x.fillRect(17, 14, 2, 2);
+    x.fillStyle = skinS;
+    x.fillRect(17, 14, 2, 1);
+    // Riendas hacia la cabeza del caballo
+    x.fillStyle = belt;
+    x.fillRect(19, 14, 13, 1);
+
+    // ---- Piernas del jinete (sobre el lomo) ----
+    x.fillStyle = outline;
+    x.fillRect(19, 20, 4, 9);
+    x.fillRect(25, 20, 4, 9);
+    x.fillStyle = pants;
+    x.fillRect(20, 20, 2, 7);
+    x.fillRect(26, 20, 2, 7);
+    x.fillStyle = boot;
+    x.fillRect(20, 27, 2, 2);
+    x.fillRect(26, 27, 2, 2);
+  }
+
+  // ⚔️ Brazo derecho con la espada en una pose concreta
+  function paintCavalryArm(x, hand, head) {
+    const P = cavalryPalette;
+    // Espada (hoja + guarda + mango)
+    x.fillStyle = P.outline;
+    x.fillRect(head[0] - 1, head[1], 4, 11);
+    x.fillRect(head[0] - 1, head[1] + 10, 4, 2);
+    x.fillRect(head[0], head[1] + 12, 2, 3);
+    x.fillStyle = P.blade;
+    x.fillRect(head[0], head[1] + 1, 2, 9);
+    x.fillStyle = P.bladeL;
+    x.fillRect(head[0], head[1] + 1, 1, 8);
+    x.fillStyle = P.guard;
+    x.fillRect(head[0] - 1, head[1] + 10, 4, 2);
+    x.fillStyle = P.belt;
+    x.fillRect(head[0], head[1] + 12, 2, 3);
+    // Brazo derecho con manga de cota de malla
+    x.fillStyle = P.outline;
+    x.fillRect(hand[0], hand[1], 4, 7);
+    x.fillStyle = P.chain;
+    x.fillRect(hand[0] + 1, hand[1], 3, 4);
+    x.fillStyle = P.chainS;
+    x.fillRect(hand[0] + 1, hand[1] + 4, 3, 1);
+    // Mano que empuña la espada
+    x.fillStyle = P.skin;
+    x.fillRect(hand[0] + 1, hand[1] + 5, 2, 2);
+    x.fillStyle = P.skinS;
+    x.fillRect(hand[0] + 1, hand[1] + 5, 2, 1);
+  }
+
+  // 🐎 Sprite de reposo: jinete con la espada alzada
+  function createCavalrySprite() {
+    const c = document.createElement('canvas');
+    c.width = 48; c.height = 48;
+    const x = c.getContext('2d');
+    paintCavalryBody(x);
+    const P = cavalryPalette;
+    // ---- Espada alzada (mano derecha) ----
+    x.fillStyle = P.outline;
+    x.fillRect(31, 3, 4, 10);
+    x.fillRect(31, 13, 5, 2);
+    x.fillRect(31, 15, 4, 3);
+    x.fillStyle = P.blade;
+    x.fillRect(32, 4, 2, 8);
+    x.fillStyle = P.bladeL;
+    x.fillRect(32, 4, 1, 7);
+    x.fillStyle = P.guard;
+    x.fillRect(31, 13, 5, 2);
+    x.fillStyle = P.belt;
+    x.fillRect(32, 15, 2, 3);
+    // Brazo derecho con cota de malla
+    x.fillStyle = P.outline;
+    x.fillRect(30, 16, 4, 6);
+    x.fillStyle = P.chain;
+    x.fillRect(31, 16, 3, 4);
+    x.fillStyle = P.chainS;
+    x.fillRect(31, 20, 3, 1);
+    // Mano
+    x.fillStyle = P.skin;
+    x.fillRect(31, 18, 2, 2);
+    x.fillStyle = P.skinS;
+    x.fillRect(31, 18, 2, 1);
+    const tex = prepTexture(new THREE.CanvasTexture(c));
+    return tex;
+  }
+
+  const cavalryTex = createCavalrySprite();
+  const cavalryMat = new THREE.MeshBasicMaterial({ map: cavalryTex, transparent: true, alphaTest: 0.1, side: THREE.DoubleSide });
+
+  // ⚔️ Fases del espadazo a caballo
+  const CAVALRY_SWING = [
+    { hand: [30, 10], head: [33, 2] },   // espada alzada
+    { hand: [30, 14], head: [33, 7] },   // preparando
+    { hand: [31, 19], head: [33, 13] },  // golpe
+    { hand: [30, 14], head: [33, 7] },   // recuperación
+  ];
+
+  // ⚔️ Atlas horizontal del ciclo de espadazo (un fotograma por columna)
+  function makeCavalryAttackAtlas() {
+    const c = document.createElement('canvas');
+    c.width = 48 * CAVALRY_SWING.length; c.height = 48;
+    const x = c.getContext('2d');
+    CAVALRY_SWING.forEach((f, i) => {
+      x.save();
+      x.translate(i * 48, 0);
+      paintCavalryBody(x);
+      paintCavalryArm(x, f.hand, f.head);
+      x.restore();
+    });
+    const tex = prepTexture(new THREE.CanvasTexture(c));
+    return { tex, count: CAVALRY_SWING.length };
+  }
+  const cavalryAttackAtlas = makeCavalryAttackAtlas();
+  const CAVALRY_ATTACK_ANIM_SPEED = 7;
+
+  function createCavalry(x, z) {
+    const group = new THREE.Group();
+    const mesh = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), cavalryMat.clone());
+    mesh.scale.set(CAVALRY_HEIGHT, CAVALRY_HEIGHT, 1);
+    mesh.position.y = CAVALRY_HEIGHT / 2 - 0.05;
+    group.add(mesh);
+
+    const shadow = new THREE.Mesh(new THREE.CircleGeometry(0.4, 16), new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.3 }));
+    shadow.rotation.x = -Math.PI / 2; shadow.position.y = 0.05;
+    group.add(shadow);
+
+    const ring = new THREE.Mesh(new THREE.RingGeometry(0.5, 0.65, 24), new THREE.MeshBasicMaterial({ color: 0xff5a5a, transparent: true, opacity: 0, side: THREE.DoubleSide }));
+    ring.rotation.x = -Math.PI / 2; ring.position.y = 0.07;
+    group.add(ring);
+
+    group.position.set(x, Math.max(getHeight(x, z), WATER_LEVEL + 0.5), z);
+    scene.add(group);
+
+    const cav = {
+      type: 'cavalry',
+      mesh: group,
+      sprite: mesh,
+      ring: ring,
+      state: 'idle',
+      target: null,
+      attackCooldown: 0,
+      speed: CAVALRY_SPEED,
+      walkAnim: 0,
+      attackAnim: 0,
+      attackTex: cavalryAttackAtlas.tex.clone(),
+      hp: CAVALRY_HP,
+      maxHp: CAVALRY_HP,
+      moveTarget: null,
+    };
+    cav.attackTex.repeat.set(1 / cavalryAttackAtlas.count, 1);
+    cavalry.push(cav);
+    return cav;
+  }
+
+  // 🐎 Cola de entrenamiento: 1 caballero en entrenamiento + el resto en espera
+  const cavalryQueue = [];
+  let cavalryTrainProgress = 0;
+
+  function hireCavalry() {
+    if (gold < CAVALRY_COST) return;
+    gold -= CAVALRY_COST;
+    cavalryQueue.push(true);
+    updateResourcesUI();
+    refreshCavalryQueueUI();
+  }
+
+  function spawnCavalryAtBarracks() {
+    const bar = structures.find(s => s.def.id === 'barracks' && s.team === 'player');
+    if (!bar) return;
+    const angle = Math.random() * Math.PI * 2;
+    const r = 8 + Math.random() * 4;
+    createCavalry(bar.mesh.position.x + Math.cos(angle) * r,
+                  bar.mesh.position.z + Math.sin(angle) * r);
+  }
+
+  function updateCavalryTraining(dt) {
+    if (cavalryQueue.length > 0) {
+      cavalryTrainProgress += dt;
+      if (cavalryTrainProgress >= CAVALRY_TRAIN_TIME) {
+        cavalryTrainProgress = 0;
+        cavalryQueue.shift();
+        spawnCavalryAtBarracks();
+        refreshCavalryQueueUI();
+      }
+    } else {
+      cavalryTrainProgress = 0;
+    }
+    updateCavalryProductionUI();
+  }
+
+  // ---- Interfaz del panel de entrenamiento de caballería ----
+  const cavalryProdEl        = document.getElementById('barracks-production');
+  const cavalryTrainFillEl   = document.getElementById('train-fill-cavalry');
+  const cavalryTrainStatusEl = document.getElementById('train-status-cavalry');
+  const cavalryTrainQueueEl  = document.getElementById('train-queue-cavalry');
+  const btnTrainCavalryEl    = document.getElementById('btn-train-cavalry');
+
+  btnTrainCavalryEl.addEventListener('click', () => hireCavalry());
+
+  function refreshCavalryQueueUI() {
+    cavalryTrainQueueEl.innerHTML = '';
+    if (cavalryQueue.length === 0) {
+      cavalryTrainQueueEl.innerHTML = '<span style="font-size:11px;color:#888;">Cola vacía</span>';
+      return;
+    }
+    cavalryQueue.forEach((q, i) => {
+      const slot = document.createElement('div');
+      slot.className = 'queue-slot' + (i === 0 ? ' active' : '');
+      slot.textContent = '🐎';
+      slot.title = (i === 0) ? 'En entrenamiento' : 'En cola de espera';
+      cavalryTrainQueueEl.appendChild(slot);
+    });
+  }
+
+  function updateCavalryProductionUI() {
+    const isPlayerBarracks = selectedStructure &&
+      selectedStructure.def.id === 'barracks' && selectedStructure.team === 'player' &&
+      !selectedStructure.underConstruction;
+    cavalryProdEl.style.display = isPlayerBarracks ? 'block' : 'none';
+    if (!isPlayerBarracks) return;
+
+    if (cavalryQueue.length > 0) {
+      cavalryTrainFillEl.style.width = (cavalryTrainProgress / CAVALRY_TRAIN_TIME * 100) + '%';
+      cavalryTrainStatusEl.textContent =
+        '🐎 Entrenando caballero... ' + Math.max(0, CAVALRY_TRAIN_TIME - cavalryTrainProgress).toFixed(1) + ' s' +
+        (cavalryQueue.length > 1 ? ' · En cola: ' + (cavalryQueue.length - 1) : '');
+    } else {
+      cavalryTrainFillEl.style.width = '0%';
+      cavalryTrainStatusEl.textContent = 'Sin producción activa';
+    }
+    btnTrainCavalryEl.disabled = gold < CAVALRY_COST;
+  }
+
+  refreshCavalryQueueUI();
+
+  function updateCavalryHighlights() {
+    for (const s of cavalry) {
+      s.ring.material.opacity = selectedCavalry.includes(s) ? 0.75 : 0;
+    }
+  }
+
+  // 🐎 IA del caballero: carga rápida contra el objetivo (cuerpo a cuerpo)
+  function updateCavalry(dt) {
+    for (const s of cavalry) {
+      let striking = false;
+      if (s.state === 'attack') {
+        if (s.target && s.target.hp > 0) {
+          const d = s.mesh.position.distanceTo(s.target.mesh.position);
+          const reach = Math.max(0, d - s.target.radius);
+          if (reach > CAVALRY_ATTACK_RANGE) {
+            const dir = new THREE.Vector3().subVectors(s.target.mesh.position, s.mesh.position);
+            dir.y = 0;
+            dir.normalize();
+            moveUnit(s, dir, s.speed, dt, 0.5);
+            s.mesh.rotation.y = Math.atan2(dir.x, dir.z);
+            s.walkAnim += dt * 8;
+          } else {
+            striking = true;
+            s.attackAnim += dt * CAVALRY_ATTACK_ANIM_SPEED;
+            if (s.sprite.material.map !== s.attackTex) {
+              s.sprite.material.map = s.attackTex;
+              s.sprite.material.needsUpdate = true;
+            }
+            s.attackTex.offset.set((Math.floor(s.attackAnim) % cavalryAttackAtlas.count) / cavalryAttackAtlas.count, 0);
+            s.attackCooldown -= dt;
+            if (s.attackCooldown <= 0) {
+              damageStructure(s.target, CAVALRY_DAMAGE);
+              s.attackCooldown = 1.0;
+            }
+            s.walkAnim = 0;
+          }
+        } else {
+          s.state = 'follow';
+          s.target = null;
+        }
+      } else if (s.state === 'follow') {
+        let targetPos = king.position;
+        if (s.moveTarget) {
+          const distToTarget = s.mesh.position.distanceTo(s.moveTarget);
+          if (distToTarget < 1.5) {
+            s.moveTarget = null;
+          } else {
+            targetPos = s.moveTarget;
+          }
+        }
+        const dist = s.mesh.position.distanceTo(targetPos);
+        if (dist > CAVALRY_FOLLOW_DIST) {
+          const dir = new THREE.Vector3().subVectors(targetPos, s.mesh.position);
+          dir.y = 0;
+          dir.normalize();
+          moveUnit(s, dir, s.speed, dt, 0.5);
+          s.mesh.rotation.y = Math.atan2(dir.x, dir.z);
+          s.walkAnim += dt * 8;
+        } else {
+          s.walkAnim = 0;
+        }
+        const enemy = findNearestEnemy(s.mesh.position, CAVALRY_DETECT_RANGE);
+        if (enemy) {
+          s.state = 'attack';
+          s.target = enemy;
+          s.moveTarget = null;
+        }
+      } else {
+        s.walkAnim = 0;
+        const enemy = findNearestEnemy(s.mesh.position, CAVALRY_DETECT_RANGE);
+        if (enemy) {
+          s.state = 'attack';
+          s.target = enemy;
+        }
+      }
+      s.mesh.position.y = Math.max(getHeight(s.mesh.position.x, s.mesh.position.z), WATER_LEVEL + 0.5);
+      // Billboard
+      const yaw = Math.atan2(camera.position.x - s.mesh.position.x, camera.position.z - s.mesh.position.z);
+      s.sprite.rotation.y = yaw - s.mesh.rotation.y;
+      if (s.state !== 'idle' && s.walkAnim > 0) {
+        s.sprite.position.y = CAVALRY_HEIGHT / 2 - 0.05 + Math.abs(Math.sin(s.walkAnim)) * 0.15;
+      } else {
+        s.sprite.position.y = CAVALRY_HEIGHT / 2 - 0.05;
+      }
+      if (!striking && s.sprite.material.map !== cavalryTex) {
+        s.sprite.material.map = cavalryTex;
+        s.sprite.material.needsUpdate = true;
+      }
+    }
+  }
+
   /* --- LISTO --- */
   updateLoading(100, `¡Bienvenido a ${CFG.name}!`);
 
@@ -3729,8 +4992,8 @@ const slave = {
   let cameraDistance = 52;
   const CAMERA_DIST_MIN = 20;
   const CAMERA_DIST_MAX = 120;
-  const PITCH_MIN = 0.25;
-  const PITCH_MAX = 1.40;
+  const PITCH_MIN = 0.80;
+  const PITCH_MAX = 1.10;
 
   let isRotatingCamera = false;
   let lastMouseX = 0, lastMouseY = 0;
@@ -3741,6 +5004,8 @@ const slave = {
   let selectStartX = 0, selectStartY = 0;
   const selectRect = document.getElementById('select-rect');
   let selectedSlaves = [];
+  let selectedArchers = [];
+  let selectedCavalry = [];
 
   // Menús contextuales
   const npcMenuEl = document.getElementById('npc-menu');
@@ -3750,7 +5015,24 @@ const slave = {
   let npcChopTarget = null;   // 🪓 árbol para la orden "Talar"
 
   function selectedUnits() {
-    return selectedSlaves.concat(selectedSoldiers);
+    return selectedSlaves.concat(selectedSoldiers, selectedArchers, selectedCavalry);
+  }
+  // ✅ Selección de unidades de cualquier tipo (limpia las listas anteriores)
+  function setUnitSelection(list) {
+    selectedSlaves = [];
+    selectedSoldiers = [];
+    selectedArchers = [];
+    selectedCavalry = [];
+    for (const u of list) {
+      if (u.type === 'soldier') selectedSoldiers.push(u);
+      else if (u.type === 'archer') selectedArchers.push(u);
+      else if (u.type === 'cavalry') selectedCavalry.push(u);
+      else selectedSlaves.push(u);
+    }
+    updateSlaveHighlights();
+    updateSoldierHighlights();
+    updateArcherHighlights();
+    updateCavalryHighlights();
   }
   function showNpcMenu(x, y) {
     npcMenuEl.style.left = x + 'px';
@@ -3908,32 +5190,25 @@ const slave = {
         closeBuildMenu();
       }
 
-      // Detectar clic en esclavo o soldado (raycasting sobre sprites)
+      // Detectar clic en cualquier unidad (raycasting sobre sprites)
       buildRay.setFromCamera(mouseNDC, camera);
-      const slaveMeshes = slaves.map(s => s.sprite);
-      const soldierMeshes = soldiers.map(s => s.sprite);
-      const slaveHits = buildRay.intersectObjects(slaveMeshes, false);
-      const soldierHits = buildRay.intersectObjects(soldierMeshes, false);
+      const allUnitMeshes = slaves.map(s => s.sprite).concat(
+        soldiers.map(s => s.sprite),
+        archers.map(s => s.sprite),
+        cavalry.map(s => s.sprite));
+      const unitHits = buildRay.intersectObjects(allUnitMeshes, false);
 
-      if (slaveHits.length > 0 || soldierHits.length > 0) {
-        const clickedUnit = (slaveHits.length > 0)
-          ? slaves.find(s => s.sprite === slaveHits[0].object)
-          : soldiers.find(s => s.sprite === soldierHits[0].object);
+      if (unitHits.length > 0) {
+        const hitObj = unitHits[0].object;
+        const clickedUnit = slaves.find(s => s.sprite === hitObj)
+          || soldiers.find(s => s.sprite === hitObj)
+          || archers.find(s => s.sprite === hitObj)
+          || cavalry.find(s => s.sprite === hitObj);
         if (clickedUnit) {
-          if (clickedUnit.type === 'soldier') {
-            selectedSlaves = [];
-            selectedSoldiers = [clickedUnit];
-          } else {
-            selectedSlaves = [clickedUnit];
-            selectedSoldiers = [];
-          }
-          updateSlaveHighlights();
-          updateSoldierHighlights();
+          setUnitSelection([clickedUnit]);
           mouseAttackQueued = false;
-          // Desactivar otros paneles
-          hideTreeInfo();
-          document.getElementById('structure-info').classList.remove('visible');
-          // Mostrar panel de unidad
+          deselectStructure();
+          // Mostrar panel de unidad (cierra el de estructura)
           showSlaveInfo(clickedUnit);
           return;
         }
@@ -3963,14 +5238,11 @@ const slave = {
       }
 
       // 🌳 Clic izquierdo en un árbol: muestra su madera restante
-      const treeHits = buildRay.intersectObjects(treeMeshes, false);
+      const treeHits = buildRay.intersectObjects(treeRayMeshes, false);
       if (treeHits.length > 0) {
-        const treeData = treeHits[0].object.userData.treeData;
-        if (treeData && treeData.wood > 0) {
-          selectedSlaves = [];
-          selectedSoldiers = [];
-          updateSlaveHighlights();
-          updateSoldierHighlights();
+        const treeData = treeHitTree(treeHits);
+        if (treeData) {
+          setUnitSelection([]);
           hideSlaveInfo();
           deselectStructure();
           selectedTree = treeData;
@@ -3982,11 +5254,8 @@ const slave = {
       }
 
       // Clic en terreno vacío: deseleccionar unidades
-      if (selectedSlaves.length > 0 || selectedSoldiers.length > 0) {
-        selectedSlaves = [];
-        selectedSoldiers = [];
-        updateSlaveHighlights();
-        updateSoldierHighlights();
+      if (selectedUnits().length > 0) {
+        setUnitSelection([]);
         hideSlaveInfo();
       }
       deselectStructure();
@@ -4033,28 +5302,24 @@ const slave = {
         const rectW = x2 - x1, rectH = y2 - y1;
 
         if (rectW > 5 || rectH > 5) {
-          selectedSlaves = [];
-          selectedSoldiers = [];
-          for (const s of slaves) {
+          setUnitSelection([]);
+          const allUnits = slaves.concat(soldiers, archers, cavalry);
+          for (const s of allUnits) {
             const pos = s.mesh.position.clone().project(camera);
             if (pos.z > 1) continue;
             const sx = (pos.x * 0.5 + 0.5) * innerWidth;
             const sy = (-pos.y * 0.5 + 0.5) * innerHeight;
             if (sx >= x1 && sx <= x2 && sy >= y1 && sy <= y2) {
-              selectedSlaves.push(s);
-            }
-          }
-          for (const s of soldiers) {
-            const pos = s.mesh.position.clone().project(camera);
-            if (pos.z > 1) continue;
-            const sx = (pos.x * 0.5 + 0.5) * innerWidth;
-            const sy = (-pos.y * 0.5 + 0.5) * innerHeight;
-            if (sx >= x1 && sx <= x2 && sy >= y1 && sy <= y2) {
-              selectedSoldiers.push(s);
+              if (s.type === 'soldier') selectedSoldiers.push(s);
+              else if (s.type === 'archer') selectedArchers.push(s);
+              else if (s.type === 'cavalry') selectedCavalry.push(s);
+              else selectedSlaves.push(s);
             }
           }
           updateSlaveHighlights();
           updateSoldierHighlights();
+          updateArcherHighlights();
+          updateCavalryHighlights();
           mouseAttackQueued = false;
           hideTreeInfo();
         }
@@ -4075,25 +5340,20 @@ const slave = {
         npcMovePoint = null;
         buildRay.setFromCamera(mouseNDC, camera);
 
-        // Primero verificar si se clickeó un esclavo o soldado (para dar órdenes)
-        const slaveMeshes = slaves.map(s => s.sprite);
-        const soldierMeshes = soldiers.map(s => s.sprite);
-        const slaveHits = buildRay.intersectObjects(slaveMeshes, false);
-        const soldierHits = buildRay.intersectObjects(soldierMeshes, false);
-        if (slaveHits.length > 0 || soldierHits.length > 0) {
-          const clickedUnit = (slaveHits.length > 0)
-            ? slaves.find(s => s.sprite === slaveHits[0].object)
-            : soldiers.find(s => s.sprite === soldierHits[0].object);
+        // Primero verificar si se clickeó una unidad (para dar órdenes)
+        const allUnitMeshes = slaves.map(s => s.sprite).concat(
+          soldiers.map(s => s.sprite),
+          archers.map(s => s.sprite),
+          cavalry.map(s => s.sprite));
+        const unitHits = buildRay.intersectObjects(allUnitMeshes, false);
+        if (unitHits.length > 0) {
+          const hitObj = unitHits[0].object;
+          const clickedUnit = slaves.find(s => s.sprite === hitObj)
+            || soldiers.find(s => s.sprite === hitObj)
+            || archers.find(s => s.sprite === hitObj)
+            || cavalry.find(s => s.sprite === hitObj);
           if (clickedUnit) {
-            if (clickedUnit.type === 'soldier') {
-              selectedSlaves = [];
-              selectedSoldiers = [clickedUnit];
-            } else {
-              selectedSlaves = [clickedUnit];
-              selectedSoldiers = [];
-            }
-            updateSlaveHighlights();
-            updateSoldierHighlights();
+            setUnitSelection([clickedUnit]);
             npcMovePoint = terrainPoint();
             showNpcMenu(e.clientX, e.clientY);
             isRotatingCamera = false;
@@ -4155,10 +5415,10 @@ const slave = {
           }
         }
         // 🌳 Click derecho en un árbol: orden "Talar" (o su info si no hay unidades)
-        const treeHits = buildRay.intersectObjects(treeMeshes, false);
+        const treeHits = buildRay.intersectObjects(treeRayMeshes, false);
         if (treeHits.length > 0) {
-          const treeData = treeHits[0].object.userData.treeData;
-          if (treeData && treeData.wood > 0) {
+          const treeData = treeHitTree(treeHits);
+          if (treeData) {
             if (selectedUnits().length > 0) {
               npcChopTarget = treeData;
               npcMineTarget = null;
@@ -4308,6 +5568,21 @@ const slave = {
     for (let i = 0; i < structures.length; i++) {
       structures[i].healthBar.quaternion.copy(camera.quaternion);
     }
+    // 🌳 Barras de madera restante: árbol seleccionado o siendo talado
+    releaseTreeBars();
+    const chopTrees = new Set();
+    for (const sl of slaves) {
+      if (sl.state === 'chop' && sl.chopTarget && sl.chopTarget.wood > 0) chopTrees.add(sl.chopTarget);
+    }
+    if (selectedTree && selectedTree.wood > 0) chopTrees.add(selectedTree);
+    for (const t of chopTrees) {
+      const b = getTreeBar();
+      b.position.set(t.x, getHeight(t.x, t.z) + 4.6, t.z);
+      b.quaternion.copy(camera.quaternion);
+      const ratio = Math.max(0.02, t.wood / t.maxWood);
+      b.userData.fg.scale.x = ratio;
+      b.userData.fg.position.x = -(2.1 * (1 - ratio)) / 2;
+    }
     // 🚪 Animar todas las hojas de puerta (interpolación suave)
     for (const s of structures) {
       if (s.doorLeaves) {
@@ -4336,7 +5611,12 @@ const slave = {
     updateSlaves(dt);
     updateSoldierTraining(dt);
     updateSoldiers(dt);
+    updateArcherTraining(dt);
+    updateArchers(dt);
+    updateCavalryTraining(dt);
+    updateCavalry(dt);
     separateUnits();
+    depenetrateUnits();
     // 📊 Actualizar el panel en tiempo real (construcción / extracción / talado)
     if (selectedStructure || selectedTree) updateInfoPanel();
     if (selectedSlaveInfo) updateSlaveInfoUI();
