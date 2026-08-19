@@ -4,22 +4,39 @@
 <meta charset="utf-8"/>
 <title>Reino RTT — Estilo Age of Empires (Mejorado)</title>
 <style>
-  html, body { margin: 0; padding: 0; overflow: hidden; height: 100%; background: #000; font-family: "Trebuchet MS", Arial, sans-serif; }
+  @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&display=swap');
+  html, body { margin: 0; padding: 0; overflow: hidden; height: 100%; background: #000; font-family: "Cinzel", "Trebuchet MS", Arial, sans-serif; }
+  /* --- BARRA SUPERIOR ESTILO AGE OF EMPIRES --- */
   #hud {
-    position: absolute; top: 12px; right: 12px; z-index: 10;
+    position: absolute; top: 8px; left: 50%; transform: translateX(-50%);
+    z-index: 10; display: none; flex-direction: column; align-items: center;
+    gap: 4px; user-select: none;
+  }
+  #hud.visible { display: flex; }
+  .hud-topbar {
+    display: flex; align-items: center; gap: 14px;
+    background: linear-gradient(180deg, rgba(60,42,20,.95), rgba(30,20,8,.95));
+    border: 2px solid #b98d3e; border-radius: 6px;
+    padding: 6px 18px;
+    box-shadow: 0 4px 14px rgba(0,0,0,.6), inset 0 0 0 1px rgba(255,215,106,.2);
+    font-family: "Cinzel", "Trebuchet MS", Arial, sans-serif;
     color: #fff;
-    background: rgba(20, 14, 6, 0.65); border: 2px solid #b98d3e; border-radius: 8px;
-    padding: 10px 14px; font-size: 14px; line-height: 1.6; user-select: none;
-    display: none; text-align: right;
   }
-  #hud b { color: #ffd76a; }
-  #hud .res-row { display: flex; gap: 16px; justify-content: flex-end; }
-  #hud .res { white-space: nowrap; font-size: 15px; }
-  #hud .res b { font-family: "Courier New", monospace; }
-  #hud-help {
-    font-size: 11px; color: #c9b98a;
-    border-top: 1px solid #6a5228; margin-top: 6px; padding-top: 5px;
+  .hud-res { white-space: nowrap; font-size: 15px; font-weight: 600; letter-spacing: .5px; }
+  .hud-res b { color: #ffd76a; }
+  .hud-sep { width: 2px; height: 20px; background: rgba(185,141,62,.6); }
+  .hud-pop, .hud-age, .hud-time { white-space: nowrap; font-size: 13px; font-weight: 600; }
+  .hud-pop b, .hud-age b, .hud-time b { color: #ffd76a; }
+  #hud-king {
+    display: flex; align-items: center; gap: 8px;
+    background: rgba(20,14,6,.85);
+    border: 2px solid #b98d3e; border-radius: 6px;
+    padding: 3px 12px;
   }
+  .king-icon { font-size: 16px; }
+  .king-hp-bar { width: 150px; height: 12px; background: #1a0808; border: 1px solid #6a5228; border-radius: 6px; overflow: hidden; }
+  .king-hp-fill { height: 100%; width: 100%; background: linear-gradient(90deg, #c0392b, #e74c3c); transition: width .3s; }
+  .king-hp-text { color: #fff; font-size: 11px; font-weight: 600; white-space: nowrap; }
   #exit-btn {
     position: absolute; top: 12px; left: 12px; z-index: 10;
     display: none;
@@ -390,6 +407,77 @@
   background: rgba(57, 255, 90, 0.15);
   display: none;
 }
+
+/* --- AVISO FLASH (eventos del juego) --- */
+#flash-msg {
+  position: fixed; top: 24%; left: 50%; transform: translate(-50%,-50%);
+  z-index: 60; display: none;
+  background: rgba(20,14,6,.85); border: 2px solid #ffd76a; border-radius: 8px;
+  padding: 10px 28px; color: #ffd76a; font-size: 20px; font-weight: 700;
+  font-family: "Cinzel", "Trebuchet MS", serif; letter-spacing: 1px;
+  text-shadow: 0 2px 6px rgba(0,0,0,.8);
+  pointer-events: none;
+}
+#flash-msg.visible { display: block; animation: flash-pop .3s ease; }
+@keyframes flash-pop { from { transform: translate(-50%,-50%) scale(.8); opacity: 0; } to { transform: translate(-50%,-50%) scale(1); opacity: 1; } }
+
+/* --- PANTALLA FINAL (victoria / derrota) --- */
+#end-screen {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  z-index: 200; display: none;
+  align-items: center; justify-content: center; flex-direction: column; gap: 18px;
+  background: rgba(0,0,0,.78);
+}
+#end-screen.visible { display: flex; }
+#end-title {
+  font-family: "Cinzel", serif; font-size: 54px; font-weight: 700;
+  letter-spacing: 3px; text-shadow: 0 4px 14px rgba(0,0,0,.9);
+}
+#end-screen.victory #end-title { color: #ffd76a; }
+#end-screen.defeat #end-title { color: #e74c3c; }
+#end-subtitle { color: #e8d5a0; font-size: 16px; }
+#end-time { color: #b98d3e; font-size: 13px; }
+#end-restart {
+  padding: 12px 32px; font-size: 16px; cursor: pointer;
+  background: linear-gradient(180deg, rgba(120,80,20,.9), rgba(60,40,10,.9));
+  color: #ffd76a; border: 2px solid #b98d3e; border-radius: 6px;
+  font-family: "Cinzel", "Trebuchet MS", serif;
+}
+#end-restart:hover { border-color: #fff; color: #fff; }
+
+/* --- PANEL DE ERA (castillo) --- */
+#age-production { margin-top: 10px; }
+#age-research-btn {
+  width: 100%; padding: 8px;
+  background: linear-gradient(180deg, rgba(120,80,20,.9), rgba(60,40,10,.9));
+  color: #ffd76a; border: 2px solid #b98d3e; border-radius: 6px;
+  cursor: pointer; font-family: "Cinzel", "Trebuchet MS", serif; font-size: 12px;
+}
+#age-research-btn:hover { border-color: #fff; color: #fff; }
+#age-research-btn:disabled { opacity: .4; cursor: not-allowed; }
+#age-research-status { font-size: 11px; color: #ccc; margin-bottom: 6px; min-height: 13px; }
+#age-research-bar { width: 100%; height: 12px; background: #1a0808; border: 1px solid #6a5228; border-radius: 6px; overflow: hidden; margin-bottom: 4px; }
+#age-research-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #7b5b1e, #ffd76a); }
+
+/* --- BOTÓN RESEMBRAR GRANJA --- */
+#btn-reseed-farm {
+  width: 100%; padding: 8px;
+  background: linear-gradient(180deg, rgba(60,120,40,.9), rgba(30,60,20,.9));
+  color: #b7ff9e; border: 2px solid #6a9e4a; border-radius: 6px;
+  cursor: pointer; font-family: "Cinzel", "Trebuchet MS", serif; font-size: 12px;
+}
+#btn-reseed-farm:hover { border-color: #ffd76a; color: #fff; }
+#btn-reseed-farm:disabled { opacity: .4; cursor: not-allowed; }
+
+/* --- STATS DE UNIDAD SELECCIONADA --- */
+.unit-stats-row {
+  display: flex; gap: 6px; flex-wrap: wrap;
+  color: #e8d5a0; font-size: 11px; margin: 6px 0;
+}
+.unit-stats-row span {
+  background: rgba(60,42,20,.7); border: 1px solid #6a5228;
+  border-radius: 4px; padding: 2px 6px; white-space: nowrap;
+}
 </style>
 </head>
 <body>
@@ -402,16 +490,32 @@
 
 <!-- HUD en juego -->
 <div id="hud">
-  <div class="res-row">
-    <span class="res" title="Oro">🪙 <b id="res-gold">0</b></span>
-    <span class="res" title="Madera">🪵 <b id="res-wood">0</b></span>
-    <span class="res" title="Piedra">🪨 <b id="res-stone">0</b></span>
+  <div class="hud-topbar">
+    <span class="hud-res" title="Comida">🍖 <b id="res-food">0</b></span>
+    <span class="hud-res" title="Madera">🪵 <b id="res-wood">0</b></span>
+    <span class="hud-res" title="Oro">🪙 <b id="res-gold">0</b></span>
+    <span class="hud-res" title="Piedra">🪨 <b id="res-stone">0</b></span>
+    <span class="hud-sep"></span>
+    <span class="hud-pop" title="Población">👥 <b id="hud-pop">0/0</b></span>
+    <span class="hud-sep"></span>
+    <span class="hud-age" title="Edad">🏛 <b id="hud-age">Edad Oscura</b></span>
+    <span class="hud-sep"></span>
+    <span class="hud-time" title="Tiempo de partida">⏳ <b id="hud-time">00:00</b></span>
   </div>
-<div id="hud-help">
-  <b>👑 W A S D</b> mover · Click izq <b>aldeano/soldado/arquero/caballero</b> = seleccionar · <b>Arrastra</b> = selección múltiple · <b>Click der</b> = órdenes / Mover aquí / Atacar
-</div>
+  <div id="hud-king" title="Vida del Rey">
+    <span class="king-icon">👑</span>
+    <div class="king-hp-bar"><div class="king-hp-fill" id="king-hp-fill"></div></div>
+    <span class="king-hp-text" id="king-hp-text">300/300</span>
+  </div>
 </div>
 <button id="exit-btn">↩ Menú Principal</button>
+<div id="flash-msg"></div>
+<div id="end-screen">
+  <div id="end-title">VICTORIA</div>
+  <div id="end-subtitle"></div>
+  <div id="end-time"></div>
+  <button id="end-restart">↩ Volver al Menú</button>
+</div>
 
 <!-- Aviso de modo colocación -->
 <div id="build-hint">🏗️ Colocando: <b id="build-hint-name"></b> · Click izq: colocar · R: rotar · Click der / ESC: cancelar</div>
@@ -426,6 +530,7 @@
       <div class="slave-hp-bar"><div class="slave-hp-fill" id="slave-hp-fill"></div></div>
     </div>
   </div>
+  <div id="slave-stats" class="unit-stats-row"></div>
   <button id="btn-slave-build" class="slave-build-btn">🏗️<br><span>Construir</span></button>
 </div>
 <!-- Panel informativo de estructura seleccionada -->
@@ -498,6 +603,13 @@
       </div>
     </div>
   </div>
+  <div id="age-production" style="display:none">
+    <div class="prod-title">🏛 AVANZAR DE ERA</div>
+    <div id="age-research-status">Edad Oscura</div>
+    <div class="train-bar"><div class="train-fill" id="age-research-fill"></div></div>
+    <button id="age-research-btn">📜 Investigar</button>
+  </div>
+  <button id="btn-reseed-farm" style="display:none">🌱 Resembrar Granja (60 🪵)</button>
 </div>
 
 <!-- Menú de construcción -->
@@ -671,6 +783,76 @@ musicVolSlider.addEventListener('input', (e) => applyMusicVolume(parseInt(e.targ
 sfxVolSlider.addEventListener('input', (e) => {
   sfxVolLabel.textContent = e.target.value + '%';
 });
+
+/* ============================================================
+   🔊 EFECTOS DE SONIDO SINTETIZADOS (WebAudio, sin archivos)
+============================================================ */
+let sfxCtx = null;
+function sfxUnlock() {
+  if (!sfxCtx) {
+    try { sfxCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { return; }
+  }
+  if (sfxCtx.state === 'suspended') sfxCtx.resume().catch(() => {});
+}
+window.addEventListener('pointerdown', sfxUnlock, { once: true });
+window.addEventListener('keydown', sfxUnlock, { once: true });
+
+function sfxVol() {
+  const v = sfxVolSlider ? parseInt(sfxVolSlider.value) / 100 : 1;
+  return Math.max(0, Math.min(1, v)) * 0.6;
+}
+function tone(freq, dur, type, vol, slideTo) {
+  if (!sfxCtx || sfxCtx.state !== 'running') return;
+  const t = sfxCtx.currentTime;
+  const osc = sfxCtx.createOscillator();
+  const g = sfxCtx.createGain();
+  osc.type = type || 'square';
+  osc.frequency.setValueAtTime(freq, t);
+  if (slideTo) osc.frequency.exponentialRampToValueAtTime(Math.max(1, slideTo), t + dur);
+  g.gain.setValueAtTime(vol, t);
+  g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+  osc.connect(g).connect(sfxCtx.destination);
+  osc.start(t);
+  osc.stop(t + dur);
+}
+function noiseBurst(dur, vol, filterFreq) {
+  if (!sfxCtx || sfxCtx.state !== 'running') return;
+  const t = sfxCtx.currentTime;
+  const len = Math.max(1, Math.floor(sfxCtx.sampleRate * dur));
+  const buf = sfxCtx.createBuffer(1, len, sfxCtx.sampleRate);
+  const data = buf.getChannelData(0);
+  for (let i = 0; i < len; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / len);
+  const src = sfxCtx.createBufferSource();
+  src.buffer = buf;
+  const filt = sfxCtx.createBiquadFilter();
+  filt.type = 'bandpass';
+  filt.frequency.value = filterFreq || 1200;
+  const g = sfxCtx.createGain();
+  g.gain.setValueAtTime(vol, t);
+  g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+  src.connect(filt).connect(g).connect(sfxCtx.destination);
+  src.start(t);
+}
+let lastSfxTime = 0;
+function sfx(name) {
+  const now = performance.now();
+  const v = sfxVol();
+  switch (name) {
+    case 'build':   tone(120, 0.18, 'triangle', v, 70); break;
+    case 'train':   tone(660, 0.12, 'square', v * 0.8, 990); setTimeout(() => tone(880, 0.15, 'square', v * 0.6), 90); break;
+    case 'attack':  noiseBurst(0.18, v * 0.7, 900); break;
+    case 'arrow':   if (now - lastSfxTime < 70) return; lastSfxTime = now; noiseBurst(0.12, v * 0.5, 2600); break;
+    case 'hit':     tone(200, 0.08, 'square', v * 0.5, 120); break;
+    case 'gather':  tone(520, 0.07, 'triangle', v * 0.5, 620); break;
+    case 'chop':    tone(180, 0.09, 'square', v * 0.4, 90); break;
+    case 'age':     tone(523, 0.2, 'square', v * 0.7); setTimeout(() => tone(659, 0.2, 'square', v * 0.7), 130); setTimeout(() => tone(784, 0.35, 'square', v * 0.8), 260); break;
+    case 'wave':    tone(196, 0.4, 'sawtooth', v * 0.6, 262); setTimeout(() => tone(196, 0.4, 'sawtooth', v * 0.6, 262), 300); break;
+    case 'king':    tone(110, 0.3, 'sawtooth', v * 0.8, 55); noiseBurst(0.2, v * 0.6, 400); break;
+    case 'victory': [523, 659, 784, 1046].forEach((f, i) => setTimeout(() => tone(f, 0.35, 'square', v * 0.8), i * 170)); break;
+    case 'defeat':  [392, 330, 262, 196].forEach((f, i) => setTimeout(() => tone(f, 0.4, 'sawtooth', v * 0.8), i * 220)); break;
+    case 'kill':    noiseBurst(0.12, v * 0.4, 500); break;
+  }
+}
 
 /* ============================================================
    🎵 MÚSICA DEL MENÚ (assets/music/menumusic.mp3)
@@ -1307,6 +1489,7 @@ async function startGame(levelNum) {
     if (ci >= 0) treeColliders.splice(ci, 1);
     const ti = trees.indexOf(data);
     if (ti >= 0) trees.splice(ti, 1);
+    sfx('chop');
   }
 
   // 🪓 Primer árbol (con madera) golpeado por el rayo del cursor
@@ -1352,6 +1535,161 @@ async function startGame(levelNum) {
   }
   const playerBase = findLandSpot(-170, 170);   // esquina inferior izquierda
   const enemyBase  = findLandSpot(170, -170);   // esquina opuesta
+
+  /* ============================================================
+     🍇 ARBUSTOS DE BAYAS (recurso de comida estilo AoE)
+  ============================================================ */
+  const bushes = [];
+  const bushSprites = [];
+  {
+    const c = document.createElement('canvas');
+    c.width = c.height = 64;
+    const x = c.getContext('2d');
+    x.clearRect(0, 0, 64, 64);
+    x.fillStyle = '#2e5e1e';
+    x.beginPath(); x.ellipse(32, 40, 24, 16, 0, 0, Math.PI * 2); x.fill();
+    x.fillStyle = '#3f7a2a';
+    x.beginPath(); x.ellipse(22, 36, 14, 12, -0.3, 0, Math.PI * 2); x.fill();
+    x.beginPath(); x.ellipse(42, 36, 14, 12, 0.3, 0, Math.PI * 2); x.fill();
+    x.fillStyle = '#c9302e';
+    for (const [bx, by] of [[18,34],[26,30],[34,38],[44,32],[50,36],[22,42],[38,44]]) {
+      x.beginPath(); x.arc(bx, by, 2.4, 0, Math.PI * 2); x.fill();
+    }
+    x.fillStyle = '#7a1f1e';
+    for (const [bx, by] of [[28,38],[38,34],[20,38],[46,40]]) {
+      x.beginPath(); x.arc(bx, by, 1.6, 0, Math.PI * 2); x.fill();
+    }
+    const tex = new THREE.CanvasTexture(c);
+    tex.colorSpace = THREE.SRGBColorSpace;
+    const bushMat = new THREE.SpriteMaterial({ map: tex, transparent: true });
+    function makeBush(x, z) {
+      const h = getHeight(x, z);
+      const spr = new THREE.Sprite(bushMat);
+      spr.position.set(x, h + 2.2, z);
+      spr.scale.set(5, 5, 1);
+      scene.add(spr);
+      const data = { x, z, sprite: spr, food: 100, maxFood: 100 };
+      bushes.push(data);
+      bushSprites.push(spr);
+      return data;
+    }
+    // 6 racimos de 3-4 arbustos lejos de ambas bases y del agua
+    for (let i = 0; i < 6; i++) {
+      const cx = (Math.random() - 0.5) * (WORLD_SIZE - 40);
+      const cz = (Math.random() - 0.5) * (WORLD_SIZE - 40);
+      const n = 3 + Math.floor(Math.random() * 2);
+      for (let j = 0; j < n; j++) {
+        const x = THREE.MathUtils.clamp(cx + (Math.random() - 0.5) * 14, -BOUND, BOUND);
+        const z = THREE.MathUtils.clamp(cz + (Math.random() - 0.5) * 14, -BOUND, BOUND);
+        const h = getHeight(x, z);
+        if (h <= WATER_LEVEL + 1) continue;
+        if (Math.hypot(x - playerBase.x, z - playerBase.z) < 40) continue;
+        if (Math.hypot(x - enemyBase.x, z - enemyBase.z) < 40) continue;
+        makeBush(x, z);
+      }
+    }
+  }
+  function removeBush(b) {
+    scene.remove(b.sprite);
+    const i = bushes.indexOf(b);
+    if (i >= 0) bushes.splice(i, 1);
+    const si = bushSprites.indexOf(b.sprite);
+    if (si >= 0) bushSprites.splice(si, 1);
+  }
+
+  /* ============================================================
+     🦌 CIERVOS CAZABLES (comida estilo AoE)
+  ============================================================ */
+  const deers = [];
+  const deerSprites = [];
+  {
+    const c = document.createElement('canvas');
+    c.width = c.height = 64;
+    const x = c.getContext('2d');
+    x.clearRect(0, 0, 64, 64);
+    x.fillStyle = '#8a5a2b';
+    x.beginPath(); x.ellipse(30, 40, 14, 9, 0, 0, Math.PI * 2); x.fill();
+    x.fillStyle = '#6e4520';
+    x.beginPath(); x.ellipse(20, 34, 5, 4, 0, 0, Math.PI * 2); x.fill();
+    x.fillStyle = '#8a5a2b';
+    x.beginPath(); x.ellipse(14, 28, 5, 4, 0, 0, Math.PI * 2); x.fill();
+    x.fillStyle = '#fff';
+    x.beginPath(); x.arc(12, 27, 1.2, 0, Math.PI * 2); x.fill();
+    x.strokeStyle = '#6e4520'; x.lineWidth = 1.5;
+    for (const [ax, ay] of [[16, 24],[19, 22]]) { x.beginPath(); x.moveTo(ax, ay); x.lineTo(ax - 1, ay - 4); x.stroke(); }
+    x.fillStyle = '#5a3a1e';
+    x.fillRect(20, 45, 2.5, 7); x.fillRect(30, 45, 2.5, 7); x.fillRect(26, 46, 2.5, 7); x.fillRect(36, 46, 2.5, 7);
+    const tex = new THREE.CanvasTexture(c);
+    tex.colorSpace = THREE.SRGBColorSpace;
+    const deerMat = new THREE.SpriteMaterial({ map: tex, transparent: true });
+    function makeDeer(x, z) {
+      const h = getHeight(x, z);
+      const spr = new THREE.Sprite(deerMat);
+      spr.position.set(x, h + 2, z);
+      spr.scale.set(4, 4, 1);
+      scene.add(spr);
+      const d = {
+        x, z, sprite: spr,
+        hp: 60, maxHp: 60,
+        foodValue: 120,
+        alive: true,
+        dir: Math.random() * Math.PI * 2,
+        changeTimer: 2 + Math.random() * 4,
+        fleeTimer: 0,
+      };
+      deers.push(d);
+      deerSprites.push(spr);
+      return d;
+    }
+    for (let i = 0; i < 10; i++) {
+      const x = (Math.random() - 0.5) * (WORLD_SIZE - 20);
+      const z = (Math.random() - 0.5) * (WORLD_SIZE - 20);
+      if (getHeight(x, z) <= WATER_LEVEL + 0.6) continue;
+      makeDeer(THREE.MathUtils.clamp(x, -BOUND, BOUND), THREE.MathUtils.clamp(z, -BOUND, BOUND));
+    }
+  }
+  function killDeer(d) {
+    if (!d.alive) return;
+    d.alive = false;
+    d.sprite.visible = false;
+    sfx('kill');
+    food += d.foodValue;
+    updateResourcesUI();
+    spawnFoodFloat(new THREE.Vector3(d.x, getHeight(d.x, d.z), d.z), d.foodValue);
+  }
+  function updateDeers(dt) {
+    for (const d of deers) {
+      if (!d.alive) continue;
+      let fleeing = false;
+      if (d.fleeTimer <= 0) {
+        for (const u of slaves.concat(soldiers, archers, cavalry)) {
+          const dx = u.mesh.position.x - d.x, dz = u.mesh.position.z - d.z;
+          if (dx * dx + dz * dz < 14 * 14) { fleeing = true; break; }
+        }
+        if (fleeing) d.fleeTimer = 2.2;
+      } else {
+        d.fleeTimer -= dt;
+        if (d.fleeTimer > 0) fleeing = true;
+      }
+      d.changeTimer -= dt;
+      if (fleeing) {
+        let bx = 0, bz = 0;
+        for (const u of slaves.concat(soldiers, archers, cavalry)) {
+          bx += d.x - u.mesh.position.x;
+          bz += d.z - u.mesh.position.z;
+        }
+        if (bx || bz) d.dir = Math.atan2(bz, bx);
+      } else if (d.changeTimer <= 0) {
+        d.dir = Math.random() * Math.PI * 2;
+        d.changeTimer = 2 + Math.random() * 4;
+      }
+      const sp = fleeing ? 12 : 5;
+      const nx = THREE.MathUtils.clamp(d.x + Math.sin(d.dir) * sp * dt, -BOUND, BOUND);
+      const nz = THREE.MathUtils.clamp(d.z + Math.cos(d.dir) * sp * dt, -BOUND, BOUND);
+      if (getHeight(nx, nz) > WATER_LEVEL + 0.5) { d.x = nx; d.z = nz; }
+      d.sprite.position.set(d.x, getHeight(d.x, d.z) + 2, d.z);
+    }
+  }
 
   const king = new THREE.Group();
   king.position.set(playerBase.x + 12, Math.max(getHeight(playerBase.x + 12, playerBase.z - 12), WATER_LEVEL + 2), playerBase.z - 12);
@@ -1651,7 +1989,8 @@ async function startGame(levelNum) {
     { id: 'tower_B',      name: 'Torre B',          icon: '🏯', size: 5,  hp: 600, desc: 'Torre defensiva fortificada con almenas.',                  file: 'building_tower_B_blue.gltf', cost: { gold: 150, wood: 50, stone: 100 }, buildTime: 16 },
     { id: 'watermill',    name: 'Molino de agua',   icon: '💧', size: 7,  hp: 320, desc: 'Muele grano aprovechando la fuerza del río.',               file: 'building_watermill_blue.gltf', cost: { gold: 110, wood: 70, stone: 40 }, buildTime: 14 },
     { id: 'well',         name: 'Pozo',             icon: '🪣', size: 3,  hp: 150, desc: 'Fuente de agua potable para los aldeanos.',                 file: 'building_well_blue.gltf', cost: { gold: 40, wood: 20, stone: 30 }, buildTime: 8 },
-    { id: 'windmill',     name: 'Molino de viento', icon: '🌬️', size: 7,  hp: 300, desc: 'Muele grano aprovechando la fuerza del viento.',            file: 'building_windmill_blue.gltf', cost: { gold: 130, wood: 90, stone: 30 }, buildTime: 15 }
+    { id: 'windmill',     name: 'Molino de viento', icon: '🌬️', size: 7,  hp: 300, desc: 'Muele grano aprovechando la fuerza del viento.',            file: 'building_windmill_blue.gltf', cost: { gold: 130, wood: 90, stone: 30 }, buildTime: 15 },
+    { id: 'farm',         name: 'Granja',           icon: '🌾', size: 6,  hp: 300, desc: 'Cultiva alimento para el reino (se agota y hay que resembrarla).', cost: { wood: 60 }, buildTime: 8, requiresAge: 1, procedural: true }
   ];
 
   // Murallas y vallas "neutral" (formato .gltf; su .bin y textura se cargan solos)
@@ -1692,8 +2031,10 @@ async function startGame(levelNum) {
      SISTEMA DE ESTRUCTURAS: colisión, vida, daño y destrucción
   ============================================================ */
   const structures = [];                 // { mesh, def, hp, maxHp, healthBar, radius }
+  const enemies = [];                    // 🔴 unidades enemigas de la IA (isEnemyUnit)
   let selectedStructure = null;
   let selectedTree = null;               // 🌳 árbol seleccionado (panel de madera restante)
+  let selectedBush = null;               // 🍇 arbusto seleccionado (panel de comida restante)
   const KING_ATTACK_RANGE = 5.5;         // alcance del espadazo del rey
   const KING_ATTACK_DAMAGE = 35;         // daño por golpe
   const KING_RADIUS = 1.0;               // radio de colisión del rey
@@ -1913,6 +2254,8 @@ async function startGame(levelNum) {
       doorOpen: false,
       doorLocalPos: doorLocalPos,
     };
+    // 🌾 Las granjas guardan la comida restante (estilo AoE: se agota y se resiembra)
+    if (def.id === 'farm') data.foodLeft = 250;
     structures.push(data);
 
     // Referencia en cada mesh para raycasting
@@ -1961,8 +2304,50 @@ async function startGame(levelNum) {
     if (selectedStructure === s) updateInfoPanel();
   }
 
+  // 💥 Despacha el daño al objetivo correcto: estructura, unidad del jugador o enemiga
+  function damageTarget(t, amount) {
+    if (!t) return;
+    if (t.isEnemyUnit) return damageEnemyUnit(t, amount);
+    if (t.isUnit) return damageUnit(t, amount);
+    return damageStructure(t, amount);
+  }
+
+  // 💥 Daño a una unidad del jugador
+  function damageUnit(u, amount) {
+    if (u.dead || u.hp <= 0) return;
+    u.hp -= amount;
+    if (u.hp <= 0) killUnit(u);
+  }
+  function killUnit(u) {
+    if (u.dead) return;
+    u.dead = true;
+    scene.remove(u.mesh);
+    const arr = u.type === 'soldier' ? soldiers : u.type === 'archer' ? archers : u.type === 'cavalry' ? cavalry : slaves;
+    const i = arr.indexOf(u);
+    if (i >= 0) arr.splice(i, 1);
+    const selArrs = [selectedSlaves, selectedSoldiers, selectedArchers, selectedCavalry];
+    for (const sa of selArrs) {
+      const j = sa.indexOf(u);
+      if (j >= 0) sa.splice(j, 1);
+    }
+    if (selectedSlaveInfo === u) hideSlaveInfo();
+  }
+
+  // 👑 Daño al rey (muere = derrota)
+  function damageKing(amount) {
+    if (kingHp <= 0) return;
+    kingHp = Math.max(0, kingHp - amount);
+    sfx('king');
+    updateHUDKingHP();
+    if (kingHp <= 0 && typeof endGame === 'function') endGame(false);
+  }
+
   function destroyStructure(s) {
     scene.remove(s.mesh);
+    // 🏚️ Restos + humo del edificio caído (no en minas agotadas)
+    if (!s.isGoldMine) {
+      spawnDestroyedBuilding(s.mesh.position.clone());
+    }
     const idx = structures.indexOf(s);
     if (idx >= 0) structures.splice(idx, 1);
     if (selectedStructure === s) deselectStructure();
@@ -1984,9 +2369,38 @@ function deselectStructure() {
 
   function hideTreeInfo() {
     selectedTree = null;
+    selectedBush = null;
   }
 
   function updateInfoPanel() {
+    document.getElementById('btn-reseed-farm').style.display = 'none';
+    document.getElementById('age-production').style.display = 'none';
+    // 🍇 Modo arbusto de bayas: muestra la comida restante
+    if (selectedBush) {
+      if (selectedBush.food <= 0) {
+        hideTreeInfo();
+        document.getElementById('structure-info').classList.remove('visible');
+        return;
+      }
+      const b = selectedBush;
+      const nameEl = document.getElementById('info-name');
+      const hpEl = document.getElementById('info-hp');
+      const fill = document.getElementById('info-hp-fill');
+      const descEl = document.getElementById('info-desc');
+      document.querySelector('#structure-info .info-header').style.display = '';
+      nameEl.style.display = '';
+      hpEl.style.display = '';
+      descEl.style.display = '';
+      nameEl.textContent = '🍇 Arbusto de bayas';
+      hpEl.textContent = Math.ceil(b.food) + ' / ' + b.maxFood + ' 🍖';
+      fill.style.width = (b.food / b.maxFood * 100) + '%';
+      fill.style.background = 'linear-gradient(90deg, #7ec850, #b0e880)';
+      descEl.textContent = b.food > 0
+        ? 'Click derecho sobre el arbusto con aldeanos seleccionados y pulsa 🍇 Recoger bayas.'
+        : 'Arbusto agotado.';
+      document.getElementById('structure-info').classList.add('visible');
+      return;
+    }
     // 🌳 Modo árbol: muestra la madera restante (y se apaga si lo talan)
     if (selectedTree) {
       if (selectedTree.wood <= 0) {
@@ -2046,6 +2460,23 @@ function deselectStructure() {
       document.getElementById('structure-info').classList.add('visible');
       return;
     }
+    // 🌾 Panel especial para la granja (comida restante + botón resembrar)
+    if (s.def.id === 'farm') {
+      document.querySelector('#structure-info .info-header').style.display = '';
+      nameEl.style.display = '';
+      hpEl.style.display = '';
+      descEl.style.display = '';
+      nameEl.textContent = '🌾 Granja';
+      hpEl.textContent = Math.ceil(s.foodLeft || 0) + ' / 250 🍖';
+      fill.style.width = ((s.foodLeft || 0) / 250 * 100) + '%';
+      fill.style.background = 'linear-gradient(90deg, #7ec850, #b0e880)';
+      descEl.textContent = (s.foodLeft || 0) <= 0
+        ? 'La granja está agotada. Resiémbrala para volver a producir comida.'
+        : 'Produce comida automáticamente hasta agotarse.';
+      document.getElementById('btn-reseed-farm').style.display = (s.foodLeft || 0) <= 0 ? 'block' : 'none';
+      document.getElementById('structure-info').classList.add('visible');
+      return;
+    }
     document.querySelector('#structure-info .info-header').style.display = '';
     nameEl.style.display = '';
     hpEl.style.display = '';
@@ -2058,6 +2489,11 @@ function deselectStructure() {
     else if (ratio > 0.3) fill.style.background = 'linear-gradient(90deg, #ffd76a, #ff9a3a)';
     else                  fill.style.background = 'linear-gradient(90deg, #ff4040, #c01010)';
     descEl.textContent = s.def.desc;
+    // 🏛 El castillo del jugador permite avanzar de era
+    if (s.def.id === 'castle' && s.team === 'player') {
+      document.getElementById('age-production').style.display = 'block';
+      updateAgeProductionUI();
+    }
     document.getElementById('structure-info').classList.add('visible');
   }
   // Panel de info del esclavo seleccionado
@@ -2102,6 +2538,16 @@ function hideSlaveInfo() {
 // Botón construir del panel de esclavo
 document.getElementById('btn-slave-build').addEventListener('click', () => {
   toggleBuildMenu();
+});
+
+// 🌾 Resembrar granja agotada (60 madera)
+document.getElementById('btn-reseed-farm').addEventListener('click', () => {
+  if (!selectedStructure || selectedStructure.def.id !== 'farm') return;
+  if (wood < 60) return;
+  wood -= 60;
+  selectedStructure.foodLeft = 250;
+  updateResourcesUI();
+  updateInfoPanel();
 });
 
   // Colisión circular del rey contra las estructuras
@@ -2156,7 +2602,8 @@ document.getElementById('btn-slave-build').addEventListener('click', () => {
     ALL_STRUCTURES.forEach(b => {
       const btn = document.getElementById('build-item-' + b.id);
       if (!btn) return;
-      const canAfford = gold >= b.cost.gold && wood >= b.cost.wood && stone >= b.cost.stone;
+      const ageOk = !b.requiresAge || (typeof currentAge !== 'undefined' && currentAge >= b.requiresAge);
+      const canAfford = gold >= b.cost.gold && wood >= b.cost.wood && stone >= b.cost.stone && ageOk;
       btn.style.opacity = canAfford ? '1' : '0.4';
     });
   }
@@ -2174,6 +2621,7 @@ document.getElementById('btn-slave-build').addEventListener('click', () => {
     closeBuildMenu();
 
     const def = ALL_STRUCTURES.find(b => b.id === id);
+    if (def.requiresAge && (typeof currentAge === 'undefined' || currentAge < def.requiresAge)) return;
     const ghost = model.scene.clone(true);
 
     // Escalar al tamaño deseado
@@ -2278,6 +2726,7 @@ document.getElementById('btn-slave-build').addEventListener('click', () => {
     
     // Crear estructura en modo "en construcción" (HP empieza en 0)
     const data = addStructure(bld, def, 'player');
+    sfx('build');
     data.hp = 0;
     data.underConstruction = true;
     data.buildProgress = 0;
@@ -2296,6 +2745,44 @@ builder.mineTarget = null;
     // El modo colocación sigue activo para poner varias
   }
 
+  // 🌾 Granja procedural (estilo AoE): bancal de cultivos con cerco de madera
+  function makeFarmModel() {
+    const g = new THREE.Group();
+    // Textura de cultivos pintada a mano en canvas
+    const c = document.createElement('canvas');
+    c.width = c.height = 256;
+    const x = c.getContext('2d');
+    x.fillStyle = '#7a5b2e'; x.fillRect(0, 0, 256, 256);
+    for (let row = 0; row < 8; row++) {
+      for (let col = 0; col < 8; col++) {
+        const cx = 16 + col * 32, cy = 16 + row * 32;
+        x.fillStyle = row % 2 ? '#5c7a2e' : '#6b8a33';
+        x.fillRect(cx - 10, cy - 4, 20, 8);
+        x.fillStyle = row % 2 ? '#4e6b28' : '#587a2c';
+        x.fillRect(cx - 6, cy + 4, 12, 6);
+        x.fillStyle = '#d9c76a';   // espigas doradas
+        x.fillRect(cx - 2, cy - 8, 4, 6);
+      }
+    }
+    x.strokeStyle = '#5a3d1e'; x.lineWidth = 8;
+    x.strokeRect(6, 6, 244, 244);
+    const tex = new THREE.CanvasTexture(c);
+    tex.colorSpace = THREE.SRGBColorSpace;
+    const mat = new THREE.MeshStandardMaterial({ map: tex, roughness: 1 });
+    const bed = new THREE.Mesh(new THREE.BoxGeometry(5, 0.4, 5), mat);
+    bed.position.y = -0.2;
+    g.add(bed);
+    // Postes de las esquinas
+    const postMat = new THREE.MeshStandardMaterial({ color: 0x6b4a2a, roughness: 0.9 });
+    const postGeo = new THREE.CylinderGeometry(0.14, 0.17, 1.1, 6);
+    for (const [sx, sz] of [[-1,-1],[-1,1],[1,-1],[1,1]]) {
+      const post = new THREE.Mesh(postGeo, postMat);
+      post.position.set(sx * 2.5, 0.35, sz * 2.5);
+      g.add(post);
+    }
+    return g;
+  }
+
   // ---- Cargar los 24 modelos (.gltf edificios + .glb murallas) ----
   // GLTFLoader lee ambos formatos; el .glb ya trae texturas y buffers incrustados.
   const gltfLoader = new GLTFLoader();
@@ -2303,9 +2790,16 @@ builder.mineTarget = null;
     const b = ALL_STRUCTURES[i];
     updateLoading(92 + Math.round((i / ALL_STRUCTURES.length) * 7), `Cargando estructuras (${i + 1}/${ALL_STRUCTURES.length})...`);
     try {
-      const gltf = await gltfLoader.loadAsync(b.path + b.file);
-      setupDoors(gltf.scene);   // 🚪 prepara pivotes UNA vez por modelo
-      build.models[b.id] = { scene: gltf.scene };
+      let sceneModel;
+      if (b.procedural) {
+        // 🌾 Las granjas se generan por código (no tienen modelo .gltf)
+        sceneModel = makeFarmModel();
+      } else {
+        const gltf = await gltfLoader.loadAsync(b.path + b.file);
+        setupDoors(gltf.scene);   // 🚪 prepara pivotes UNA vez por modelo
+        sceneModel = gltf.scene;
+      }
+      build.models[b.id] = { scene: sceneModel };
     } catch (err) {
       console.warn('⚠ No se pudo cargar ' + b.file, err);
       const item = document.getElementById('build-item-' + b.id);
@@ -2317,6 +2811,7 @@ builder.mineTarget = null;
   const RED_PATH = 'assets/structures/buildings/red/';
   const redModels = {};
   for (const b of BUILDINGS) {
+    if (b.procedural) continue;   // la granja no tiene versión roja
     updateLoading(99, `Cargando ciudad enemiga (${b.id})...`);
     try {
       const gltf = await gltfLoader.loadAsync(RED_PATH + b.file.replace('_blue', '_red'));
@@ -2498,6 +2993,13 @@ builder.mineTarget = null;
     scene.add(spr);
     goldFloats.push({ spr, life: 0, maxLife: 1.3 });
   }
+  function spawnFoodFloat(pos, amount) {
+    const spr = makeResourceFloatSprite(amount, '🍖', '#7ec850');
+    spr.position.copy(pos);
+    spr.position.y += 7;
+    scene.add(spr);
+    goldFloats.push({ spr, life: 0, maxLife: 1.3 });
+  }
 
   // ⛏️ Constantes de extracción para los esclavos
   const SLAVE_MINE_RANGE = 4.5;
@@ -2509,6 +3011,13 @@ builder.mineTarget = null;
   const SLAVE_CHOP_INTERVAL = 1.0;
   const SLAVE_CHOP_AMOUNT = 6;
   const SLAVE_CHOP_ANIM_SPEED = 6;
+  // 🍇 Recoger bayas y 🦌 cazar ciervos (comida estilo AoE)
+  const SLAVE_GATHER_RANGE = 3.5;
+  const SLAVE_GATHER_INTERVAL = 0.9;
+  const SLAVE_GATHER_AMOUNT = 10;
+  const SLAVE_HUNT_RANGE = 2.4;
+  const SLAVE_HUNT_INTERVAL = 1.1;
+  const SLAVE_HUNT_DAMAGE = 20;
 
   /* ============================================================
      MINIMAPA (canvas 2D top-down)
@@ -2573,8 +3082,24 @@ builder.mineTarget = null;
         minimapCtx.fillRect(mx - 2.2, my - 2.2, 4.4, 4.4);
         continue;
       }
-      minimapCtx.fillStyle = '#d9a733';
+      minimapCtx.fillStyle = s.team === 'enemy' ? '#b03a3a' : '#d9a733';
       minimapCtx.fillRect(mx - 1.5, my - 1.5, 3, 3);
+    }
+
+    // 🦌 Ciervos (puntos marrones pequeños)
+    minimapCtx.fillStyle = '#c8a050';
+    for (const d of deers) {
+      if (!d.alive) continue;
+      const mx = (d.x / WORLD_SIZE + 0.5) * MINIMAP_RES;
+      const my = (d.z / WORLD_SIZE + 0.5) * MINIMAP_RES;
+      minimapCtx.fillRect(mx - 0.9, my - 0.9, 1.8, 1.8);
+    }
+    // 🫐 Arbustos de bayas (puntos verdes oscuros)
+    minimapCtx.fillStyle = '#2e7d32';
+    for (const b of bushes) {
+      const mx = (b.x / WORLD_SIZE + 0.5) * MINIMAP_RES;
+      const my = (b.z / WORLD_SIZE + 0.5) * MINIMAP_RES;
+      minimapCtx.fillRect(mx - 1, my - 1, 2, 2);
     }
 
     // Esclavos (puntos azules claros)
@@ -2607,6 +3132,15 @@ builder.mineTarget = null;
       const s = cavalry[i];
       const mx = (s.mesh.position.x / WORLD_SIZE + 0.5) * MINIMAP_RES;
       const my = (s.mesh.position.z / WORLD_SIZE + 0.5) * MINIMAP_RES;
+      minimapCtx.fillRect(mx - 1.2, my - 1.2, 2.4, 2.4);
+    }
+    // 👹 Enemigos (puntos rojos con borde negro)
+    for (const e of enemies) {
+      const mx = (e.mesh.position.x / WORLD_SIZE + 0.5) * MINIMAP_RES;
+      const my = (e.mesh.position.z / WORLD_SIZE + 0.5) * MINIMAP_RES;
+      minimapCtx.fillStyle = '#000000';
+      minimapCtx.fillRect(mx - 1.7, my - 1.7, 3.4, 3.4);
+      minimapCtx.fillStyle = '#ff3333';
       minimapCtx.fillRect(mx - 1.2, my - 1.2, 2.4, 2.4);
     }
     // Rey (círculo blanco con borde)
@@ -2643,33 +3177,112 @@ builder.mineTarget = null;
   const SLAVE_DETECT_RANGE = 14;
   const SLAVE_DAMAGE = 25;
   // 💰 Recursos del jugador
-  let gold = 500, wood = 200, stone = 100;
+  let gold = 500, wood = 200, stone = 100, food = 300;
   const resGoldEl  = document.getElementById('res-gold');
   const resWoodEl  = document.getElementById('res-wood');
   const resStoneEl = document.getElementById('res-stone');
+  const resFoodEl  = document.getElementById('res-food');
+
+  // 🏛 Estado de edades (declarado aquí para evitar TDZ en el arranque)
+  const AGE_NAMES = ['Edad Oscura', 'Edad Feudal', 'Edad de Castillos', 'Edad Imperial'];
+  const AGE_COSTS = [
+    null,
+    { food: 500 },
+    { food: 800, gold: 200 },
+    { food: 1000, gold: 800 },
+  ];
+  let currentAge = 0;
+  const AGE_RESEARCH_TIME = 30;
+  let ageResearching = false, ageResearchT = 0;
 
   function updateResourcesUI() {
     resGoldEl.textContent  = Math.floor(gold);
     resWoodEl.textContent  = Math.floor(wood);
     resStoneEl.textContent = Math.floor(stone);
+    resFoodEl.textContent  = Math.floor(food);
     if (typeof updateBuildMenuButtons === 'function') updateBuildMenuButtons();
+  }
+
+  // 👥 Población actual y tope (las casas/castillo/torres suben el tope, estilo AoE)
+  function unitPop() {
+    return slaves.length + soldiers.length + archers.length + cavalry.length;
+  }
+  function popCap() {
+    let cap = 5; // el rey no cuenta; 5 aldeanos iniciales
+    for (const s of structures) {
+      if (s.team !== 'player' || s.hp <= 0) continue;
+      const pc = { home_A: 5, home_B: 5, castle: 15, tower_A: 2, tower_B: 2 }[s.def.id];
+      if (pc) cap += pc;
+    }
+    return cap;
+  }
+
+  // 👑 Vida del rey (HUD)
+  let kingHp = 300, KING_MAX_HP = 300;
+  const kingHpFillEl = document.getElementById('king-hp-fill');
+  const kingHpTextEl = document.getElementById('king-hp-text');
+  function updateHUDKingHP() {
+    kingHpFillEl.style.width = (Math.max(0, kingHp) / KING_MAX_HP * 100) + '%';
+    kingHpTextEl.textContent = Math.max(0, Math.ceil(kingHp)) + '/' + KING_MAX_HP;
+  }
+
+  // 📊 Barra superior: población, era, tiempo de partida
+  const hudPopEl  = document.getElementById('hud-pop');
+  const hudAgeEl  = document.getElementById('hud-age');
+  const hudTimeEl = document.getElementById('hud-time');
+  let gameTime = 0;
+  function updateHUDStats() {
+    hudPopEl.textContent = unitPop() + '/' + popCap();
+    hudAgeEl.textContent = (typeof currentAge !== 'undefined') ? AGE_NAMES[currentAge] : 'Edad Oscura';
+    const mm = Math.floor(gameTime / 60), ss = Math.floor(gameTime % 60);
+    hudTimeEl.textContent = String(mm).padStart(2, '0') + ':' + String(ss).padStart(2, '0');
+  }
+
+  // 💬 Aviso flotante central (oleada enemiga, nueva era, victoria...)
+  let flashTimer = null;
+  const flashMsgEl = document.getElementById('flash-msg');
+  function flashMsg(text, color) {
+    flashMsgEl.textContent = text;
+    flashMsgEl.style.color = color || '';
+    flashMsgEl.classList.add('visible');
+    clearTimeout(flashTimer);
+    flashTimer = setTimeout(() => flashMsgEl.classList.remove('visible'), 2200);
   }
 
   // 🏭 Producción pasiva de los edificios del jugador (por segundo):
   // Castillo = impuestos (oro) · Aserradero = madera · Mina = piedra + algo de oro · Mercado = oro
+  // Molinos = comida (granja añade su propia producción con agotamiento, estilo AoE)
   const PRODUCERS = {
     castle:     { gold: 1.0 },
     lumbermill: { wood: 1.0 },
     mine:       { stone: 0.8, gold: 0.3 },
     market:     { gold: 0.5 },
+    watermill:  { food: 0.6 },
+    windmill:   { food: 0.5 },
   };
+  // 📈 Bonus de producción por era (Edad Oscura → Imperial)
+  const AGE_BONUS = [1, 1.2, 1.5, 2.0];
+  function ageBonus() {
+    return (typeof currentAge !== 'undefined' && typeof AGE_BONUS[currentAge] !== 'undefined') ? AGE_BONUS[currentAge] : 1;
+  }
   function updateResources(dt) {
     for (const s of structures) {
+      if (s.team !== 'player' || s.hp <= 0) continue;
+      // 🌾 Granja: produce comida hasta agotarse (estilo AoE, hay que resembrar)
+      if (s.def.id === 'farm') {
+        if (s.foodLeft > 0) {
+          const rate = 2.0 * ageBonus();
+          s.foodLeft = Math.max(0, s.foodLeft - dt * rate);
+          food += dt * rate;
+        }
+        continue;
+      }
       const p = PRODUCERS[s.def.id];
-      if (!p || s.team !== 'player' || s.hp <= 0) continue;
-      if (p.gold)  gold  += p.gold  * dt;
-      if (p.wood)  wood  += p.wood  * dt;
-      if (p.stone) stone += p.stone * dt;
+      if (!p) continue;
+      if (p.gold)  gold  += p.gold  * dt * ageBonus();
+      if (p.wood)  wood  += p.wood  * dt * ageBonus();
+      if (p.stone) stone += p.stone * dt * ageBonus();
+      if (p.food)  food  += p.food  * dt * ageBonus();
     }
     updateResourcesUI();
   }
@@ -2687,9 +3300,9 @@ builder.mineTarget = null;
   };
 
   // 🎨 Dibuja el cuerpo del aldeano SIN el brazo derecho (se pinta según la acción)
-  function paintSlaveBody(x) {
+  function paintSlaveBody(x, P = slavePalette) {
     const { outline, hair, hairL, band, bandL, skin, skinS, skinL, eye, eyeW, mouth,
-            tunic, tunicS, tunicL, belt, buckle, pants, pantsS, boot, bootS } = slavePalette;
+            tunic, tunicS, tunicL, belt, buckle, pants, pantsS, boot, bootS } = P;
 
     // ---- Cabello (afro abundante) ----
     x.fillStyle = outline;
@@ -2829,9 +3442,9 @@ builder.mineTarget = null;
     const c = document.createElement('canvas');
     c.width = 32; c.height = 48;
     const x = c.getContext('2d');
-    paintSlaveBody(x);
+paintSlaveBody(x);
     const P = slavePalette;
-    // Brazo derecho en reposo
+      // Brazo derecho en reposo
     x.fillStyle = P.outline;
     x.fillRect(22, 16, 4, 13);
     x.fillStyle = P.tunic;
@@ -2975,6 +3588,10 @@ const slave = {
   mesh: group,
   sprite: mesh,
   ring: ring,
+  type: 'slave',
+  isUnit: true,
+  dead: false,
+  radius: 0.5,
   state: 'idle',
   target: null,
   buildTarget: null,
@@ -3025,6 +3642,7 @@ const slave = {
   function hireSlave() {
     if (gold < SLAVE_COST) return;
     gold -= SLAVE_COST;                 // se paga al encargar
+    sfx('train');
     slaveQueue.push(true);              // entra en la cola
     updateResourcesUI();
     refreshQueueUI();
@@ -3166,7 +3784,7 @@ const slave = {
   // 🧱 Desatasca unidades que quedaron DENTRO de una estructura o árbol
   // (empuje radial hasta el borde exterior de cada obstáculo)
   function depenetrateUnits() {
-    const all = slaves.concat(soldiers, archers, cavalry);
+    const all = slaves.concat(soldiers, archers, cavalry, enemies);
     const R = 0.5;
     for (let pass = 0; pass < 2; pass++) {
       for (const s of all) {
@@ -3198,7 +3816,7 @@ const slave = {
 
   // 👥 Separación entre unidades: evita que se amontonen unas sobre otras
   function separateUnits() {
-    const all = slaves.concat(soldiers, archers, cavalry);
+    const all = slaves.concat(soldiers, archers, cavalry, enemies);
     const MIN_DIST = 1.1;
     for (let i = 0; i < all.length; i++) {
       for (let j = i + 1; j < all.length; j++) {
@@ -3249,16 +3867,11 @@ const slave = {
         } else {
           s.walkAnim = 0;
         }
-        // Detectar estructuras enemigas cercanas
-        for (const struct of structures) {
-          if (struct.team === 'enemy' && struct.hp > 0) {
-            const d = s.mesh.position.distanceTo(struct.mesh.position);
-            if (d < SLAVE_DETECT_RANGE) {
-              s.state = 'attack';
-              s.target = struct;
-              break;
-            }
-          }
+        // Detectar unidades y estructuras enemigas cercanas
+        const nearEnemy = findNearestEnemy(s.mesh.position, SLAVE_DETECT_RANGE);
+        if (nearEnemy) {
+          s.state = 'attack';
+          s.target = nearEnemy;
         }
         } else if (s.state === 'mine') {
   // ⛏️ Extraer oro de una mina; si se agota, vuelve a seguir
@@ -3338,6 +3951,78 @@ const slave = {
       }
     }
   }
+        } else if (s.state === 'gather') {
+  // 🍇 Recoger bayas del arbusto; si se agota, vuelve a seguir
+  if (!s.gatherTarget || s.gatherTarget.food <= 0) {
+    s.state = 'follow';
+    s.gatherTarget = null;
+    continue;
+  }
+  const b = s.gatherTarget;
+  const dist = Math.hypot(s.mesh.position.x - b.x, s.mesh.position.z - b.z);
+  if (dist > SLAVE_GATHER_RANGE) {
+    const dir = new THREE.Vector3(b.x - s.mesh.position.x, 0, b.z - s.mesh.position.z);
+    dir.normalize();
+    moveUnit(s, dir, s.speed, dt, 0.5);
+    s.mesh.rotation.y = Math.atan2(dir.x, dir.z);
+    s.walkAnim += dt * 8;
+  } else {
+    s.chopAnim += dt * SLAVE_CHOP_ANIM_SPEED;
+    if (s.sprite.material.map !== s.chopTex) {
+      s.sprite.material.map = s.chopTex;
+      s.sprite.material.needsUpdate = true;
+    }
+    s.chopTex.offset.set((Math.floor(s.chopAnim) % slaveChopAtlas.count) / slaveChopAtlas.count, 0);
+    s.chopTimer += dt;
+    s.walkAnim += dt * 6;
+    if (s.chopTimer >= SLAVE_GATHER_INTERVAL) {
+      s.chopTimer = 0;
+      const amount = Math.min(SLAVE_GATHER_AMOUNT, b.food);
+      b.food = Math.max(0, b.food - amount);
+      food += amount;
+      updateResourcesUI();
+      spawnFoodFloat(new THREE.Vector3(b.x, getHeight(b.x, b.z), b.z), amount);
+      if (b.food <= 0) {
+        removeBush(b);
+        s.state = 'follow';
+        s.gatherTarget = null;
+      }
+    }
+  }
+        } else if (s.state === 'hunt') {
+  // 🦌 Cazar ciervo: perseguir y golpear hasta abatirlo
+  if (!s.huntTarget || !s.huntTarget.alive) {
+    s.state = 'follow';
+    s.huntTarget = null;
+    continue;
+  }
+  const d = s.huntTarget;
+  const dist2 = Math.hypot(s.mesh.position.x - d.x, s.mesh.position.z - d.z);
+  if (dist2 > SLAVE_HUNT_RANGE) {
+    const dir = new THREE.Vector3(d.x - s.mesh.position.x, 0, d.z - s.mesh.position.z);
+    dir.normalize();
+    moveUnit(s, dir, s.speed, dt, 0.5);
+    s.mesh.rotation.y = Math.atan2(dir.x, dir.z);
+    s.walkAnim += dt * 8;
+  } else {
+    s.chopAnim += dt * SLAVE_CHOP_ANIM_SPEED;
+    if (s.sprite.material.map !== s.chopTex) {
+      s.sprite.material.map = s.chopTex;
+      s.sprite.material.needsUpdate = true;
+    }
+    s.chopTex.offset.set((Math.floor(s.chopAnim) % slaveChopAtlas.count) / slaveChopAtlas.count, 0);
+    s.chopTimer += dt;
+    s.walkAnim += dt * 6;
+    if (s.chopTimer >= SLAVE_HUNT_INTERVAL) {
+      s.chopTimer = 0;
+      d.hp -= SLAVE_HUNT_DAMAGE;
+      if (d.hp <= 0) {
+        killDeer(d);
+        s.state = 'follow';
+        s.huntTarget = null;
+      }
+    }
+  }
         } else if (s.state === 'build') {
   // Si no hay objetivo o ya se terminó de construir, volver a seguir
   if (!s.buildTarget || s.buildTarget.hp >= s.buildTarget.maxHp || !s.buildTarget.underConstruction) {
@@ -3401,7 +4086,7 @@ const slave = {
           } else {
             s.attackCooldown -= dt;
             if (s.attackCooldown <= 0) {
-              damageStructure(s.target, SLAVE_DAMAGE);
+              damageTarget(s.target, SLAVE_DAMAGE);
               s.attackCooldown = 1.0;
             }
             s.walkAnim = 0;
@@ -3480,10 +4165,10 @@ const slave = {
   };
 
   // 🎨 Cuerpo del soldado SIN el brazo derecho (se pinta según la acción)
-  function paintSoldierBody(x) {
+  function paintSoldierBody(x, P = soldierPalette) {
     const { outline, helm, helmS, helmL, plume, skin, skinS, skinL, eye, eyeW, mouth,
             tunic, tunicS, tunicL, belt, buckle, chain, chainS, cross,
-            pants, pantsS, boot, bootS, wood, woodL, woodS } = soldierPalette;
+            pants, pantsS, boot, bootS, wood, woodL, woodS } = P;
 
     // ---- Yelmo cónico con nasal y pluma roja ----
     x.fillStyle = outline;
@@ -3632,9 +4317,8 @@ const slave = {
 
   // ⚔️ Brazo derecho empuñando la espada en una pose concreta
   // (hand = ancla del brazo, head = punta de la hoja)
-  function paintSoldierArm(x, hand, head) {
-    const P = soldierPalette;
-    // Espada (hoja + guarda + mango)
+function paintSoldierArm(x, hand, head, P = soldierPalette) {
+      // Espada (hoja + guarda + mango)
     x.fillStyle = P.outline;
     x.fillRect(head[0] - 1, head[1], 4, 11);
     x.fillRect(head[0] - 1, head[1] + 10, 4, 2);
@@ -3668,9 +4352,9 @@ const slave = {
     const x = c.getContext('2d');
 
     paintSoldierBody(x);
-
     const P = soldierPalette;
-    // ---- Espada alzada (mano derecha) ----
+
+// ---- Espada alzada (mano derecha) ----
     x.fillStyle = P.outline;
     x.fillRect(23, 3, 4, 10);
     x.fillRect(23, 13, 5, 2);
@@ -3751,6 +4435,9 @@ const slave = {
 
     const soldier = {
       type: 'soldier',
+      isUnit: true,
+      dead: false,
+      radius: 0.5,
       mesh: group,
       sprite: mesh,
       ring: ring,
@@ -3777,6 +4464,7 @@ const slave = {
   function hireSoldier() {
     if (gold < SOLDIER_COST) return;
     gold -= SOLDIER_COST;                 // se paga al encargar
+    sfx('train');
     soldierQueue.push(true);              // entra en la cola
     updateResourcesUI();
     refreshSoldierQueueUI();
@@ -3857,7 +4545,7 @@ const slave = {
     }
   }
 
-  // 🔍 Encuentra la estructura enemiga viva más cercana dentro de un radio
+  // 🔍 Encuentra la unidad o estructura enemiga viva más cercana dentro de un radio
   function findNearestEnemy(pos, range) {
     let best = null;
     let bestD = range;
@@ -3866,6 +4554,11 @@ const slave = {
         const d = pos.distanceTo(st.mesh.position);
         if (d < bestD) { bestD = d; best = st; }
       }
+    }
+    for (const u of enemies) {
+      if (u.dead || u.hp <= 0) continue;
+      const d = pos.distanceTo(u.mesh.position);
+      if (d < bestD) { bestD = d; best = u; }
     }
     return best;
   }
@@ -3896,7 +4589,7 @@ const slave = {
             s.attackTex.offset.set((Math.floor(s.attackAnim) % soldierAttackAtlas.count) / soldierAttackAtlas.count, 0);
             s.attackCooldown -= dt;
             if (s.attackCooldown <= 0) {
-              damageStructure(s.target, SOLDIER_DAMAGE);
+              damageTarget(s.target, SOLDIER_DAMAGE);
               s.attackCooldown = 1.0;
             }
             s.walkAnim = 0;
@@ -4007,10 +4700,10 @@ const slave = {
   };
 
   // 🎨 Cuerpo del arquero SIN el brazo derecho (se pinta según la acción)
-  function paintArcherBody(x) {
+  function paintArcherBody(x, P = archerPalette) {
     const { outline, hood, hoodS, hoodL, skin, skinS, skinL, eye, eyeW, mouth,
             tunic, tunicS, tunicL, belt, buckle, pants, pantsS, boot, bootS,
-            quiver, quiverS } = archerPalette;
+            quiver, quiverS } = P;
 
     // ---- Capucha ----
     x.fillStyle = outline;
@@ -4151,9 +4844,8 @@ const slave = {
 
   // 🏹 Brazo derecho con el arco en una pose concreta
   // (hand = ancla de la mano, head = punta superior del arco)
-  function paintArcherArm(x, hand, head) {
-    const P = archerPalette;
-    // Arco: bastón de madera con puntas
+function paintArcherArm(x, hand, head, P = archerPalette) {
+      // Arco: bastón de madera con puntas
     x.fillStyle = P.outline;
     x.fillRect(head[0] - 1, head[1], 3, 10);
     x.fillStyle = P.wood;
@@ -4188,9 +4880,9 @@ const slave = {
     const c = document.createElement('canvas');
     c.width = 32; c.height = 48;
     const x = c.getContext('2d');
-    paintArcherBody(x);
+paintArcherBody(x);
     const P = archerPalette;
-    // ---- Arco en reposo (junto al cuerpo) ----
+      // ---- Arco en reposo (junto al cuerpo) ----
     x.fillStyle = P.outline;
     x.fillRect(23, 22, 3, 10);
     x.fillStyle = P.wood;
@@ -4265,6 +4957,9 @@ const slave = {
 
     const archer = {
       type: 'archer',
+      isUnit: true,
+      dead: false,
+      radius: 0.5,
       mesh: group,
       sprite: mesh,
       ring: ring,
@@ -4291,6 +4986,7 @@ const slave = {
   function hireArcher() {
     if (gold < ARCHER_COST) return;
     gold -= ARCHER_COST;                 // se paga al encargar
+    sfx('train');
     archerQueue.push(true);              // entra en la cola
     updateResourcesUI();
     refreshArcherQueueUI();
@@ -4394,10 +5090,12 @@ const slave = {
               s.sprite.material.map = s.attackTex;
               s.sprite.material.needsUpdate = true;
             }
-            s.attackTex.offset.set((Math.floor(s.attackAnim) % archerShootAtlas.count) / archerShootAtlas.count, 0);
+s.attackTex.offset.set((Math.floor(s.attackAnim) % archerShootAtlas.count) / archerShootAtlas.count, 0);
             s.attackCooldown -= dt;
             if (s.attackCooldown <= 0) {
-              damageStructure(s.target, ARCHER_DAMAGE);
+              spawnArrow(s.mesh.position.clone().setY(s.mesh.position.y + 3),
+                         s.target.mesh.position.clone().setY(s.target.mesh.position.y + 2),
+                         s.target, ARCHER_DAMAGE, 'player');
               s.attackCooldown = 1.2;
             }
             s.walkAnim = 0;
@@ -4506,10 +5204,10 @@ const slave = {
   };
 
   // 🐎 Cuerpo del caballero (jinete + caballo) SIN el brazo derecho
-  function paintCavalryBody(x) {
+  function paintCavalryBody(x, P = cavalryPalette) {
     const { outline, helm, helmS, helmL, plume, skin, skinS, skinL, eye, eyeW, mouth,
             tunic, tunicS, tunicL, belt, buckle, chain, chainS,
-            pants, pantsS, boot, bootS, horse, horseS, horseL, mane, tail } = cavalryPalette;
+            pants, pantsS, boot, bootS, horse, horseS, horseL, mane, tail } = P;
 
     // ---- Cola del caballo ----
     x.fillStyle = outline;
@@ -4650,9 +5348,8 @@ const slave = {
   }
 
   // ⚔️ Brazo derecho con la espada en una pose concreta
-  function paintCavalryArm(x, hand, head) {
-    const P = cavalryPalette;
-    // Espada (hoja + guarda + mango)
+function paintCavalryArm(x, hand, head, P = cavalryPalette) {
+      // Espada (hoja + guarda + mango)
     x.fillStyle = P.outline;
     x.fillRect(head[0] - 1, head[1], 4, 11);
     x.fillRect(head[0] - 1, head[1] + 10, 4, 2);
@@ -4684,9 +5381,9 @@ const slave = {
     const c = document.createElement('canvas');
     c.width = 48; c.height = 48;
     const x = c.getContext('2d');
-    paintCavalryBody(x);
+paintCavalryBody(x);
     const P = cavalryPalette;
-    // ---- Espada alzada (mano derecha) ----
+      // ---- Espada alzada (mano derecha) ----
     x.fillStyle = P.outline;
     x.fillRect(31, 3, 4, 10);
     x.fillRect(31, 13, 5, 2);
@@ -4764,6 +5461,9 @@ const slave = {
 
     const cav = {
       type: 'cavalry',
+      isUnit: true,
+      dead: false,
+      radius: 0.5,
       mesh: group,
       sprite: mesh,
       ring: ring,
@@ -4790,6 +5490,7 @@ const slave = {
   function hireCavalry() {
     if (gold < CAVALRY_COST) return;
     gold -= CAVALRY_COST;
+    sfx('train');
     cavalryQueue.push(true);
     updateResourcesUI();
     refreshCavalryQueueUI();
@@ -4895,7 +5596,7 @@ const slave = {
             s.attackTex.offset.set((Math.floor(s.attackAnim) % cavalryAttackAtlas.count) / cavalryAttackAtlas.count, 0);
             s.attackCooldown -= dt;
             if (s.attackCooldown <= 0) {
-              damageStructure(s.target, CAVALRY_DAMAGE);
+              damageTarget(s.target, CAVALRY_DAMAGE);
               s.attackCooldown = 1.0;
             }
             s.walkAnim = 0;
@@ -4955,6 +5656,571 @@ const slave = {
     }
   }
 
+  /* ============================================================
+     ⚔️ SISTEMA DE COMBATE UNIDAD-vs-UNIDAD (jugador ↔ enemigo)
+  ============================================================ */
+  // 🎨 Paletas enemigas (versión roja de cada unidad, estilo AoE)
+  const enemySlavePalette = {
+    ...slavePalette,
+    band: '#8b2020', bandL: '#b03030',
+    tunic: '#a03028', tunicS: '#70201c', tunicL: '#c54a40',
+    pants: '#5a2020', pantsS: '#401616',
+  };
+  const enemySoldierPalette = {
+    ...soldierPalette,
+    tunic: '#a03028', tunicS: '#70201c', tunicL: '#c54a40',
+    pants: '#5a2020', pantsS: '#401616',
+  };
+  const enemyArcherPalette = {
+    ...archerPalette,
+    hood: '#8b2020', hoodS: '#5a1515', hoodL: '#b03030',
+    tunic: '#a03028', tunicS: '#70201c', tunicL: '#c54a40',
+  };
+  const enemyCavalryPalette = {
+    ...cavalryPalette,
+    plume: '#ffd76a',
+    tunic: '#a03028', tunicS: '#70201c', tunicL: '#c54a40',
+  };
+
+  // 🖼️ Textura de unidad enemiga: cuerpo + arma en pose fija
+  function makeEnemyTex(w, h, paintBody, paintArm, armPose, P) {
+    const c = document.createElement('canvas');
+    c.width = w; c.height = h;
+    const x = c.getContext('2d');
+    paintBody(x, P);
+    if (paintArm) paintArm(x, armPose.hand, armPose.head, P);
+    return prepTexture(new THREE.CanvasTexture(c));
+  }
+  const enemySlaveTex   = makeEnemyTex(32, 48, paintSlaveBody, null, null, enemySlavePalette);
+  const enemySoldierTex = makeEnemyTex(32, 48, paintSoldierBody, paintSoldierArm, { hand: [21, 10], head: [23, 2] }, enemySoldierPalette);
+  const enemyArcherTex  = makeEnemyTex(32, 48, paintArcherBody, paintArcherArm, { hand: [21, 12], head: [23, 5] }, enemyArcherPalette);
+  const enemyCavalryTex = makeEnemyTex(48, 48, paintCavalryBody, paintCavalryArm, { hand: [30, 10], head: [33, 2] }, enemyCavalryPalette);
+
+  // 🔴 Crea una unidad enemiga con sus estadísticas de combate
+  function createEnemyUnit(type, x, z) {
+    const HEIGHTS = { slave: SLAVE_HEIGHT, soldier: SOLDIER_HEIGHT, archer: ARCHER_HEIGHT, cavalry: CAVALRY_HEIGHT };
+    const TEX = { slave: enemySlaveTex, soldier: enemySoldierTex, archer: enemyArcherTex, cavalry: enemyCavalryTex };
+    const STATS = {
+      slave:   { hp: 100,  speed: SLAVE_SPEED,   damage: 8,  range: 4,  cd: 1.2 },
+      soldier: { hp: SOLDIER_HP, speed: SOLDIER_SPEED,   damage: SOLDIER_DAMAGE,  range: SOLDIER_ATTACK_RANGE, cd: 1.0 },
+      archer:  { hp: ARCHER_HP,  speed: ARCHER_SPEED,    damage: ARCHER_DAMAGE,   range: ARCHER_ATTACK_RANGE,  cd: 1.3 },
+      cavalry: { hp: CAVALRY_HP, speed: CAVALRY_SPEED,   damage: CAVALRY_DAMAGE,  range: CAVALRY_ATTACK_RANGE, cd: 1.0 },
+    };
+    const st = STATS[type];
+    const h = HEIGHTS[type];
+    const group = new THREE.Group();
+    const mesh = new THREE.Mesh(
+      new THREE.PlaneGeometry(1, 1),
+      new THREE.MeshBasicMaterial({ map: TEX[type], transparent: true, alphaTest: 0.1, side: THREE.DoubleSide })
+    );
+    if (type === 'cavalry') {
+      mesh.scale.set(h, h, 1);
+    } else {
+      const aspect = 32 / 48;
+      mesh.scale.set(h * aspect, h, 1);
+    }
+    mesh.position.y = h / 2 - 0.05;
+    group.add(mesh);
+
+    const shadow = new THREE.Mesh(new THREE.CircleGeometry(0.4, 16), new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.3 }));
+    shadow.rotation.x = -Math.PI / 2; shadow.position.y = 0.05;
+    group.add(shadow);
+
+    group.position.set(x, Math.max(getHeight(x, z), WATER_LEVEL + 0.5), z);
+    scene.add(group);
+
+    const u = {
+      type,
+      mesh: group,
+      sprite: mesh,
+      isEnemyUnit: true,
+      isUnit: true,
+      dead: false,
+      radius: 0.5,
+      hp: st.hp,
+      maxHp: st.hp,
+      damage: st.damage,
+      attackRange: st.range,
+      attackCooldown: 0,
+      speed: st.speed,
+      walkAnim: 0,
+      state: 'patrol',
+      target: null,
+      aiState: 'patrol',      // patrol | assault | aggressive | attack | chop
+      aiTimer: 0,
+      aiDir: Math.random() * Math.PI * 2,
+      moveTarget: null,
+      chopTarget: null,
+    };
+    enemies.push(u);
+    return u;
+  }
+
+  // 💥 Daño/muerte a unidades enemigas
+  function damageEnemyUnit(u, amount) {
+    if (u.dead || u.hp <= 0) return;
+    u.hp -= amount;
+    if (u.hp <= 0) killEnemyUnit(u);
+  }
+  function killEnemyUnit(u) {
+    if (u.dead) return;
+    u.dead = true;
+    scene.remove(u.mesh);
+    const i = enemies.indexOf(u);
+    if (i >= 0) enemies.splice(i, 1);
+  }
+
+  // 🏹 Flechas visuales (arqueros y torres)
+  const arrows = [];
+  function spawnArrow(fromPos, toPos, target, damage, team) {
+    const from = fromPos.clone();
+    const to = toPos.clone();
+    const dir = new THREE.Vector3().subVectors(to, from);
+    const len = dir.length();
+    if (len < 0.5) return;
+    const mesh = new THREE.Mesh(
+      new THREE.ConeGeometry(0.09, 0.6, 5),
+      new THREE.MeshBasicMaterial({ color: 0xd8c39a })
+    );
+    mesh.position.copy(from);
+    scene.add(mesh);
+    arrows.push({ mesh, from, to, t: 0, dur: Math.min(0.45, 0.1 + len * 0.012), arcH: Math.min(7, len * 0.25), target, damage, team });
+    sfx('arrow');
+  }
+  function updateArrows(dt) {
+    for (let i = arrows.length - 1; i >= 0; i--) {
+      const a = arrows[i];
+      a.t += dt / a.dur;
+      if (a.t >= 1) {
+        scene.remove(a.mesh);
+        if (a.target) {
+          const alive = a.target === king ? kingHp > 0 : (a.target.hp > 0 && !a.target.dead);
+          if (alive) {
+            if (a.target === king) damageKing(a.damage);
+            else if (a.target.isEnemyUnit) damageEnemyUnit(a.target, a.damage);
+            else if (a.target.isUnit) damageUnit(a.target, a.damage);
+            else damageStructure(a.target, a.damage);
+          }
+        }
+        arrows.splice(i, 1);
+        continue;
+      }
+      a.mesh.position.lerpVectors(a.from, a.to, a.t);
+      a.mesh.position.y += Math.sin(a.t * Math.PI) * a.arcH;
+      const ahead = new THREE.Vector3().lerpVectors(a.from, a.to, Math.min(1, a.t + 0.02));
+      a.mesh.lookAt(ahead.x, a.mesh.position.y, ahead.z);
+    }
+  }
+
+  // 🗼 Las torres disparan flechas a los enemigos cercanos (estilo AoE)
+  function updateTowers(dt) {
+    for (const s of structures) {
+      if (s.hp <= 0 || s.underConstruction) continue;
+      if (s.def.id !== 'tower_A' && s.def.id !== 'tower_B') continue;
+      const range = s.def.id === 'tower_A' ? 26 : 32;
+      const dmg = s.def.id === 'tower_A' ? 12 : 16;
+      s.towerCooldown = (s.towerCooldown || 0) - dt;
+      if (s.towerCooldown > 0) continue;
+      if (s.team === 'player') {
+        const target = findNearestEnemy(s.mesh.position, range);
+        if (target) {
+          s.towerCooldown = 1.6;
+          spawnArrow(
+            s.mesh.position.clone().setY(s.mesh.position.y + 4),
+            target.mesh.position.clone().setY(target.mesh.position.y + 2),
+            target, dmg, 'player'
+          );
+        }
+      } else {
+        // 🗼 Las torres enemigas defienden su ciudad
+        let target = null;
+        for (const u of slaves.concat(soldiers, archers, cavalry)) {
+          if (u.dead || u.hp <= 0) continue;
+          if (s.mesh.position.distanceTo(u.mesh.position) < range) { target = u; break; }
+        }
+        if (!target && s.mesh.position.distanceTo(king.position) < range) target = king;
+        if (target) {
+          s.towerCooldown = 1.6;
+          const tp = target === king ? king.position.clone().setY(king.position.y + 4) : target.mesh.position.clone().setY(target.mesh.position.y + 2);
+          spawnArrow(s.mesh.position.clone().setY(s.mesh.position.y + 4), tp, target, dmg, 'enemy');
+        }
+      }
+    }
+  }
+
+  // 🔴 Movimiento y combate de las unidades enemigas
+  function moveEnemyUnit(u, tp, dt) {
+    const dir = new THREE.Vector3().subVectors(tp, u.mesh.position);
+    dir.y = 0;
+    dir.normalize();
+    const nx = u.mesh.position.x + dir.x * u.speed * dt;
+    const nz = u.mesh.position.z + dir.z * u.speed * dt;
+    if (!collidesWithStructure(nx, nz, 0.4) && !collidesWithTree(nx, nz, 0.4)) {
+      u.mesh.position.x = nx;
+      u.mesh.position.z = nz;
+    }
+    u.mesh.rotation.y = Math.atan2(dir.x, dir.z);
+  }
+  function updateEnemyUnits(dt) {
+    for (const u of enemies) {
+      if (u.dead) continue;
+      // 🤖 IA de oleada: asediar estructuras del jugador o marchar a su base
+      if (u.aiState === 'assault' && !u.target) {
+        u.target = findNearestPlayerStructure(u.mesh.position, 90);
+        if (!u.target) {
+          const pb = new THREE.Vector3(playerBase.x, 0, playerBase.z);
+          if (u.mesh.position.distanceTo(pb) > 14) moveEnemyUnit(u, pb, dt);
+        }
+      }
+      if (u.aiState === 'assault' && u.target && u.target.isUnit) {
+        const st = findNearestPlayerStructure(u.mesh.position, 40);
+        if (st) u.target = st;
+      }
+      // 🎯 Elegir objetivo: unidad del jugador o el rey
+      if (!u.target || u.target === king ? kingHp <= 0 : (u.target.dead || u.target.hp <= 0)) {
+        u.target = null;
+        let best = null, bestD = u.attackRange + 4;
+        for (const p of slaves.concat(soldiers, archers, cavalry)) {
+          if (p.dead || p.hp <= 0) continue;
+          const d = u.mesh.position.distanceTo(p.mesh.position);
+          if (d < bestD) { bestD = d; best = p; }
+        }
+        const dk = u.mesh.position.distanceTo(king.position);
+        if (dk < bestD) best = king;
+        if (best) u.target = best;
+      }
+      if (u.target) {
+        const t = u.target;
+        const tp = t === king ? king.position : t.mesh.position;
+        const d = u.mesh.position.distanceTo(tp);
+        if (u.type === 'archer') {
+          if (d > u.attackRange) {
+            moveEnemyUnit(u, tp, dt);
+            u.walkAnim += dt * 8;
+          } else {
+            u.attackCooldown -= dt;
+            if (u.attackCooldown <= 0) {
+              u.attackCooldown = 1.3;
+              spawnArrow(
+                u.mesh.position.clone().setY(u.mesh.position.y + 3),
+                tp.clone().setY(tp.y + 2),
+                t, u.damage, 'enemy'
+              );
+            }
+          }
+        } else {
+          const reach = d - (t === king ? 1.5 : t.radius);
+          if (reach > u.attackRange) {
+            moveEnemyUnit(u, tp, dt);
+            u.walkAnim += dt * 8;
+          } else {
+            u.attackCooldown -= dt;
+            if (u.attackCooldown <= 0) {
+              u.attackCooldown = u.type === 'slave' ? 1.2 : 1.0;
+              if (t === king) damageKing(u.damage);
+              else damageUnit(t, u.damage);
+            }
+            u.walkAnim = 0;
+          }
+        }
+      } else {
+        // 👣 Sin objetivo: deambular (patrulla local)
+        u.aiTimer -= dt;
+        if (u.aiTimer <= 0) {
+          u.aiTimer = 2 + Math.random() * 3;
+          u.aiDir = Math.random() * Math.PI * 2;
+        }
+        const nx = u.mesh.position.x + Math.sin(u.aiDir) * u.speed * 0.5 * dt;
+        const nz = u.mesh.position.z + Math.cos(u.aiDir) * u.speed * 0.5 * dt;
+        if (Math.abs(nx) < BOUND && Math.abs(nz) < BOUND && getHeight(nx, nz) > WATER_LEVEL + 0.5) {
+          u.mesh.position.x = nx;
+          u.mesh.position.z = nz;
+        }
+        u.walkAnim += dt * 8;
+      }
+      u.mesh.position.y = Math.max(getHeight(u.mesh.position.x, u.mesh.position.z), WATER_LEVEL + 0.5);
+      // Billboard hacia la cámara
+      const yaw = Math.atan2(camera.position.x - u.mesh.position.x, camera.position.z - u.mesh.position.z);
+      u.sprite.rotation.y = yaw - u.mesh.rotation.y;
+      const h = u.type === 'cavalry' ? CAVALRY_HEIGHT : u.type === 'soldier' ? SOLDIER_HEIGHT : u.type === 'archer' ? ARCHER_HEIGHT : SLAVE_HEIGHT;
+      u.sprite.position.y = h / 2 - 0.05 + Math.abs(Math.sin(u.walkAnim)) * 0.15;
+    }
+  }
+
+  /* ============================================================
+     🤖 IA ENEMIGA (economía + entrenamiento + oleadas estilo AoE)
+  ============================================================ */
+  let enemyGold = 800, enemyWood = 400, enemyStone = 200;
+  let enemyWaveTimer = 75;        // ⏱️ primera oleada a los 75 s
+  let enemyWave = 0;
+  const enemyTraining = [];       // cola de entrenamiento { type, t }
+  const ENEMY_UNIT_COSTS = { slave: { gold: 10 }, soldier: { gold: 20 }, archer: { gold: 25 }, cavalry: { gold: 35 } };
+  const ENEMY_TRAIN_TIMES = { slave: 6, soldier: 8, archer: 9, cavalry: 12 };
+
+  function findNearestPlayerStructure(pos, range) {
+    let best = null, bestD = range;
+    for (const s of structures) {
+      if (s.team === 'player' && s.hp > 0) {
+        const d = pos.distanceTo(s.mesh.position);
+        if (d < bestD) { bestD = d; best = s; }
+      }
+    }
+    return best;
+  }
+
+  // 🔴 Unidades iniciales de defensa en la ciudad enemiga
+  function spawnInitialEnemyUnits() {
+    for (let i = 0; i < 3; i++) {
+      createEnemyUnit('slave', enemyBase.x + 40 + (Math.random() - 0.5) * 16, enemyBase.z + 20 + (Math.random() - 0.5) * 16);
+    }
+    for (let i = 0; i < 2; i++) {
+      createEnemyUnit('soldier', enemyBase.x + (Math.random() - 0.5) * 30, enemyBase.z + (Math.random() - 0.5) * 30);
+    }
+    createEnemyUnit('archer', enemyBase.x + (Math.random() - 0.5) * 30, enemyBase.z + (Math.random() - 0.5) * 30);
+  }
+  spawnInitialEnemyUnits();
+
+  function spawnEnemyAtBase(type) {
+    const castle = structures.find(s => s.def.id === 'castle' && s.team === 'enemy');
+    const bx = castle ? castle.mesh.position.x : enemyBase.x;
+    const bz = castle ? castle.mesh.position.z : enemyBase.z;
+    const ang = Math.random() * Math.PI * 2;
+    const r = 12 + Math.random() * 8;
+    createEnemyUnit(type, bx + Math.cos(ang) * r, bz + Math.sin(ang) * r);
+  }
+
+  function decideEnemyTraining() {
+    const count = enemies.length;
+    const pool = [];
+    if (enemyGold >= 35 && count > 5) pool.push('cavalry');
+    if (enemyGold >= 25 && count > 2) pool.push('archer');
+    pool.push('soldier');
+    if (count < 5) pool.push('slave');
+    const type = pool[Math.floor(Math.random() * pool.length)];
+    return { type, time: ENEMY_TRAIN_TIMES[type] };
+  }
+
+  // 🌊 Lanza una oleada de asalto contra la base del jugador
+  function launchEnemyWave() {
+    enemyWave++;
+    enemyWaveTimer = Math.max(45, 75 - enemyWave * 4 + Math.random() * 20);
+    const n = 3 + enemyWave;    // 4, 5, 6... tropas por oleada
+    const comp = [];
+    for (let i = 0; i < n; i++) {
+      const r = Math.random();
+      if (enemyWave >= 2 && r < 0.25) comp.push('cavalry');
+      else if (r < 0.55) comp.push('soldier');
+      else if (r < 0.85) comp.push('archer');
+      else comp.push('slave');
+    }
+    for (const type of comp) {
+      const u = spawnEnemyAtBase(type);
+      if (u) u.aiState = 'assault';   // marchan directo a tu base
+    }
+    flashMsg('⚔️ ¡Oleada enemiga! ' + comp.length + ' tropas se acercan', '#ff6b6b');
+    sfx('wave');
+  }
+
+  function updateEnemyAI(dt) {
+    // 💰 economía pasiva del enemigo (escala con la era)
+    enemyGold += dt * 3.5 * ageBonus();
+    enemyWood += dt * 2.5 * ageBonus();
+    enemyStone += dt * 1.2 * ageBonus();
+
+    // 🏭 entrenar unidades
+    if (enemyTraining.length > 0) {
+      enemyTraining[0].t -= dt;
+      if (enemyTraining[0].t <= 0) {
+        enemyTraining.shift();
+        spawnEnemyAtBase(Math.random() < 0.3 ? 'soldier' : 'archer');
+      }
+    } else {
+      const want = decideEnemyTraining();
+      const cost = ENEMY_UNIT_COSTS[want.type];
+      if (enemyGold >= cost.gold) {
+        enemyGold -= cost.gold;
+        enemyTraining.push({ type: want.type, t: want.time });
+      }
+    }
+
+    // 🌊 oleadas
+    enemyWaveTimer -= dt;
+    if (enemyWaveTimer <= 0) launchEnemyWave();
+  }
+
+  /* ============================================================
+     🏛 EDADES (avance de era en el castillo, estilo AoE)
+     (las constantes de estado están declaradas arriba, junto a los recursos)
+  ============================================================ */
+  const ageProdEl = document.getElementById('age-production');
+  const ageBtnEl = document.getElementById('age-research-btn');
+  const ageStatusEl = document.getElementById('age-research-status');
+  const ageFillEl = document.getElementById('age-research-fill');
+
+  function startAgeResearch() {
+    if (ageResearching || currentAge >= 3) return;
+    const cost = AGE_COSTS[currentAge + 1];
+    if (food < cost.food || gold < cost.gold) return;
+    food -= cost.food;
+    gold -= cost.gold;
+    updateResourcesUI();
+    ageResearching = true;
+    ageResearchT = 0;
+    updateAgeProductionUI();
+  }
+
+  function updateAgeResearch(dt) {
+    if (!ageResearching) return;
+    ageResearchT += dt;
+    if (ageResearchT >= AGE_RESEARCH_TIME) {
+      ageResearching = false;
+      ageResearchT = 0;
+      currentAge++;
+      updateHUDStats();
+      updateBuildMenuButtons();
+      flashMsg('🏛 ¡Avanzaste a la ' + AGE_NAMES[currentAge] + '!', '#ffd76a');
+      sfx('age');
+    }
+  }
+
+  function updateAgeProductionUI() {
+    if (currentAge >= 3) {
+      ageStatusEl.textContent = '🏛 Edad Imperial (máxima)';
+      ageBtnEl.disabled = true;
+      ageBtnEl.textContent = '📜 Edad máxima';
+      ageFillEl.style.width = '100%';
+      return;
+    }
+    const cost = AGE_COSTS[currentAge + 1];
+    const parts = [];
+    if (cost.food) parts.push(cost.food + ' 🍖');
+    if (cost.gold) parts.push(cost.gold + ' 🪙');
+    if (ageResearching) {
+      ageStatusEl.textContent = '⏳ Investigando ' + AGE_NAMES[currentAge + 1] + '...';
+      ageBtnEl.disabled = true;
+      ageBtnEl.textContent = '📜 Investigando...';
+      ageFillEl.style.width = (ageResearchT / AGE_RESEARCH_TIME * 100) + '%';
+    } else {
+      const canAfford = food >= cost.food && gold >= cost.gold;
+      ageStatusEl.textContent = 'Siguiente: ' + AGE_NAMES[currentAge + 1] + ' (' + parts.join(' · ') + ')';
+      ageBtnEl.disabled = !canAfford;
+      ageBtnEl.textContent = '📜 Investigar ' + AGE_NAMES[currentAge + 1];
+      ageFillEl.style.width = '0%';
+    }
+  }
+  document.getElementById('age-research-btn').addEventListener('click', startAgeResearch);
+
+  /* ============================================================
+     🏁 VICTORIA/DERROTA + RESTOS Y HUMO DE EDIFICIOS DESTRUIDOS
+  ============================================================ */
+  let gameOver = false;
+
+  function endGame(win) {
+    if (gameOver) return;
+    gameOver = true;
+    const screen = document.getElementById('end-screen');
+    screen.classList.add('visible');
+    screen.classList.add(win ? 'victory' : 'defeat');
+    document.getElementById('end-title').textContent = win ? '🎉 ¡VICTORIA!' : '💀 DERROTA';
+    document.getElementById('end-subtitle').textContent = win
+      ? 'El castillo enemigo ha caído. ¡Tu reino prospera!'
+      : (kingHp <= 0 ? 'Tu rey ha muerto en batalla...' : 'Tu castillo ha sido destruido...');
+    const mins = Math.floor(gameTime / 60);
+    const secs = Math.floor(gameTime % 60);
+    document.getElementById('end-time').textContent = '⏱ Tiempo de partida: ' + mins + ':' + (secs < 10 ? '0' : '') + secs;
+    sfx(win ? 'victory' : 'defeat');
+    document.getElementById('end-restart').addEventListener('click', () => {
+      screen.classList.remove('visible', 'victory', 'defeat');
+      hud.classList.remove('visible');
+      stopGameMusic();
+      gameStarted = false;
+      menu.classList.remove('hidden');
+      levelSelect.classList.add('visible');
+    }, { once: true });
+  }
+
+  function updateEndConditions() {
+    if (gameOver) return;
+    const enemyCastle = structures.find(s => s.def.id === 'castle' && s.team === 'enemy');
+    if (!enemyCastle) { endGame(true); return; }
+    const playerCastle = structures.find(s => s.def.id === 'castle' && s.team === 'player');
+    if (!playerCastle) { endGame(false); return; }
+  }
+
+  // 🏚️ Restos de edificio destruido (building_destroyed.gltf)
+  let destroyedModelGroup = null;
+  const smokeParticles = [];
+  let smokeTex = null;
+
+  function makeSmokeTex() {
+    const c = document.createElement('canvas');
+    c.width = c.height = 64;
+    const x = c.getContext('2d');
+    const g = x.createRadialGradient(32, 32, 2, 32, 32, 30);
+    g.addColorStop(0, 'rgba(190,190,190,0.55)');
+    g.addColorStop(1, 'rgba(120,120,120,0)');
+    x.fillStyle = g;
+    x.fillRect(0, 0, 64, 64);
+    return new THREE.CanvasTexture(c);
+  }
+
+  function spawnSmoke(pos) {
+    if (!smokeTex) smokeTex = makeSmokeTex();
+    for (let i = 0; i < 4; i++) {
+      const mat = new THREE.SpriteMaterial({ map: smokeTex, transparent: true, depthWrite: false, opacity: 0.7 });
+      const spr = new THREE.Sprite(mat);
+      spr.position.copy(pos);
+      spr.position.y += 1 + Math.random() * 2;
+      spr.scale.setScalar(4 + Math.random() * 3);
+      scene.add(spr);
+      smokeParticles.push({ sprite: spr, life: 2.5 + Math.random() * 1.5, maxLife: 4, vel: 1.2 + Math.random(), drift: (Math.random() - 0.5) * 2 });
+    }
+  }
+
+  function updateSmoke(dt) {
+    for (let i = smokeParticles.length - 1; i >= 0; i--) {
+      const p = smokeParticles[i];
+      if (p.sprite) {
+        p.life -= dt;
+        if (p.life <= 0) {
+          scene.remove(p.sprite);
+          p.sprite.material.dispose();
+          smokeParticles.splice(i, 1);
+          continue;
+        }
+        p.sprite.position.y += p.vel * dt;
+        p.sprite.position.x += p.drift * dt;
+        p.sprite.material.opacity = Math.max(0, p.life / p.maxLife) * 0.7;
+        p.sprite.scale.setScalar((4 + p.maxLife - p.life) * 1.4);
+      } else {
+        p.life -= dt;
+        if (p.life <= 0) {
+          scene.remove(p.group);
+          smokeParticles.splice(i, 1);
+        }
+      }
+    }
+  }
+
+  function spawnDestroyedBuilding(pos) {
+    if (!destroyedModelGroup) {
+      destroyedModelGroup = new THREE.Group();
+      scene.add(destroyedModelGroup);
+      destroyedModelGroup.visible = false;
+      gltfLoader.load('assets/structures/buildings/neutral/building_destroyed.gltf', (gltf) => {
+        gltf.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+        destroyedModelGroup.add(gltf.scene);
+      });
+    }
+    if (destroyedModelGroup.children.length === 0) return;
+    const clone = destroyedModelGroup.clone(true);
+    clone.position.copy(pos);
+    clone.scale.setScalar(0.6);
+    scene.add(clone);
+    smokeParticles.push({ group: clone, life: 30 });
+    spawnSmoke(pos);
+  }
+
   /* --- LISTO --- */
   updateLoading(100, `¡Bienvenido a ${CFG.name}!`);
 
@@ -4962,7 +6228,8 @@ const slave = {
     startGameMusic();               // 🎵 soundtrack001 arranca cuando el nivel ya está cargado
     if (typeof tipTimer !== 'undefined') clearInterval(tipTimer);
     loadingScreen.classList.add('hidden');
-    hud.style.display = 'block';
+    hud.classList.add('visible');
+    updateHUDKingHP();
     exitBtn.style.display = 'block';
   }, 400);
 
@@ -5013,6 +6280,8 @@ const slave = {
   let npcAttackTarget = null; // 🎯 estructura enemiga para la orden "Atacar"
   let npcMineTarget = null;   // ⛏️ mina de oro para la orden "Minar"
   let npcChopTarget = null;   // 🪓 árbol para la orden "Talar"
+  let npcGatherTarget = null; // 🍇 arbusto de bayas para la orden "Recoger bayas"
+  let npcHuntTarget = null;   // 🦌 ciervo para la orden "Cazar"
 
   function selectedUnits() {
     return selectedSlaves.concat(selectedSoldiers, selectedArchers, selectedCavalry);
@@ -5170,6 +6439,48 @@ const slave = {
     }
     hideContextMenus();
   };
+  document.getElementById('npc-gather').onclick = () => {
+    // 🍇 Orden "Recoger bayas": esclavos seleccionados (o el más cercano) al arbusto
+    if (npcGatherTarget && npcGatherTarget.food > 0) {
+      const gatherers = selectedSlaves.length > 0
+        ? selectedSlaves
+        : [findClosestSlave(new THREE.Vector3(npcGatherTarget.x, 0, npcGatherTarget.z))];
+      for (const s of gatherers) {
+        if (!s) continue;
+        s.state = 'gather';
+        s.gatherTarget = npcGatherTarget;
+        s.chopTimer = 0;
+        s.mineTarget = null;
+        s.chopTarget = null;
+        s.moveTarget = null;
+        s.target = null;
+        s.buildTarget = null;
+        s.huntTarget = null;
+      }
+    }
+    hideContextMenus();
+  };
+  document.getElementById('npc-hunt').onclick = () => {
+    // 🦌 Orden "Cazar": esclavos seleccionados (o el más cercano) al ciervo
+    if (npcHuntTarget && npcHuntTarget.alive) {
+      const hunters = selectedSlaves.length > 0
+        ? selectedSlaves
+        : [findClosestSlave(new THREE.Vector3(npcHuntTarget.x, 0, npcHuntTarget.z))];
+      for (const s of hunters) {
+        if (!s) continue;
+        s.state = 'hunt';
+        s.huntTarget = npcHuntTarget;
+        s.chopTimer = 0;
+        s.mineTarget = null;
+        s.chopTarget = null;
+        s.moveTarget = null;
+        s.target = null;
+        s.buildTarget = null;
+        s.gatherTarget = null;
+      }
+    }
+    hideContextMenus();
+  };
 
     window.addEventListener('mousedown', (e) => {
     if (e.target !== renderer.domElement) {
@@ -5228,7 +6539,7 @@ const slave = {
               mouseAttackQueued = false;
             } else if (data.team === 'enemy') {
               const dist = king.position.distanceTo(data.mesh.position);
-              if (dist < KING_ATTACK_RANGE) damageStructure(data, KING_ATTACK_DAMAGE);
+              if (dist < KING_ATTACK_RANGE) damageTarget(data, KING_ATTACK_DAMAGE);
             } else {
               mouseAttackQueued = false;
             }
@@ -5337,6 +6648,8 @@ const slave = {
         npcAttackTarget = null;   // las órdenes se habilitan SOLO si clickeas su objetivo
         npcMineTarget = null;
         npcChopTarget = null;
+        npcGatherTarget = null;
+        npcHuntTarget = null;
         npcMovePoint = null;
         buildRay.setFromCamera(mouseNDC, camera);
 
@@ -5356,6 +6669,18 @@ const slave = {
             setUnitSelection([clickedUnit]);
             npcMovePoint = terrainPoint();
             showNpcMenu(e.clientX, e.clientY);
+            isRotatingCamera = false;
+            return;
+          }
+        }
+
+        // 🔴 Click derecho en una unidad enemiga: orden "Atacar"
+        const enemyUnitHits = buildRay.intersectObjects(enemies.map(e => e.sprite), false);
+        if (enemyUnitHits.length > 0) {
+          const eu = enemies.find(e => e.sprite === enemyUnitHits[0].object);
+          if (eu && eu.hp > 0 && selectedUnits().length > 0) {
+            npcAttackTarget = eu;
+            issueAttackOrder(selectedUnits(), eu);
             isRotatingCamera = false;
             return;
           }
@@ -5430,6 +6755,38 @@ const slave = {
               selectedTree = treeData;
               updateInfoPanel();
             }
+            isRotatingCamera = false;
+            return;
+          }
+        }
+        // 🍇 Click derecho en un arbusto de bayas: orden "Recoger bayas"
+        const bushHits = buildRay.intersectObjects(bushSprites, false);
+        if (bushHits.length > 0) {
+          const bushData = bushes.find(b => b.sprite === bushHits[0].object);
+          if (bushData && bushData.food > 0) {
+            if (selectedUnits().length > 0) {
+              npcGatherTarget = bushData;
+              npcHuntTarget = null;
+              showNpcMenu(e.clientX, e.clientY);
+            } else {
+              npcGatherTarget = null;
+              npcHuntTarget = null;
+              deselectStructure();
+              selectedBush = bushData;
+              updateInfoPanel();
+            }
+            isRotatingCamera = false;
+            return;
+          }
+        }
+        // 🦌 Click derecho en un ciervo vivo: orden "Cazar"
+        const deerHits = buildRay.intersectObjects(deerSprites, false);
+        if (deerHits.length > 0) {
+          const deerData = deers.find(d => d.sprite === deerHits[0].object);
+          if (deerData && deerData.alive && selectedUnits().length > 0) {
+            npcHuntTarget = deerData;
+            npcGatherTarget = null;
+            showNpcMenu(e.clientX, e.clientY);
             isRotatingCamera = false;
             return;
           }
@@ -5606,9 +6963,20 @@ const slave = {
     }
 
     // Minimapa cada frame (muy barato: 200x200)
+    gameTime += dt;
     updateResources(dt);
+    updateHUDStats();
     updateTraining(dt);
     updateSlaves(dt);
+    updateDeers(dt);
+    updateEnemyUnits(dt);
+    updateEnemyAI(dt);
+    updateAgeResearch(dt);
+    updateAgeProductionUI();
+    updateArrows(dt);
+    updateTowers(dt);
+    updateEndConditions();
+    updateSmoke(dt);
     updateSoldierTraining(dt);
     updateSoldiers(dt);
     updateArcherTraining(dt);
@@ -5656,6 +7024,8 @@ document.querySelectorAll('.level-card').forEach(card => {
   <button class="menu-option" id="npc-attack">⚔️ Atacar</button>
   <button class="menu-option" id="npc-mine">⛏️ Minar</button>
   <button class="menu-option" id="npc-chop">🪓 Talar</button>
+  <button class="menu-option" id="npc-gather">🍇 Recoger bayas</button>
+  <button class="menu-option" id="npc-hunt">🦌 Cazar</button>
   <button class="menu-option" id="npc-follow">🏃 Seguirme</button>
   <button class="menu-option" id="npc-stop">✋ Dejar de seguirme</button>
 </div>
